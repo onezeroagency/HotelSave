@@ -164,8 +164,14 @@ reportedly much faster than enterprise/GDS onboarding.
 
 ### Onboarding (the critical path — start now, it's the long pole)
 
-1. Apply to the **Booking.com Affiliate Partner Program** → become a *Managed
-   Affiliate Partner*.
+1. Apply to the **Booking.com Affiliate Partner Program** — **directly, at
+   [partnerships.booking.com](https://partnerships.booking.com/)** → become a
+   *Managed Affiliate Partner*.
+   - ⚠️ **Must be the direct program, not an affiliate network.** Booking.com is
+     *not* on CJ/Commission Junction (that carries Expedia/Hotels.com), and the
+     network routes that *do* carry Booking (e.g. Awin) grant **links/banners
+     only — no Demand API**. Only the direct Managed Affiliate Partner track
+     unlocks Partner Centre + the availability API our detection loop needs.
 2. Get **Partner Centre** access → generate an **API key/token** and your
    **`X-Affiliate-Id`**.
 3. That single credential pair works for **both** sandbox and production.
