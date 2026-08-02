@@ -137,10 +137,22 @@ vector in `tests/test_hotellook.py`.
 > distinguished). Run it locally, or from an environment whose network policy
 > allows `engine.hotellook.com`.
 
+## Alerting — Klaviyo (§10)
+
+Backend detects, Klaviyo delivers. The backend already emits the events
+(`app/services/klaviyo.py`); the Klaviyo-side setup — metrics, Flow 1 (Price
+Drop) & Flow 2 (Deadline Guard) copy, and the transactional-send config — lives
+in [`docs/klaviyo-setup.md`](docs/klaviyo-setup.md). Bootstrap the metrics into a
+**HotelSave-specific** Klaviyo account with:
+
+```bash
+KLAVIYO_API_KEY=pk_... python scripts/bootstrap_klaviyo_metrics.py you@example.com
+```
+
 ## What's next (spec §13)
 
-4. **Alerting** — wire the four Klaviyo events into Flows 1 (Price Drop) & 2 (Deadline Guard).
 5. **Launch narrow** — one traveler niche, first-booking-free funnel.
 
-✅ Step 1 (skeleton), Step 2 (ingestion), and Step 3 (real price source, pending
-live validation) are in.
+✅ Step 1 (skeleton), Step 2 (ingestion), Step 3 (real price source, pending live
+validation), and Step 4 (alerting: backend events done; flows documented as
+deployable config) are in.
