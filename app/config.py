@@ -26,6 +26,14 @@ class Settings(BaseSettings):
     drop_floor_pct: float = 0.03
     deadline_alert_hours: int = 48
 
+    # Parse (§6a): booking parser + LLM model
+    parser: str = "mock"  # mock | claude
+    anthropic_api_key: str | None = None
+    claude_model: str = "claude-opus-5"
+
+    # Inbound email (§5)
+    inbound_webhook_secret: str | None = None  # optional shared secret on the webhook URL
+
     # Stripe (§11)
     stripe_secret_key: str | None = None
     stripe_webhook_secret: str | None = None

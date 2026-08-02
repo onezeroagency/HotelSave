@@ -13,7 +13,12 @@ class PlanStatus(str, enum.Enum):
 
 
 class JobStatus(str, enum.Enum):
-    """MonitoringJob lifecycle (§4)."""
+    """MonitoringJob lifecycle (§4), plus two pre-monitoring holding states from
+    the parse/resolve step (§6) where a job exists but isn't yet actionable."""
+
+    # Pre-monitoring: created from an email but waiting on the user.
+    pending_hotel = "pending_hotel"  # ambiguous hotel match — awaiting a pick (§6b)
+    pending_info = "pending_info"  # refundable but cancellation_deadline unknown (§6a)
 
     active = "active"
     drop_found = "drop_found"
@@ -25,6 +30,11 @@ class JobStatus(str, enum.Enum):
     @classmethod
     def monitored(cls) -> tuple["JobStatus", ...]:
         return (cls.active, cls.drop_found, cls.deadline_soon)
+
+    # Pre-monitoring holding states, resolved into `active` once complete.
+    @classmethod
+    def pending(cls) -> tuple["JobStatus", ...]:
+        return (cls.pending_hotel, cls.pending_info)
 
 
 class BoardType(str, enum.Enum):

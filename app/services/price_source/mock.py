@@ -18,6 +18,21 @@ class MockPriceSource(PriceSource):
         lng: float | None = None,
     ) -> list[HotelMatch]:
         slug = "-".join(name.lower().split())[:40] or "hotel"
+        # Without a city we can't disambiguate — return a weak multi-match so the
+        # caller falls into the "ask the user which hotel" branch (§6b).
+        if not city:
+            return [
+                HotelMatch(
+                    hotel_id=f"mock:{slug}:{i}",
+                    name=f"{name} ({i})",
+                    city=None,
+                    country=None,
+                    lat=lat,
+                    lng=lng,
+                    confidence=0.5,
+                )
+                for i in (1, 2)
+            ]
         return [
             HotelMatch(
                 hotel_id=f"mock:{slug}",

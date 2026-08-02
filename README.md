@@ -38,9 +38,13 @@ directly — it emits events; Klaviyo flows own all copy, timing, and lifecycle.
 | `app/routers/auth.py` | register / login / me (JWT) |
 | `app/routers/jobs.py` | `MonitoringJob` CRUD, scoped to the user |
 | `app/routers/billing.py` | Stripe checkout + webhook → `plan_status` (§11) |
+| `app/routers/inbound.py` | forward-to email webhook (Postmark) → ingestion (§5) |
+| `app/services/parser/` | **one LLM call → structured booking** (§6a) — `mock` for dev/tests, Claude in prod, swappable |
+| `app/services/email_inbound/` | inbound-email provider adapters (Postmark today), behind a common shape (§5) |
+| `app/services/ingestion.py` | email → parse → resolve hotel_id → job, with the §6 post-parse guards |
 | `app/services/price_source/` | **the aggregator lives behind this interface** (§9) — `mock` today, real source is a one-line swap |
 | `app/services/matching.py` | like-for-like rules + drop floor `max(€10, 3%)` (§7) |
-| `app/services/klaviyo.py` | the four events the backend emits (§10) |
+| `app/services/klaviyo.py` | the events the backend emits (§10) |
 | `app/scheduler/worker.py` | deadline-clocked polling loop (§8) |
 
 ## Quick start
@@ -98,9 +102,28 @@ export DATABASE_URL=postgresql+psycopg2://user:pass@localhost:5432/hotelsave
 alembic upgrade head
 ```
 
+## Ingestion (§5, §6)
+
+Forward a confirmation to the inbound address; the provider POSTs it to
+`/inbound/postmark`. The sender is matched to a user, one LLM call extracts the
+booking, the hotel is resolved to an aggregator ID, and a `MonitoringJob` is
+created — `active` if everything's present, otherwise a `pending_*` state with a
+prompt back to the user (non-refundable, missing deadline, or ambiguous hotel).
+With `PARSER=mock` (the default) the whole path runs with no API key:
+
+```bash
+# after registering me@example.com, forward a booking to it:
+curl -s localhost:8000/inbound/postmark -H 'content-type: application/json' -d '{
+  "FromFull": {"Email": "me@example.com"},
+  "TextBody": "Hotel: Grand Vilnius\nCity: Vilnius\nCheck-in: 2026-09-10\nCheck-out: 2026-09-13\nBoard: BB\nAdults: 2\nTotal: 420\nCurrency: EUR\nRefundable: Yes\nCancellation: 2026-09-07T23:59"}'
+# → {"status": "monitoring", "job_id": 1}
+```
+
 ## What's next (spec §13)
 
-2. **Ingestion** — forward-to email → LLM parse → hotel-ID resolution → job.
 3. **Monitoring** — real aggregator behind `PriceSource`; watch it detect a real drop.
 4. **Alerting** — wire the four Klaviyo events into Flows 1 (Price Drop) & 2 (Deadline Guard).
 5. **Launch narrow** — one traveler niche, first-booking-free funnel.
+
+✅ Step 1 (skeleton) and Step 2 (ingestion) are in. Ingestion runs on the mock
+parser + mock price source; step 3 swaps in the real aggregator.

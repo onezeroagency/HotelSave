@@ -15,11 +15,33 @@ logger = logging.getLogger("hotelsave.klaviyo")
 KLAVIYO_EVENTS_URL = "https://a.klaviyo.com/api/events/"
 KLAVIYO_REVISION = "2024-10-15"
 
-# Event names the backend emits (§10). Flows trigger off these.
+# Core event names the backend emits (§10). Flows trigger off these.
 EVENT_BOOKING_MONITORED = "Booking Monitored"
 EVENT_PRICE_DROP_FOUND = "Price Drop Found"
 EVENT_DEADLINE_APPROACHING = "Deadline Approaching"
 EVENT_MONITORING_ENDED = "Monitoring Ended"
+
+# Ingestion/onboarding events (§5, §6) — transactional prompts back to the user.
+EVENT_SIGNUP_INVITE = "Forwarded Without Account"  # unknown sender → invite to sign up
+EVENT_NEEDS_REFUNDABLE = "Refundable Confirmation Needed"  # non-refundable booking (§6a)
+EVENT_NEEDS_DEADLINE = "Cancellation Deadline Needed"  # deadline missing (§6a)
+EVENT_HOTEL_RESOLUTION_NEEDED = "Hotel Resolution Needed"  # ambiguous hotel (§6b)
+
+
+def booking_monitored_properties(job) -> dict:
+    """Payload for the `Booking Monitored` event — shared by ingestion and the
+    manual CRUD path so the event shape stays consistent."""
+    return {
+        "hotel": job.hotel_name_raw,
+        "city": job.city,
+        "check_in": job.check_in.isoformat(),
+        "check_out": job.check_out.isoformat(),
+        "original_price": float(job.original_price),
+        "currency": job.currency,
+        "cancellation_deadline": job.cancellation_deadline.isoformat()
+        if job.cancellation_deadline
+        else None,
+    }
 
 
 def emit_event(event_name: str, email: str, properties: dict) -> None:

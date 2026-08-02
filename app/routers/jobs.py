@@ -10,7 +10,7 @@ from .. import models, schemas
 from ..database import get_db
 from ..deps import get_current_user
 from ..enums import JobStatus
-from ..services import klaviyo
+from ..services import klaviyo, lifecycle
 from ..services.price_source import get_price_source
 
 router = APIRouter(prefix="/jobs", tags=["monitoring-jobs"])
@@ -77,17 +77,7 @@ def create_job(
     klaviyo.emit_event(
         klaviyo.EVENT_BOOKING_MONITORED,
         current_user.email,
-        {
-            "hotel": job.hotel_name_raw,
-            "city": job.city,
-            "check_in": job.check_in.isoformat(),
-            "check_out": job.check_out.isoformat(),
-            "original_price": float(job.original_price),
-            "currency": job.currency,
-            "cancellation_deadline": job.cancellation_deadline.isoformat()
-            if job.cancellation_deadline
-            else None,
-        },
+        klaviyo.booking_monitored_properties(job),
     )
     return job
 
@@ -129,6 +119,9 @@ def update_job(
         setattr(job, field, value)
     db.commit()
     db.refresh(job)
+    # If the user just supplied what a pending job was waiting on (a deadline, or
+    # picked their hotel via hotel_id), flip it to active and start monitoring (§6).
+    lifecycle.activate_if_ready(db, job, current_user.email)
     return job
 
 

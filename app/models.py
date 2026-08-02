@@ -66,6 +66,7 @@ class MonitoringJob(Base):
     # --- hotel identity ---
     hotel_name_raw: Mapped[str] = mapped_column(String(500), nullable=False)
     hotel_id: Mapped[str | None] = mapped_column(String(100), index=True)
+    hotel_candidates: Mapped[str | None] = mapped_column(Text)  # JSON pick-list when ambiguous (§6b)
     city: Mapped[str | None] = mapped_column(String(200))
     country: Mapped[str | None] = mapped_column(String(100))
     lat: Mapped[float | None] = mapped_column(Float)

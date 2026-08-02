@@ -83,6 +83,7 @@ class MonitoringJobRead(BaseModel):
 
     hotel_name_raw: str
     hotel_id: str | None
+    hotel_candidates: str | None
     city: str | None
     country: str | None
 

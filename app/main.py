@@ -7,7 +7,7 @@ from fastapi import FastAPI
 
 from .config import settings
 from .database import Base, engine
-from .routers import auth, billing, jobs
+from .routers import auth, billing, inbound, jobs
 
 logging.basicConfig(level=logging.INFO)
 
@@ -38,3 +38,4 @@ def health() -> dict:
 app.include_router(auth.router)
 app.include_router(jobs.router)
 app.include_router(billing.router)
+app.include_router(inbound.router)
