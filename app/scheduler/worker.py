@@ -63,6 +63,27 @@ def _jitter_seconds() -> int:
 
 
 def process_job(job: MonitoringJob, source: PriceSource, db: Session, now: datetime) -> None:
+    hrs = hours_until(job.cancellation_deadline, now)
+
+    # Expiry short-circuit (§8): once the free-cancellation window has closed or
+    # the stay is over, stop — never price or fire an actionable alert on a
+    # booking the user can no longer act on. Checked before any aggregator call.
+    if (hrs is not None and hrs <= 0) or job.check_out <= now.date():
+        job.status = JobStatus.expired.value
+        job.next_check_at = None
+        klaviyo.emit_event(
+            klaviyo.EVENT_MONITORING_ENDED,
+            job.user.email,
+            {
+                "hotel": job.hotel_name_raw,
+                "best_savings_seen": float(job.original_price - job.lowest_seen_price)
+                if job.lowest_seen_price is not None
+                else 0.0,
+                "outcome": "drop_found" if job.drop_alert_sent_at else "no_drop",
+            },
+        )
+        return
+
     # Can't price a job we couldn't resolve to a hotel_id yet (§6b).
     if not job.hotel_id:
         job.next_check_at = now + timedelta(hours=cadence_hours(None))
@@ -91,8 +112,6 @@ def process_job(job: MonitoringJob, source: PriceSource, db: Session, now: datet
         # lowest_seen_price updates every check regardless of alerting (§8).
         if job.lowest_seen_price is None or best.total_price < job.lowest_seen_price:
             job.lowest_seen_price = best.total_price
-
-    hrs = hours_until(job.cancellation_deadline, now)
 
     # --- drop detection (§8) ---
     if is_actionable_drop(best, job):
@@ -143,28 +162,10 @@ def process_job(job: MonitoringJob, source: PriceSource, db: Session, now: datet
         job.status = JobStatus.deadline_soon.value
         job.deadline_alert_sent_at = now
 
-    # --- schedule next check ---
+    # --- schedule next check (expiry was handled up front) ---
     job.next_check_at = now + timedelta(hours=cadence_hours(hrs)) + timedelta(
         seconds=_jitter_seconds()
     )
-
-    # --- expiry: deadline passed or checked out ---
-    deadline_passed = hrs is not None and hrs <= 0
-    checked_out = job.check_out <= now.date()
-    if deadline_passed or checked_out:
-        job.status = JobStatus.expired.value
-        job.next_check_at = None
-        klaviyo.emit_event(
-            klaviyo.EVENT_MONITORING_ENDED,
-            job.user.email,
-            {
-                "hotel": job.hotel_name_raw,
-                "best_savings_seen": float(job.original_price - job.lowest_seen_price)
-                if job.lowest_seen_price is not None
-                else 0.0,
-                "outcome": "drop_found" if job.drop_alert_sent_at else "no_drop",
-            },
-        )
 
 
 def run_once(db: Session | None = None) -> int:

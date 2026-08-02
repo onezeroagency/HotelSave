@@ -64,15 +64,23 @@ def test_run_once_detects_drop_and_records_history(db_session):
     assert history[0].best_matching_price == job.current_best_price
 
 
-def test_expired_when_deadline_passed(db_session):
+def test_expired_when_deadline_passed(db_session, monkeypatch):
     session, _ = db_session
     now = datetime.now(timezone.utc)
     job = _seed_job(session, cancellation_deadline=now - timedelta(hours=1))
 
+    events: list[str] = []
+    monkeypatch.setattr(
+        "app.services.klaviyo.emit_event", lambda name, email, props: events.append(name)
+    )
     worker.run_once(db=session)
     session.refresh(job)
+
     assert job.status == JobStatus.expired.value
     assert job.next_check_at is None
+    # Past the deadline we never price or fire an actionable alert (§8):
+    assert job.check_count == 0  # no aggregator call
+    assert events == ["Monitoring Ended"]  # not "Price Drop Found"
 
 
 def test_paused_plan_is_skipped(db_session):
