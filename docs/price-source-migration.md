@@ -212,11 +212,17 @@ integration never had.
 - **Tests:** reuse `tests/test_hotellook.py` as the template — mock the client,
   assert the room→candidate mapping; no signature test needed.
 
-### Build sequence once credentials exist
+### Build sequence
 
-1. Scaffold `booking.py` + config + `.env.example` (auth/base URLs are known facts).
-2. Point at the **sandbox**, validate `resolve_hotel` + `check` end-to-end with a
-   real property (the "Amrita Hotel Liepaja" run, redone against Booking).
+1. ~~Scaffold `booking.py` + config + `.env.example` (auth/base URLs are known facts).~~
+   **Done (2026-08-02):** `app/services/price_source/booking.py` (header auth +
+   sandbox/prod base URLs, `resolve_hotel`/`check` stubbed with `NotImplementedError`),
+   `booking_*` settings in `app/config.py` + `.env.example`, factory wiring for
+   `PRICE_SOURCE=booking`, and `tests/test_booking.py` covering the plumbing. The
+   endpoint mapping is intentionally left unimplemented until step 2.
+2. **(needs the API key)** Point at the **sandbox**, fill in `resolve_hotel` + `check`,
+   and validate end-to-end with a real property (the "Amrita Hotel Liepaja" run,
+   redone against Booking) — confirm the actual field names as you go.
 3. Confirm the like-for-like path (§7) and the scheduler (§8) fire on a simulated
    drop; then flip `booking_env` to production.
 

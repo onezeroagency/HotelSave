@@ -26,10 +26,18 @@ class Settings(BaseSettings):
     drop_floor_pct: float = 0.03
     deadline_alert_hours: int = 48
 
-    # Travelpayouts / Hotellook (§9) — Data API token + affiliate marker
+    # Travelpayouts / Hotellook (§9) — DEFUNCT (Hotellook shut down 20 Oct 2025).
+    # Kept only for the reference source; see docs/price-source-migration.md.
     travelpayouts_token: str | None = None
     travelpayouts_marker: str | None = None
     travelpayouts_customer_ip: str | None = None  # optional; region-prices the search
+
+    # Booking.com Demand API (§9) — affiliate replacement for Hotellook. Needs a
+    # DIRECT Managed Affiliate Partner account (not CJ/Awin) → API key + affiliate id.
+    # See docs/price-source-migration.md. Not live yet (pending partner access).
+    booking_api_key: str | None = None
+    booking_affiliate_id: str | None = None
+    booking_env: str = "sandbox"  # sandbox | production
 
     # Parse (§6a): booking parser + LLM model
     parser: str = "mock"  # mock | claude
