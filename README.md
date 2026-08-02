@@ -129,13 +129,15 @@ carrying the OTA, total, free-cancellation flag, and the marker-tagged rebook
 deep-link. The md5 request signature is pinned to Travelpayouts' documented test
 vector in `tests/test_hotellook.py`.
 
-> **Live validation still pending.** The request shapes are built from the API
-> docs but haven't been run against the live service (this build environment's
-> network policy blocks `engine.hotellook.com`). First live run should confirm
-> the search hotel-id param, the poll-until-complete termination, and board-type
-> derivation (the API exposes only a breakfast boolean, so HB/FB aren't
-> distinguished). Run it locally, or from an environment whose network policy
-> allows `engine.hotellook.com`.
+> **⚠️ Hotellook is discontinued — this price source is defunct.** Travelpayouts
+> permanently closed Hotellook on **20 Oct 2025**. The 2026-08-02 live validation
+> (`scripts/validate_hotellook.py "Amrita Hotel Liepaja"`) confirmed that every
+> endpoint under `https://engine.hotellook.com/api/v2/` (lookup, search/start,
+> search/getResult, and the host root) now returns an **nginx 404** — so the
+> `hotellook` source can never return a rate. The code is kept only as the worked
+> reference implementation behind the `PriceSource` interface. A replacement
+> aggregator must be selected before §9 can ship; the options and the (small)
+> interface impact are scoped in [`docs/price-source-migration.md`](docs/price-source-migration.md).
 
 ## Alerting — Klaviyo (§10)
 
@@ -153,6 +155,7 @@ KLAVIYO_API_KEY=pk_... python scripts/bootstrap_klaviyo_metrics.py you@example.c
 
 5. **Launch narrow** — one traveler niche, first-booking-free funnel.
 
-✅ Step 1 (skeleton), Step 2 (ingestion), Step 3 (real price source, pending live
-validation), and Step 4 (alerting: backend events done; flows documented as
-deployable config) are in.
+✅ Step 1 (skeleton), Step 2 (ingestion), and Step 4 (alerting: backend events
+done; flows documented as deployable config) are in. ⚠️ Step 3 (real price source)
+is **blocked**: it was built against Hotellook, which was shut down 20 Oct 2025 —
+a replacement aggregator must be picked ([`docs/price-source-migration.md`](docs/price-source-migration.md)).
