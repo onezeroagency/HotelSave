@@ -13,6 +13,8 @@ def get_price_source() -> PriceSource:
     name = settings.price_source.lower()
     if name == "mock":
         return MockPriceSource()
-    # if name == "hotellook":
-    #     return HotellookPriceSource(...)  # §9 — Travelpayouts / Hotellook
+    if name == "hotellook":
+        from .hotellook import HotellookPriceSource  # §9 — Travelpayouts / Hotellook
+
+        return HotellookPriceSource()
     raise ValueError(f"Unknown PRICE_SOURCE: {settings.price_source!r}")

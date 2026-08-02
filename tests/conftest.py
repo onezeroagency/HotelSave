@@ -6,8 +6,14 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
 from app import models  # noqa: F401  (register tables on metadata)
+from app.config import settings
 from app.database import Base, get_db
 from app.main import app
+
+# Tests always use the in-memory mock price source and parser, regardless of any
+# local .env (which may point PRICE_SOURCE at the live Hotellook API).
+settings.price_source = "mock"
+settings.parser = "mock"
 
 
 @pytest.fixture()

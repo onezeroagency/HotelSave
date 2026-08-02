@@ -42,7 +42,7 @@ directly — it emits events; Klaviyo flows own all copy, timing, and lifecycle.
 | `app/services/parser/` | **one LLM call → structured booking** (§6a) — `mock` for dev/tests, Claude in prod, swappable |
 | `app/services/email_inbound/` | inbound-email provider adapters (Postmark today), behind a common shape (§5) |
 | `app/services/ingestion.py` | email → parse → resolve hotel_id → job, with the §6 post-parse guards |
-| `app/services/price_source/` | **the aggregator lives behind this interface** (§9) — `mock` today, real source is a one-line swap |
+| `app/services/price_source/` | **the aggregator lives behind this interface** (§9) — `mock`, or `hotellook` (Travelpayouts) via `PRICE_SOURCE` |
 | `app/services/matching.py` | like-for-like rules + drop floor `max(€10, 3%)` (§7) |
 | `app/services/klaviyo.py` | the events the backend emits (§10) |
 | `app/scheduler/worker.py` | deadline-clocked polling loop (§8) |
@@ -119,11 +119,28 @@ curl -s localhost:8000/inbound/postmark -H 'content-type: application/json' -d '
 # → {"status": "monitoring", "job_id": 1}
 ```
 
+## Price source — Travelpayouts / Hotellook (§9)
+
+Set `PRICE_SOURCE=hotellook` with a `TRAVELPAYOUTS_TOKEN` + `TRAVELPAYOUTS_MARKER`
+to run against the real aggregator. `resolve_hotel` uses the `lookup.json`
+endpoint; `check` runs the async signed search (`search/start` → poll
+`search/getResult`) and maps each room offer to a like-for-like candidate,
+carrying the OTA, total, free-cancellation flag, and the marker-tagged rebook
+deep-link. The md5 request signature is pinned to Travelpayouts' documented test
+vector in `tests/test_hotellook.py`.
+
+> **Live validation still pending.** The request shapes are built from the API
+> docs but haven't been run against the live service (this build environment's
+> network policy blocks `engine.hotellook.com`). First live run should confirm
+> the search hotel-id param, the poll-until-complete termination, and board-type
+> derivation (the API exposes only a breakfast boolean, so HB/FB aren't
+> distinguished). Run it locally, or from an environment whose network policy
+> allows `engine.hotellook.com`.
+
 ## What's next (spec §13)
 
-3. **Monitoring** — real aggregator behind `PriceSource`; watch it detect a real drop.
 4. **Alerting** — wire the four Klaviyo events into Flows 1 (Price Drop) & 2 (Deadline Guard).
 5. **Launch narrow** — one traveler niche, first-booking-free funnel.
 
-✅ Step 1 (skeleton) and Step 2 (ingestion) are in. Ingestion runs on the mock
-parser + mock price source; step 3 swaps in the real aggregator.
+✅ Step 1 (skeleton), Step 2 (ingestion), and Step 3 (real price source, pending
+live validation) are in.

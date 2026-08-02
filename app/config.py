@@ -26,6 +26,11 @@ class Settings(BaseSettings):
     drop_floor_pct: float = 0.03
     deadline_alert_hours: int = 48
 
+    # Travelpayouts / Hotellook (§9) — Data API token + affiliate marker
+    travelpayouts_token: str | None = None
+    travelpayouts_marker: str | None = None
+    travelpayouts_customer_ip: str | None = None  # optional; region-prices the search
+
     # Parse (§6a): booking parser + LLM model
     parser: str = "mock"  # mock | claude
     anthropic_api_key: str | None = None
