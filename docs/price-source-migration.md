@@ -3,6 +3,14 @@
 **Status:** planning only. No implementation in this document — it exists to pick a
 replacement aggregator and size the work.
 
+**Decision (2026-08-02):** proceed with the **affiliate model** via the
+**Booking.com Demand API** — it preserves §9's economics (commission-on-rebook,
+no per-call fees) *and* exposes the availability data the detection loop needs.
+Concrete onboarding + integration path in [§8](#8-chosen-path-affiliate-via-bookingcom-demand-api).
+No adapter code will be written until it can be validated against Booking's
+sandbox with a real key — writing an integration from docs alone is exactly what
+produced the dead Hotellook code.
+
 **Author's note:** commercial terms, onboarding time, and exact field names below
 are from public docs and provider marketing as of 2026-08; confirm each with the
 provider before committing. The *technical* findings about Hotellook are verified
@@ -137,12 +145,74 @@ source defunct (done) rather than deleting, so the mapping logic stays legible.
 
 ## 7. Open decisions for the team
 
-1. **Affiliate (A) or booking (B)?** This is the business call that picks the
-   provider and decides whether "rebook" stays a redirect or becomes an in-app flow.
-2. Is **single-OTA** coverage (Booking) acceptable given we monitor one known
-   property, or is cross-OTA breadth a hard requirement?
-3. Appetite for **merchant/agent obligations** (payments, cancellations, support)
-   that model B brings?
+1. ~~**Affiliate (A) or booking (B)?**~~ **Decided (2026-08-02): affiliate (A).**
+   Rebook stays a commission deep-link; no merchant/agent obligations.
+2. **Single-OTA coverage accepted.** We monitor one already-booked property, so a
+   strong Booking.com rate for that property/dates is enough for a like-for-like
+   refundable comparison. Cross-OTA breadth is a nice-to-have, not a blocker.
+3. N/A under model A — no payments/cancellations/support burden.
+
+## 8. Chosen path: affiliate via Booking.com Demand API
+
+**Why this clears the affiliate model's data problem.** Affiliate programs usually
+hand you deep-links, not a pollable price API. Booking.com's **Demand API** is the
+exception: approved **Affiliate Partners** get both a **check-availability** endpoint
+(structured rates for detection, §7/§8) *and* affiliate attribution on the rebook
+link — the same combination Hotellook uniquely provided. Booking.com charges **no
+API/commission fee**, requires **no minimum volume and no advance**, and approval is
+reportedly much faster than enterprise/GDS onboarding.
+
+### Onboarding (the critical path — start now, it's the long pole)
+
+1. Apply to the **Booking.com Affiliate Partner Program** → become a *Managed
+   Affiliate Partner*.
+2. Get **Partner Centre** access → generate an **API key/token** and your
+   **`X-Affiliate-Id`**.
+3. That single credential pair works for **both** sandbox and production.
+
+Only the team can do this (it needs OneZero's business details); no code unblocks it.
+
+### API facts (from Booking.com docs — to be re-verified against the sandbox)
+
+| Thing | Value |
+|---|---|
+| Sandbox base URL | `https://demandapi-sandbox.booking.com/3.1` |
+| Production base URL | `https://demandapi.booking.com/3.1` |
+| Auth headers | `X-Affiliate-Id: <id>` + `Authorization: Bearer <token>` |
+| Transport | REST, JSON, **POST** requests |
+| Sandbox behaviour | Same creds as prod; simulates search/booking/payment/cancellation with **no real charges** — safe to validate against |
+| Detection endpoint | Accommodations **availability** (e.g. bulk/check-availability) |
+| Lookup | Accommodations search/details (name + city → Booking property id) |
+
+The sandbox is what lets us **validate before prod** — the safeguard the Hotellook
+integration never had.
+
+### Interface impact (a new adapter behind the existing `PriceSource`)
+
+- **New module** `app/services/price_source/booking.py` implementing `PriceSource`;
+  select via `PRICE_SOURCE=booking`. Add settings `booking_api_key`,
+  `booking_affiliate_id`, `booking_env=sandbox|production` (mirror the existing
+  `travelpayouts_*` block in `app/config.py` + `.env.example`).
+- **Auth:** replace Hotellook's md5 `_signature` with the two headers above — much
+  simpler; no signature vector to pin.
+- **`resolve_hotel`:** Booking accommodations search by name + city → `HotelMatch`
+  (keep the single-match 0.95 / multi 0.5 confidence rule, §6b).
+- **`check`:** POST availability for property + dates + occupancy → map rooms to
+  `RateCandidate`. `refundable` ← cancellation-policy field; `board_type` ← meal
+  plan (RO/BB/HB/FB — *better* than Hotellook's breakfast-only bool); `deep_link` ←
+  the affiliate-attributed property URL.
+- **Validate every field name against the sandbox** before trusting it. This is the
+  step that was skipped for Hotellook.
+- **Tests:** reuse `tests/test_hotellook.py` as the template — mock the client,
+  assert the room→candidate mapping; no signature test needed.
+
+### Build sequence once credentials exist
+
+1. Scaffold `booking.py` + config + `.env.example` (auth/base URLs are known facts).
+2. Point at the **sandbox**, validate `resolve_hotel` + `check` end-to-end with a
+   real property (the "Amrita Hotel Liepaja" run, redone against Booking).
+3. Confirm the like-for-like path (§7) and the scheduler (§8) fire on a simulated
+   drop; then flip `booking_env` to production.
 
 ---
 
