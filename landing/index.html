@@ -1,424 +1,122 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>MyRoomWatch</title>
-<meta name="description" content="MyRoomWatch watches your refundable hotel booking, alerts you when the same stay drops in price, and guards your free-cancellation deadline so you can always rebook in time.">
+<title>MyRoomWatch — Stop overpaying for hotels you've already booked</title>
+<meta name="description" content="Book refundable. We watch your exact room for a cheaper like-for-like rate and guard your free-cancellation deadline. First booking free, then €15/month.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=Instrument+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
-<style>
-  :root {
-    --bg: #f4f7f5;
-    --surface: #ffffff;
-    --surface-2: #eaf1ee;
-    --border: #d8e3de;
-    --ink: #16242b;
-    --muted: #566a6f;
-    --primary: #0d6e66;
-    --primary-ink: #0a544d;
-    --accent: #b3730f;          /* deadline amber — used sparingly */
-    --accent-soft: #f6ead3;
-    --positive: #0b7a5e;        /* the saving */
-    --shadow: 0 1px 2px rgba(16,36,43,.05), 0 12px 28px -12px rgba(16,36,43,.18);
-    --radius: 14px;
-    --maxw: 1080px;
-  }
-  :root:not([data-theme="light"]) {
-    @media (prefers-color-scheme: dark) {
-      --bg: #0c161b;
-      --surface: #13222a;
-      --surface-2: #0f1d23;
-      --border: #26373f;
-      --ink: #e8f0f0;
-      --muted: #9fb3b7;
-      --primary: #34a99b;
-      --primary-ink: #7fd2c6;
-      --accent: #e2ad55;
-      --accent-soft: #2a2418;
-      --positive: #45c39b;
-      --shadow: 0 1px 2px rgba(0,0,0,.3), 0 18px 40px -16px rgba(0,0,0,.6);
-    }
-  }
-  :root[data-theme="dark"] {
-    --bg: #0c161b;
-    --surface: #13222a;
-    --surface-2: #0f1d23;
-    --border: #26373f;
-    --ink: #e8f0f0;
-    --muted: #9fb3b7;
-    --primary: #34a99b;
-    --primary-ink: #7fd2c6;
-    --accent: #e2ad55;
-    --accent-soft: #2a2418;
-    --positive: #45c39b;
-    --shadow: 0 1px 2px rgba(0,0,0,.3), 0 18px 40px -16px rgba(0,0,0,.6);
-  }
-
-  * { box-sizing: border-box; }
-  html { -webkit-text-size-adjust: 100%; }
-  body {
-    margin: 0;
-    background: var(--bg);
-    color: var(--ink);
-    font-family: "Instrument Sans", system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
-    font-size: 17px;
-    line-height: 1.6;
-    -webkit-font-smoothing: antialiased;
-  }
-  h1, h2, h3 {
-    font-family: "Bricolage Grotesque", "Instrument Sans", sans-serif;
-    font-weight: 700;
-    line-height: 1.08;
-    letter-spacing: -0.015em;
-    text-wrap: balance;
-    margin: 0;
-  }
-  p { margin: 0; }
-  a { color: var(--primary-ink); text-decoration-thickness: 1px; text-underline-offset: 2px; }
-  .wrap { max-width: var(--maxw); margin: 0 auto; padding: 0 24px; }
-  .eyebrow {
-    font-family: "IBM Plex Mono", ui-monospace, monospace;
-    font-size: .72rem; font-weight: 500;
-    letter-spacing: .16em; text-transform: uppercase;
-    color: var(--primary-ink);
-  }
-  .mono { font-family: "IBM Plex Mono", ui-monospace, monospace; font-variant-numeric: tabular-nums; }
-
-  /* ---- top bar ---- */
-  header.nav {
-    position: sticky; top: 0; z-index: 10;
-    background: color-mix(in srgb, var(--bg) 86%, transparent);
-    backdrop-filter: blur(8px);
-    border-bottom: 1px solid var(--border);
-  }
-  .nav .wrap { display: flex; align-items: center; justify-content: space-between; height: 64px; gap: 16px; }
-  .brand { display: flex; align-items: center; gap: 10px; font-family: "Bricolage Grotesque", sans-serif; font-weight: 700; font-size: 1.14rem; letter-spacing: -.02em; color: var(--ink); text-decoration: none; }
-  .brand .dot { width: 12px; height: 12px; border-radius: 50%; background: var(--primary); box-shadow: 0 0 0 4px color-mix(in srgb, var(--primary) 20%, transparent); }
-  .btn {
-    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
-    font: inherit; font-weight: 600; cursor: pointer;
-    padding: 11px 18px; border-radius: 10px; border: 1px solid transparent;
-    text-decoration: none; transition: transform .12s ease, background .12s ease, border-color .12s ease;
-  }
-  .btn-primary { background: var(--primary); color: #fff; }
-  .btn-primary:hover { transform: translateY(-1px); background: color-mix(in srgb, var(--primary) 88%, #000); }
-  .btn-ghost { border-color: var(--border); color: var(--ink); background: var(--surface); }
-  .btn-ghost:hover { border-color: var(--primary); }
-  :root[data-theme="dark"] .btn-primary, :root:not([data-theme="light"]) .btn-primary { color: #06201d; }
-
-  /* ---- hero ---- */
-  .hero { padding: 76px 0 48px; }
-  .hero-grid { display: grid; grid-template-columns: 1.05fr .95fr; gap: 56px; align-items: center; }
-  .hero h1 { font-size: clamp(2.3rem, 4.6vw, 3.5rem); margin-top: 18px; }
-  .hero .lede { margin-top: 20px; font-size: 1.16rem; color: var(--muted); max-width: 34ch; }
-  .hero-cta { margin-top: 30px; display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
-  .hero-note { margin-top: 14px; font-size: .92rem; color: var(--muted); }
-
-  /* ---- booking card ---- */
-  .card {
-    background: var(--surface); border: 1px solid var(--border);
-    border-radius: var(--radius); box-shadow: var(--shadow);
-  }
-  .booking { overflow: hidden; }
-  .booking .head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; padding: 20px 22px 14px; }
-  .booking .hotel { font-family: "Bricolage Grotesque", sans-serif; font-weight: 700; font-size: 1.2rem; }
-  .booking .sub { color: var(--muted); font-size: .95rem; margin-top: 2px; }
-  .chip {
-    font-family: "IBM Plex Mono", monospace; font-size: .68rem; font-weight: 600;
-    letter-spacing: .06em; text-transform: uppercase;
-    padding: 5px 9px; border-radius: 999px;
-    background: color-mix(in srgb, var(--primary) 12%, transparent);
-    color: var(--primary-ink); white-space: nowrap;
-  }
-  .booking .rule { height: 1px; background: var(--border); margin: 0 22px; }
-  .prices { display: flex; align-items: baseline; gap: 14px; padding: 18px 22px 6px; }
-  .prices .was { font-family: "IBM Plex Mono", monospace; color: var(--muted); text-decoration: line-through; font-size: 1.05rem; }
-  .prices .now { font-family: "IBM Plex Mono", monospace; font-weight: 600; font-size: 2rem; letter-spacing: -.01em; }
-  .prices .save {
-    margin-left: auto; font-family: "IBM Plex Mono", monospace; font-weight: 600; font-size: .82rem;
-    color: var(--positive); background: color-mix(in srgb, var(--positive) 13%, transparent);
-    padding: 6px 10px; border-radius: 999px;
-  }
-  .deadline {
-    margin: 12px 22px 22px; padding: 14px 16px; border-radius: 12px;
-    background: var(--accent-soft); border: 1px solid color-mix(in srgb, var(--accent) 35%, var(--border));
-    display: flex; align-items: center; gap: 12px;
-  }
-  .deadline .clock { color: var(--accent); flex: 0 0 auto; }
-  .deadline .label { font-size: .82rem; color: var(--muted); }
-  .deadline .time { font-family: "IBM Plex Mono", monospace; font-weight: 600; font-size: 1.14rem; color: var(--ink); font-variant-numeric: tabular-nums; }
-  .booking .foot { padding: 0 22px 22px; }
-  .booking .foot .btn { width: 100%; }
-  .stub { position: absolute; }
-
-  /* ---- sections ---- */
-  section { padding: 60px 0; }
-  .section-head { max-width: 42ch; margin-bottom: 40px; }
-  .section-head h2 { font-size: clamp(1.7rem, 3vw, 2.3rem); margin-top: 12px; }
-  .section-head p { margin-top: 14px; color: var(--muted); font-size: 1.08rem; }
-
-  .steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
-  .step { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; }
-  .step .n { font-family: "IBM Plex Mono", monospace; font-size: .8rem; font-weight: 600; color: var(--primary-ink); }
-  .step h3 { font-size: 1.18rem; margin: 12px 0 8px; }
-  .step p { color: var(--muted); font-size: .98rem; }
-
-  .wedge { background: var(--surface-2); border-radius: 20px; padding: 44px; display: grid; grid-template-columns: 1fr 1fr; gap: 40px; align-items: center; }
-  .wedge h2 { font-size: clamp(1.6rem, 2.8vw, 2.15rem); }
-  .wedge p { margin-top: 14px; color: var(--muted); }
-  .wedge ul { margin: 20px 0 0; padding: 0; list-style: none; display: grid; gap: 12px; }
-  .wedge li { display: flex; gap: 12px; align-items: flex-start; font-size: 1.02rem; }
-  .wedge li svg { flex: 0 0 auto; color: var(--primary); margin-top: 3px; }
-
-  .ethics { display: grid; grid-template-columns: repeat(3,1fr); gap: 20px; }
-  .ethics .item h3 { font-size: 1.06rem; margin-bottom: 8px; }
-  .ethics .item p { color: var(--muted); font-size: .96rem; }
-  .ethics .item .k { font-family: "IBM Plex Mono", monospace; font-size: .72rem; letter-spacing: .1em; text-transform: uppercase; color: var(--accent); }
-
-  /* ---- waitlist ---- */
-  .cta-band { text-align: center; padding: 72px 0; }
-  .cta-band h2 { font-size: clamp(1.9rem, 3.4vw, 2.6rem); }
-  .cta-band p { margin: 16px auto 0; color: var(--muted); max-width: 46ch; }
-  form.waitlist { margin: 28px auto 0; max-width: 460px; display: flex; gap: 10px; }
-  form.waitlist input {
-    flex: 1; font: inherit; padding: 13px 15px; border-radius: 10px;
-    border: 1px solid var(--border); background: var(--surface); color: var(--ink);
-  }
-  form.waitlist input:focus-visible { outline: 2px solid var(--primary); outline-offset: 1px; border-color: var(--primary); }
-  .waitlist-done { margin: 22px auto 0; color: var(--positive); font-weight: 600; }
-  .cta-fine { margin-top: 14px; font-size: .86rem; color: var(--muted); }
-
-  /* ---- footer / legal ---- */
-  footer { border-top: 1px solid var(--border); background: var(--surface); padding: 56px 0 40px; }
-  .foot-grid { display: grid; grid-template-columns: 1.2fr 1fr 1fr; gap: 40px; }
-  footer h4 { font-family: "IBM Plex Mono", monospace; font-size: .72rem; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); margin: 0 0 14px; font-weight: 600; }
-  .legal { font-size: .92rem; color: var(--muted); }
-  .legal h3 { font-size: 1rem; margin: 22px 0 6px; color: var(--ink); }
-  .legal p { margin-top: 6px; }
-  .foot-brand p { color: var(--muted); font-size: .94rem; margin-top: 12px; max-width: 34ch; }
-  .copyright { margin-top: 40px; padding-top: 20px; border-top: 1px solid var(--border); font-size: .86rem; color: var(--muted); display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
-
-  @media (max-width: 860px) {
-    .hero-grid, .wedge { grid-template-columns: 1fr; }
-    .hero { padding: 48px 0 32px; }
-    .hero .lede { max-width: none; }
-    .steps, .ethics, .foot-grid { grid-template-columns: 1fr; }
-    .wedge { padding: 30px; }
-  }
-  @media (prefers-reduced-motion: reduce) {
-    * { transition: none !important; animation: none !important; }
-  }
-</style>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Public+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
 </head>
 <body>
-<header class="nav">
+
+<header class="site-header">
   <div class="wrap">
-    <a class="brand" href="#top"><span class="dot" aria-hidden="true"></span>MyRoomWatch</a>
-    <a class="btn btn-ghost" href="#waitlist-cta">Join the waitlist</a>
+    <a class="logo" href="#"><span class="logo-mark"></span>MyRoomWatch</a>
+    <nav class="nav">
+      <a href="#how">How it works</a>
+      <a href="#pricing">Pricing</a>
+      <a class="btn btn-dark" href="#pricing">Start free</a>
+    </nav>
   </div>
 </header>
 
-<main id="top">
-  <!-- ============ HERO ============ -->
-  <section class="hero">
-    <div class="wrap hero-grid">
-      <div>
-        <span class="eyebrow">Refundable-booking watch</span>
-        <h1>The price you already paid just dropped. We catch it in time.</h1>
-        <p class="lede">MyRoomWatch watches your refundable hotel booking, tells you the moment the same stay gets cheaper, and guards your free-cancellation deadline — so you can rebook and keep the difference.</p>
-        <div class="hero-cta">
-          <a class="btn btn-primary" href="#waitlist-cta">Watch my booking</a>
-          <a class="btn btn-ghost" href="#how">See how it works</a>
-        </div>
-        <p class="hero-note">Only like-for-like refundable rates. No spam. Cancel monitoring anytime.</p>
+<main>
+  <section class="wrap hero">
+    <div>
+      <span class="pill">For refundable hotel bookings</span>
+      <h1>Stop overpaying for hotels you've already booked.</h1>
+      <p class="sub">Book refundable. We watch your exact room for a cheaper like-for-like rate — and we guard your free-cancellation deadline, so the good news never arrives too late.</p>
+      <div class="hero-cta">
+        <a class="btn btn-primary" href="#pricing">Watch my first booking free</a>
+        <span class="note">Then €15/month.<br>Cancel anytime.</span>
       </div>
-
-      <!-- monitored-booking card: the thesis, made concrete -->
-      <div class="card booking" role="img" aria-label="Example monitored booking: Amrita Hotel in Liepāja, dropped from 248 to 212 euros, with 3 days left to cancel for free.">
-        <div class="head">
-          <div>
-            <div class="hotel">Amrita Hotel</div>
-            <div class="sub">Liepāja, Latvia · 12–14 Sep · 2 adults</div>
-          </div>
-          <span class="chip">Refundable</span>
-        </div>
-        <div class="rule"></div>
-        <div class="prices">
-          <span class="was">€248</span>
-          <span class="now">€212</span>
-          <span class="save">▼ save €36</span>
-        </div>
-        <div class="deadline">
-          <svg class="clock" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
-          <div>
-            <div class="label">Free cancellation ends in</div>
-            <div class="time" id="countdown">03d 04h 12m 00s</div>
-          </div>
-        </div>
-        <div class="foot">
-          <a class="btn btn-primary" href="#waitlist-cta">Rebook &amp; save €36</a>
-        </div>
+      <div class="hero-stats">
+        <div class="stat"><b class="green num">€60–120</b><span>saved per rebook,<br>on average</span></div>
+        <div class="stat"><b class="num">4×/day</b><span>checks in the final<br>72 hours</span></div>
+        <div class="stat"><b class="num">0</b><span>card details we<br>ever touch</span></div>
       </div>
     </div>
+
+    <aside class="alert-card">
+      <div class="eyebrow">A real alert</div>
+      <div class="hotel">Hotel Artemide, Rome<br><small>12–15 Sep · Superior Double, breakfast</small></div>
+      <hr>
+      <div class="row num"><span>You paid</span><span><s>€642</s></span></div>
+      <div class="row num"><span>New rate, same room</span><span class="new">€570</span></div>
+      <div class="eyebrow" style="margin-top:24px">You save</div>
+      <div class="save num">€72</div>
+      <div class="warn"><strong>Book new first, then cancel.</strong> Never cancel first, or you could lose your room.</div>
+    </aside>
   </section>
 
-  <!-- ============ HOW IT WORKS ============ -->
-  <section id="how">
+  <section class="steps-section" id="how">
     <div class="wrap">
-      <div class="section-head">
-        <span class="eyebrow">How it works</span>
-        <h2>Three steps, then we do the watching.</h2>
-        <p>You book the way you always do. MyRoomWatch takes over the tedious part — checking, and remembering the deadline.</p>
-      </div>
+      <h2>Three steps. Then nothing.</h2>
       <div class="steps">
         <div class="step">
-          <div class="n">01 — Connect</div>
-          <h3>Forward your confirmation</h3>
-          <p>Send your booking email to MyRoomWatch, or paste the details. We identify the exact hotel, dates, room and occupancy.</p>
+          <div class="n">1</div>
+          <div><h3>Forward your confirmation</h3>
+          <p>One email to save@myroomwatch.com. We read the hotel, room, dates and your cancellation deadline.</p></div>
         </div>
         <div class="step">
-          <div class="n">02 — Watch</div>
-          <h3>We re-check the same stay</h3>
-          <p>We compare only like-for-like refundable rates for your booking, filtering out currency noise and trivial wiggle.</p>
+          <div class="n">2</div>
+          <div><h3>We watch the exact room</h3>
+          <p>Same hotel, same dates, same board and occupancy — and it must still be refundable. Nothing else counts as a drop.</p></div>
         </div>
         <div class="step">
-          <div class="n">03 — Act in time</div>
-          <h3>Alert before the deadline</h3>
-          <p>Find a real drop and we email you — with time to rebook cheaper and cancel the original inside its free window.</p>
+          <div class="n">3</div>
+          <div><h3>You rebook and pocket it</h3>
+          <p>We send the lower rate and the safe order to do it in. You book, you cancel, you keep the difference.</p></div>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- ============ DEADLINE WEDGE ============ -->
-  <section>
-    <div class="wrap">
-      <div class="wedge">
-        <div>
-          <span class="eyebrow">Why we're different</span>
-          <h2>A saving is only real if you can still act on it.</h2>
-          <p>Every free tool can tell you a price fell. None of them know when <em>your</em> cancellation window closes. That's the part that actually saves money — and the part we guard.</p>
-        </div>
-        <ul>
-          <li><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M20 6L9 17l-5-5"/></svg><span>We clock everything against your <strong>cancellation deadline</strong>, not the check-in date.</span></li>
-          <li><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M20 6L9 17l-5-5"/></svg><span>As the deadline nears, we check more often — so a late drop doesn't slip past.</span></li>
-          <li><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M20 6L9 17l-5-5"/></svg><span>If no drop comes and the window is about to close, we tell you that too.</span></li>
-        </ul>
+  <section class="wrap deadline">
+    <div>
+      <span class="pill pill-amber">The part free tools miss</span>
+      <h2>We guard your free-cancellation deadline.</h2>
+      <p class="body">A price drop is worthless if it lands after you can still cancel for free. We clock every check against your deadline — daily at first, every six hours in the final stretch — and if nothing drops, we tell you that too.</p>
+    </div>
+    <div class="cadence">
+      <h3>Check cadence</h3>
+      <div class="rows">
+        <div class="row"><span class="when">More than 14 days out</span><span class="bar"><i style="width:18%"></i></span><span class="rate">1× a day</span></div>
+        <div class="row"><span class="when">3–14 days out</span><span class="bar"><i style="width:40%"></i></span><span class="rate">2× a day</span></div>
+        <div class="row"><span class="when">Final 72 hours</span><span class="bar"><i style="width:100%"></i></span><span class="rate">every 6 hours</span></div>
       </div>
     </div>
   </section>
 
-  <!-- ============ ETHICS ============ -->
-  <section>
-    <div class="wrap">
-      <div class="section-head">
-        <span class="eyebrow">The rules we hold</span>
-        <h2>We only ever show you a genuinely better version of what you booked.</h2>
-      </div>
-      <div class="ethics">
-        <div class="item">
-          <div class="k">Like-for-like</div>
-          <h3>Same room, same terms</h3>
-          <p>We match your hotel, dates, occupancy and board — never a downgrade dressed up as a deal.</p>
-        </div>
-        <div class="item">
-          <div class="k">Refundable only</div>
-          <h3>Flexibility stays intact</h3>
-          <p>We compare refundable rate against refundable rate, so you never trade away your ability to cancel.</p>
-        </div>
-        <div class="item">
-          <div class="k">Worth acting on</div>
-          <h3>A real margin, not noise</h3>
-          <p>An alert only fires when the drop clears a meaningful floor — no €2-wiggle spam that wastes your time.</p>
+  <section class="wrap cta-section" id="pricing">
+    <div class="cta">
+      <div>
+        <h2>Your first booking is on us.</h2>
+        <p class="body">Forward one refundable confirmation and see what we find. Keep watching every booking after that for €15/month — cancel any time, no notice.</p>
+        <div class="trust">
+          <span>✓ &nbsp;We never touch your card</span>
+          <span>✓ &nbsp;We never change your booking</span>
+          <span>✓ &nbsp;You rebook yourself</span>
         </div>
       </div>
-    </div>
-  </section>
-
-  <!-- ============ WAITLIST ============ -->
-  <section class="cta-band" id="waitlist-cta">
-    <div class="wrap">
-      <span class="eyebrow">Early access</span>
-      <h2>Put your next booking on watch.</h2>
-      <p>We're opening monitoring to a first group of travelers. Join the waitlist and we'll email you when your booking can go on watch.</p>
-      <!-- NOTE: wire this form's action to your backend or a form service (e.g. Formspree) to actually capture emails. -->
-      <form class="waitlist" id="waitlist" action="#" method="post" novalidate>
-        <input type="email" name="email" required autocomplete="email" placeholder="you@example.com" aria-label="Email address">
-        <button class="btn btn-primary" type="submit">Join the waitlist</button>
-      </form>
-      <p class="waitlist-done" id="waitlist-done" hidden>Thanks — you're on the list. We'll be in touch when monitoring opens.</p>
-      <p class="cta-fine">No spam, ever. One email when we launch, then only alerts for bookings you ask us to watch.</p>
+      <div class="price-box">
+        <div class="amount num">€15</div>
+        <div class="per">per month, all bookings</div>
+        <a class="btn btn-primary btn-block" href="#">Start free</a>
+      </div>
     </div>
   </section>
 </main>
 
-<!-- ============ FOOTER + LEGAL (required for affiliate applications) ============ -->
-<footer>
+<footer class="site-footer">
   <div class="wrap">
-    <div class="foot-grid">
-      <div class="foot-brand">
-        <a class="brand" href="#top"><span class="dot" aria-hidden="true"></span>MyRoomWatch</a>
-        <p>We watch your booking and guard your deadline, so a saving never slips past you.</p>
-        <!-- Replace with your registered legal entity + contact once confirmed. -->
-        <p class="legal">Operated by OneZero · Latvia, EU · <a href="mailto:hello@myroomwatch.com">hello@myroomwatch.com</a></p>
-      </div>
-
-      <div class="legal" id="affiliate-disclosure">
-        <h4>Affiliate disclosure</h4>
-        <p>MyRoomWatch participates in affiliate programs with hotel booking providers. When you rebook through a link in one of our alerts, we may earn a commission — <strong>at no extra cost to you</strong>.</p>
-        <p>This never influences which rate we show you. We only ever surface a like-for-like refundable rate that genuinely beats your original booking; commission is earned on the rebooking, not on your attention.</p>
-      </div>
-
-      <div class="legal" id="privacy">
-        <h4>Privacy</h4>
-        <p>We store only what we need to watch your booking — your email and the booking details you provide. We never sell your data, and you can delete your account and data at any time.</p>
-        <p>MyRoomWatch is operated under EU GDPR. <!-- Link your full policy page here --><a href="#privacy">Full privacy policy →</a></p>
-      </div>
-    </div>
-    <div class="copyright">
-      <span>© <span id="year">2026</span> MyRoomWatch — OneZero. All rights reserved.</span>
-      <span class="mono">Made for travelers who book refundable.</span>
-    </div>
+    <a class="logo" href="#"><span class="logo-mark"></span>MyRoomWatch</a>
+    <p>© 2026 MyRoomWatch · We never touch your card or your booking — you always rebook yourself.</p>
   </div>
 </footer>
 
-<script>
-  // Live countdown to the free-cancellation deadline — the product's core clock.
-  (function () {
-    var el = document.getElementById("countdown");
-    if (!el) return;
-    var deadline = Date.now() + (3 * 24 * 60 * 60 + 4 * 3600 + 12 * 60) * 1000;
-    function pad(n) { return String(n).padStart(2, "0"); }
-    function tick() {
-      var ms = deadline - Date.now();
-      if (ms < 0) ms = 0;
-      var s = Math.floor(ms / 1000);
-      var d = Math.floor(s / 86400); s -= d * 86400;
-      var h = Math.floor(s / 3600);  s -= h * 3600;
-      var m = Math.floor(s / 60);    s -= m * 60;
-      el.textContent = pad(d) + "d " + pad(h) + "h " + pad(m) + "m " + pad(s) + "s";
-    }
-    tick();
-    var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    if (!reduce) setInterval(tick, 1000);
-  })();
-
-  // Waitlist: front-end acknowledgement. Wire the form action to real capture before launch.
-  (function () {
-    var form = document.getElementById("waitlist");
-    var done = document.getElementById("waitlist-done");
-    if (!form) return;
-    form.addEventListener("submit", function (e) {
-      e.preventDefault();
-      if (!form.email.value || form.email.validity.typeMismatch) { form.email.focus(); return; }
-      form.hidden = true;
-      done.hidden = false;
-    });
-  })();
-
-  document.getElementById("year").textContent = String(new Date().getFullYear());
-</script>
 </body>
 </html>
