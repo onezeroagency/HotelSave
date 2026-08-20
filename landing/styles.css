@@ -1,0 +1,125 @@
+/* MyRoomWatch landing — Harbour direction */
+:root{
+  --ink:#0D2137;--bg:#F4F6F7;--surface:#FFFFFF;--line:#E1E5E9;--line-strong:#C7CDD4;
+  --muted:#5B6672;--accent:#00A870;--accent-ink:#0A7A52;--accent-soft:#E4F5EE;--on-accent:#FFFFFF;
+  --amber:#C98A16;--amber-ink:#8A5A08;--amber-soft:#FDF3E0;--amber-line:#F0DDB8;--amber-on-dark:#F0C069;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Public Sans",system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+a{color:var(--accent-ink);text-decoration:none}
+a:hover{color:var(--ink)}
+h1,h2,h3{font-family:Manrope,sans-serif;margin:0}
+.wrap{max-width:1240px;margin:0 auto;padding:0 56px}
+.num{font-variant-numeric:tabular-nums}
+
+/* Header */
+.site-header{border-bottom:1px solid var(--line);background:var(--bg)}
+.site-header .wrap{display:flex;align-items:center;justify-content:space-between;padding-top:22px;padding-bottom:22px}
+.logo{display:flex;align-items:center;gap:9px;font:800 16px/1 Manrope,sans-serif;letter-spacing:-.025em;color:var(--ink)}
+.logo-mark{width:22px;height:22px;border-radius:7px;background:var(--ink);position:relative;flex:none}
+.logo-mark::after{content:"";position:absolute;left:6px;top:6px;width:10px;height:10px;border-radius:50%;border:2px solid var(--accent)}
+.nav{display:flex;align-items:center;gap:26px}
+.nav a{font:500 14px/1 "Public Sans",sans-serif;color:var(--muted)}
+.nav a:hover{color:var(--ink)}
+
+/* Buttons */
+.btn{display:inline-block;border:0;border-radius:14px;font:700 16.5px/1 Manrope,sans-serif;cursor:pointer;text-align:center}
+.btn-primary{padding:18px 30px;background:var(--accent);color:var(--on-accent);box-shadow:0 10px 26px -12px var(--accent)}
+.btn-primary:hover{background:var(--accent-ink);color:var(--on-accent)}
+.btn-dark{padding:11px 20px;border-radius:11px;background:var(--ink);color:#fff;font-size:14px}
+.btn-dark:hover{color:#fff;opacity:.9}
+.btn-block{display:block;width:100%}
+
+/* Hero */
+.hero{display:grid;grid-template-columns:1.08fr .92fr;gap:56px;align-items:center;padding:76px 0 64px}
+.pill{display:inline-flex;align-items:center;padding:7px 14px;border-radius:99px;background:var(--accent-soft);font:600 12px/1.3 "Public Sans",sans-serif;color:var(--accent-ink);white-space:nowrap}
+.pill-amber{background:var(--amber-soft);color:var(--amber-ink)}
+.hero h1{font-size:60px;line-height:1.04;font-weight:800;letter-spacing:-.042em;margin-top:20px;text-wrap:balance}
+.hero .sub{font:400 18.5px/1.55 "Public Sans",sans-serif;color:var(--muted);margin:20px 0 0;max-width:520px;text-wrap:pretty}
+.hero-cta{display:flex;align-items:center;gap:16px;margin-top:34px}
+.hero-cta .note{font:400 13.5px/1.45 "Public Sans",sans-serif;color:var(--muted)}
+.hero-stats{display:flex;gap:34px;margin-top:44px;padding-top:28px;border-top:1px solid var(--line)}
+.hero-stats .stat b{display:block;font:800 42px/1 Manrope,sans-serif;letter-spacing:-.04em}
+.hero-stats .stat b.green{color:var(--accent-ink)}
+.hero-stats .stat span{display:block;font:400 13.5px/1.45 "Public Sans",sans-serif;color:var(--muted);margin-top:8px}
+
+/* Alert card */
+.alert-card{background:var(--ink);border-radius:26px;padding:34px 32px;color:#fff}
+.alert-card .eyebrow{font:500 11px/1 "Public Sans",sans-serif;letter-spacing:.14em;text-transform:uppercase;color:rgba(255,255,255,.5)}
+.alert-card .hotel{font:600 16px/1.35 Manrope,sans-serif;margin-top:16px}
+.alert-card .hotel small{font:400 14px/1.35 "Public Sans",sans-serif;color:rgba(255,255,255,.6)}
+.alert-card hr{border:0;height:1px;background:rgba(255,255,255,.14);margin:22px 0}
+.alert-card .row{display:flex;justify-content:space-between;font:400 14.5px/1.9 "Public Sans",sans-serif;color:rgba(255,255,255,.62)}
+.alert-card .row .new{color:#fff;font-weight:600}
+.alert-card .save{font:800 76px/1 Manrope,sans-serif;letter-spacing:-.045em;color:var(--accent);margin-top:10px}
+.alert-card .warn{margin-top:22px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.14);border-radius:14px;padding:14px 16px;font:400 12.5px/1.55 "Public Sans",sans-serif;color:rgba(255,255,255,.72)}
+.alert-card .warn strong{color:var(--amber-on-dark)}
+
+/* Steps */
+.steps-section{background:var(--surface);border-top:1px solid var(--line);padding:64px 0}
+.steps-section h2{font-size:34px;line-height:1.15;font-weight:800;letter-spacing:-.032em}
+.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:26px;margin-top:34px}
+.step{border:1px solid var(--line);border-radius:20px;padding:26px 24px;background:var(--bg)}
+.step .n{width:32px;height:32px;border-radius:10px;background:var(--ink);color:#fff;font:800 14px/32px Manrope,sans-serif;text-align:center}
+.step h3{font-size:19px;line-height:1.3;font-weight:700;letter-spacing:-.022em;margin-top:18px}
+.step p{font:400 14.5px/1.6 "Public Sans",sans-serif;color:var(--muted);margin:9px 0 0}
+
+/* Deadline section */
+.deadline{display:grid;grid-template-columns:1fr 1fr;gap:56px;align-items:center;padding:64px 0}
+.deadline h2{font-size:38px;line-height:1.14;font-weight:800;letter-spacing:-.035em;margin-top:18px;text-wrap:balance}
+.deadline .body{font:400 17px/1.6 "Public Sans",sans-serif;color:var(--muted);margin:16px 0 0;max-width:470px;text-wrap:pretty}
+.cadence{background:var(--surface);border:1px solid var(--line);border-radius:22px;padding:28px 30px}
+.cadence h3{font:600 13px/1 Manrope,sans-serif}
+.cadence .rows{margin-top:20px;display:flex;flex-direction:column;gap:16px}
+.cadence .row{display:flex;align-items:center;gap:16px}
+.cadence .when{font:400 13.5px/1.3 "Public Sans",sans-serif;color:var(--muted);width:150px;flex:none}
+.cadence .bar{flex:1;height:8px;border-radius:4px;background:var(--line);overflow:hidden;position:relative}
+.cadence .bar i{position:absolute;inset:0;right:auto;background:var(--accent);border-radius:4px}
+.cadence .rate{font:700 13.5px/1 Manrope,sans-serif;white-space:nowrap}
+
+/* CTA */
+.cta-section{padding:0 0 64px}
+.cta{background:var(--ink);border-radius:26px;padding:48px 46px;display:flex;align-items:center;justify-content:space-between;gap:44px;color:#fff}
+.cta h2{font-size:34px;line-height:1.15;font-weight:800;letter-spacing:-.032em}
+.cta .body{font:400 16px/1.6 "Public Sans",sans-serif;color:rgba(255,255,255,.65);margin:14px 0 0;max-width:520px}
+.cta .trust{display:flex;gap:22px;margin-top:26px;flex-wrap:wrap}
+.cta .trust span{font:400 13.5px/1 "Public Sans",sans-serif;color:rgba(255,255,255,.75)}
+.price-box{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);border-radius:20px;padding:30px 32px;text-align:center;flex:none;width:280px}
+.price-box .amount{font:800 52px/1 Manrope,sans-serif;letter-spacing:-.04em}
+.price-box .per{font:400 13.5px/1 "Public Sans",sans-serif;color:rgba(255,255,255,.6);margin-top:9px}
+.price-box .btn{margin-top:22px;padding:16px;border-radius:13px;font-size:15.5px}
+
+/* Footer */
+.site-footer{border-top:1px solid var(--line);padding:26px 0 40px}
+.site-footer .wrap{display:flex;justify-content:space-between;align-items:center;gap:20px;flex-wrap:wrap}
+.site-footer p{font:400 13px/1.5 "Public Sans",sans-serif;color:var(--muted);margin:0}
+
+/* Mobile */
+@media (max-width:900px){
+  .wrap{padding:0 22px}
+  .nav a{display:none}
+  .hero{grid-template-columns:1fr;gap:30px;padding:40px 0 44px}
+  .hero h1{font-size:39px;line-height:1.06;letter-spacing:-.04em;margin-top:16px}
+  .hero .sub{font-size:15.5px;margin-top:14px}
+  .hero-cta{flex-direction:column;align-items:stretch;gap:12px}
+  .hero-cta .note{text-align:center}
+  .hero-cta .note br{display:none}
+  .btn-primary{padding:17px;width:100%}
+  .hero-stats{gap:22px;margin-top:34px}
+  .hero-stats .stat b{font-size:30px}
+  .hero-stats .stat span br{display:none}
+  .alert-card{padding:24px 22px}
+  .alert-card .save{font-size:62px}
+  .steps-section,.deadline{padding:44px 0}
+  .steps-section h2,.deadline h2{font-size:24px}
+  .steps{grid-template-columns:1fr;gap:11px;margin-top:16px}
+  .step{display:flex;gap:14px;padding:18px;background:var(--surface)}
+  .step .n{width:28px;height:28px;border-radius:9px;font:800 13px/28px Manrope,sans-serif;flex:none}
+  .step h3{margin-top:0;font-size:16px}
+  .deadline{grid-template-columns:1fr;gap:24px}
+  .cadence{padding:22px}
+  .cadence .when{width:110px;font-size:12.5px}
+  .cta{flex-direction:column;align-items:stretch;padding:28px 24px;gap:26px}
+  .cta h2{font-size:24px}
+  .price-box{width:100%}
+}
