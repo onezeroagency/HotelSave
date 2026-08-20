@@ -156,27 +156,39 @@ source defunct (done) rather than deleting, so the mapping logic stays legible.
 
 **Why this clears the affiliate model's data problem.** Affiliate programs usually
 hand you deep-links, not a pollable price API. Booking.com's **Demand API** is the
-exception: approved **Affiliate Partners** get both a **check-availability** endpoint
+exception: the **Demand API** exposes both a **check-availability** endpoint
 (structured rates for detection, §7/§8) *and* affiliate attribution on the rebook
-link — the same combination Hotellook uniquely provided. Booking.com charges **no
-API/commission fee**, requires **no minimum volume and no advance**, and approval is
-reportedly much faster than enterprise/GDS onboarding.
+link — the same combination Hotellook uniquely provided, and no per-call fee. The
+catch (see onboarding below): the Demand API is a **separate** technical onboarding
+from the regional affiliate signup (which, for us, runs through CJ), and API access
+can be gated for new partners — so treat "can we actually get the Demand API?" as an
+open risk, not a given.
 
-### Onboarding (the critical path — start now, it's the long pole)
+### Onboarding — two SEPARATE Booking tracks; you need both, don't conflate them
 
-1. Apply to the **Booking.com Affiliate Partner Program** — **directly, at
-   [partnerships.booking.com](https://partnerships.booking.com/)** → become a
-   *Managed Affiliate Partner*.
-   - ⚠️ **Must be the direct program, not an affiliate network.** Booking.com is
-     *not* on CJ/Commission Junction (that carries Expedia/Hotels.com), and the
-     network routes that *do* carry Booking (e.g. Awin) grant **links/banners
-     only — no Demand API**. Only the direct Managed Affiliate Partner track
-     unlocks Partner Centre + the availability API our detection loop needs.
-2. Get **Partner Centre** access → generate an **API key/token** and your
-   **`X-Affiliate-Id`**.
-3. That single credential pair works for **both** sandbox and production.
+1. **Affiliate program → deep-links + commission (the rebook payout).**
+   In the EU / Eastern Europe (incl. Latvia) Booking administers this **through CJ
+   (Commission Junction)**: `partnerships.booking.com` → *Register* → the Partner
+   Centre sign-up routes you to **"Register with CJ"** for these markets. That is
+   the *correct* front door for our region — CJ **is** Booking's affiliate network
+   here (this varies by market; earlier notes wrongly said Booking wasn't on CJ).
+   It grants tracked deep-links + commission — **not** the availability API.
+2. **Demand API → the availability/price feed (the detection loop, §7/§8).**
+   A **separate** onboarding at **`developers.booking.com`**: an affiliate/technical
+   partner requests API access and receives an API key + `X-Affiliate-Id`. Being a
+   CJ-managed affiliate does **not** automatically grant it, and it can be gated for
+   brand-new partners. **This is the real technical dependency — confirm it's
+   attainable early**, before assuming the product can be built on Booking data.
 
-Only the team can do this (it needs OneZero's business details); no code unblocks it.
+⚠️ **CJ ≠ Demand API.** CJ (and CJ's own link/product API) gives affiliate *links*,
+never hotel *availability*. If the Demand API can't be secured, detection falls back
+to a self-serve data API (LiteAPI/RateHawk) while the CJ Booking deep-links still
+carry the rebook commission — the "split" in §3, accepting that detected vs. rebook
+inventory can differ (soften alert copy: "prices have dropped — check your rebook
+option" rather than promising an exact figure).
+
+The affiliate signup needs OneZero's business details **and a live website** (see
+`landing/` — reviewers reject applications with no working site); no code unblocks it.
 
 ### API facts (from Booking.com docs — to be re-verified against the sandbox)
 
