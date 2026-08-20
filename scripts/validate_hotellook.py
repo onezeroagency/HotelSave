@@ -1,5 +1,14 @@
 """Live validation for the Hotellook price source (§9).
 
+OUTCOME (2026-08-02 live run against "Amrita Hotel Liepaja"): the validation
+CANNOT pass — not because of a bug in our request shapes, but because the
+Hotellook API no longer exists. Travelpayouts permanently closed Hotellook on
+20 Oct 2025; every endpoint under https://engine.hotellook.com/api/v2/ (lookup,
+search/start, search/getResult — and the host root) now returns an nginx 404.
+This script is retained only as the historical harness that surfaced that fact;
+it will fail at the resolve_hotel() step with a 404. The path forward is a
+replacement aggregator — see docs/price-source-migration.md.
+
 The build environment blocks outbound access to engine.hotellook.com, so the
 integration was written from the API docs but never run live. Run this from any
 machine that CAN reach the API (your laptop, or a cloud environment whose network

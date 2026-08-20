@@ -15,12 +15,16 @@ Signature (Travelpayouts): md5("<token>:<marker>:" + values of the request param
 sorted alphabetically by key, joined by ":"). Pinned by a documented test vector
 in the tests. Response field names follow the Hotellook v2 schema.
 
-NOT YET LIVE-VALIDATED: this environment's network policy blocks engine.hotellook.com,
-so the request shapes below are implemented from the API docs but haven't been run
-against the real service. Points to confirm on first live run: the hotel search
-param name (`hotelId`), poll-until-complete termination, and board-type derivation
-(the API exposes only a `breakfast` boolean, so we map breakfast→BB, none→RO and
-can't distinguish HB/FB).
+DEFUNCT — DO NOT USE IN PRODUCTION. The Hotellook Data API was permanently shut down
+when Travelpayouts closed Hotellook (20 Oct 2025). As of the 2026-08-02 live run,
+every endpoint under https://engine.hotellook.com/api/v2/ (lookup.json,
+search/start.json, search/getResult.json — and the host root) returns an nginx 404,
+so this source can never return a rate: `check()` catches the HTTP errors and yields
+an empty list, meaning "no drop, ever". The request shapes below were written from
+the API docs but were never validated against a live service (the build environment
+blocked the host, and by the time the validation script was run locally the provider
+was already gone). Kept as the worked reference implementation behind the PriceSource
+interface. A replacement aggregator must be chosen — see docs/price-source-migration.md.
 """
 
 import hashlib
@@ -62,6 +66,13 @@ class HotellookPriceSource(PriceSource):
         self._marker = settings.travelpayouts_marker
         self._customer_ip = settings.travelpayouts_customer_ip
         self._client = httpx.Client(timeout=HTTP_TIMEOUT)
+        # The upstream API is gone (Hotellook closed 20 Oct 2025) — flag it loudly
+        # so a `PRICE_SOURCE=hotellook` deployment doesn't silently detect no drops.
+        logger.warning(
+            "HotellookPriceSource is DEFUNCT: the Hotellook API was shut down "
+            "(20 Oct 2025) and now returns HTTP 404 for every request, so it will "
+            "never surface a rate. Pick a replacement — see docs/price-source-migration.md."
+        )
 
     # -- hotel identity (§6b) -------------------------------------------------
 
