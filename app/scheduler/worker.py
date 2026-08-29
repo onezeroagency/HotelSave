@@ -66,7 +66,9 @@ def _retry_resolution(job: MonitoringJob, source: PriceSource) -> None:
     """§6b retry: same rule as create/ingestion — only a single high-confidence
     match may auto-resolve; ambiguity stays with the ask-the-user flow."""
     try:
-        matches = source.resolve_hotel(job.hotel_name_raw, job.city, job.lat, job.lng)
+        matches = source.resolve_hotel(
+            job.hotel_name_raw, job.city, job.lat, job.lng, job.country
+        )
     except Exception:
         logger.exception(
             "Hotel resolution retry failed for job %s (%r)", job.id, job.hotel_name_raw

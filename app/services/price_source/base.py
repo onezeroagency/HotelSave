@@ -44,8 +44,14 @@ class PriceSource(ABC):
         city: str | None = None,
         lat: float | None = None,
         lng: float | None = None,
+        country: str | None = None,
     ) -> list[HotelMatch]:
-        """Name + city → the aggregator's hotel IDs, ranked (§6b)."""
+        """Name + city (+ country) → the aggregator's hotel IDs, ranked (§6b).
+
+        `country` is an ISO-3166 alpha-2 code from the booking. Some providers
+        require it to scope a city search at all (LiteAPI 400s without one), so
+        callers should pass it through whenever the booking states it.
+        """
 
     @abstractmethod
     def check(

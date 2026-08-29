@@ -82,6 +82,7 @@ class HotellookPriceSource(PriceSource):
         city: str | None = None,
         lat: float | None = None,
         lng: float | None = None,
+        country: str | None = None,
     ) -> list[HotelMatch]:
         query = f"{name} {city}".strip() if city else name
         resp = self._client.get(
