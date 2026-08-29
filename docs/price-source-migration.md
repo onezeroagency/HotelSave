@@ -238,6 +238,25 @@ integration never had.
 3. Confirm the like-for-like path (§7) and the scheduler (§8) fire on a simulated
    drop; then flip `booking_env` to production.
 
+### Status update (2026-08-20): LiteAPI is the working, validated detection feed
+
+Booking.com's NA affiliate program rejected the (pre-launch, wrong-region)
+application, and the Demand API remains gated — so the fallback became the
+mainline. `app/services/price_source/liteapi.py` (PRICE_SOURCE=liteapi) was
+**live-validated** with a sandbox key via `scripts/validate_liteapi.py` against
+"Amrita Hotel", Liepāja (lp52d95): lookup, rates body, `retailRate.total`,
+`refundableTag` (RFN + NRFN observed), and board mapping (BI→BB, RO) all
+confirmed — 200 rates parsed, 126 refundable. Read-only; `deep_link=None` until
+an affiliate program (Booking EU reapplication, or Expedia/Hotels.com on CJ)
+supplies the rebook link.
+
+**Open item (§7 correctness):** LiteAPI's `retailRate.taxesAndFees` can be
+`included=false` (VAT observed on lp52d95), i.e. `total` may exclude a tax the
+user's original OTA total includes. The matching layer must add non-included
+taxes to candidate totals before comparing against `original_price`, or phantom
+"drops" appear. Also note: production key at launch swaps sandbox test rates for
+live prices with no code change.
+
 ---
 
 ### Sources

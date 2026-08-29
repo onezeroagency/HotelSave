@@ -18,12 +18,17 @@ Response shape (SDK tests + docs): {"data": [{"hotelId", "roomTypes": [
     "retailRate": {"total": [{"amount", "currency"}]},
     "cancellationPolicies": {"refundableTag": "RFN"|"NRFN"}}]}]}]}
 
-PENDING LIVE VALIDATION: the build environment blocks api.liteapi.travel, so this
-was written from the SDK source but not yet run live. Run
-scripts/validate_liteapi.py from a machine with normal internet (sandbox key is
-enough); it prints raw envelopes next to parsed output so any field mismatch is a
-one-line fix. Points to confirm: lookup param names, rate-field nesting,
-boardType vocabulary, and whether children ages (we only know the count) matter.
+LIVE-VALIDATED 2026-08-20 (sandbox key, scripts/validate_liteapi.py, "Amrita
+Hotel" Liepaja LV → lp52d95): lookup params, rates body, and every mapped field
+confirmed against the live service — retailRate.total[].amount, refundableTag
+(both RFN and NRFN observed), boardType 'BI'→BB and 'RO'. 200 rates parsed clean.
+
+KNOWN NUANCE (§7 follow-up): retailRate.taxesAndFees can carry entries with
+included=false (e.g. VAT), meaning the `total` amount may EXCLUDE a tax that the
+user's original booking total (OTA-style) includes. Before comparing against
+original_price, the matching layer should add non-included taxesAndFees to the
+candidate total — otherwise phantom "drops" appear. Not yet implemented here;
+tracked in docs/price-source-migration.md.
 """
 
 import logging
