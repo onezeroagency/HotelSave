@@ -71,7 +71,10 @@ def test_expired_when_deadline_passed(db_session, monkeypatch):
 
     events: list[str] = []
     monkeypatch.setattr(
-        "app.services.klaviyo.emit_event", lambda name, email, props: events.append(name)
+        # Must report delivery success — the worker only closes a job once the
+        # user has actually been told (see test_expiry_retries_when_undelivered).
+        "app.services.klaviyo.emit_event",
+        lambda name, email, props: (events.append(name), True)[1],
     )
     worker.run_once(db=session)
     session.refresh(job)
@@ -81,6 +84,32 @@ def test_expired_when_deadline_passed(db_session, monkeypatch):
     # Past the deadline we never price or fire an actionable alert (§8):
     assert job.check_count == 0  # no aggregator call
     assert events == ["Monitoring Ended"]  # not "Price Drop Found"
+
+
+def test_expiry_retries_when_undelivered(db_session, monkeypatch):
+    """Expiring on a failed send would clear next_check_at and strand the wrap-up."""
+    session, _ = db_session
+    now = datetime.now(timezone.utc)
+    job = _seed_job(session, cancellation_deadline=now - timedelta(hours=1))
+
+    monkeypatch.setattr("app.services.klaviyo.emit_event", lambda *a, **k: False)
+    worker.run_once(db=session)
+    session.refresh(job)
+
+    assert job.status == JobStatus.active.value  # still open, not silently closed
+    assert job.next_check_at is not None  # and it will come back around
+
+    # The retry is deliberately an hour out, so wind the clock forward to it.
+    job.next_check_at = now - timedelta(minutes=1)
+    session.commit()
+
+    # Once Klaviyo recovers, that pass closes it out.
+    monkeypatch.setattr("app.services.klaviyo.emit_event", lambda *a, **k: True)
+    worker.run_once(db=session)
+    session.refresh(job)
+
+    assert job.status == JobStatus.expired.value
+    assert job.next_check_at is None
 
 
 def test_paused_plan_is_skipped(db_session):

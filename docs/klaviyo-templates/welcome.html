@@ -1,0 +1,105 @@
+<!-- MyRoomWatch — Flow 3: Welcome / Activation
+     Trigger: metric "Account Created" · send immediately · MARK AS TRANSACTIONAL
+     Emitted by app/routers/auth.py on successful registration.
+     The one job of this email: get the user to forward a booking. An account
+     with no forwarded booking produces nothing, so the whole page is one
+     instruction — the forwarding address — repeated in a form they can act on
+     from the inbox they're already reading it in. -->
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#F4F6F7;padding:28px 0;font-family:'Public Sans',Helvetica,Arial,sans-serif;">
+  <tr><td align="center">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#FFFFFF;border:1px solid #E1E5E9;border-radius:18px;overflow:hidden;">
+
+      <tr><td style="padding:26px 30px 0;">
+        <p style="margin:0;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:#0A7A52;font-weight:600;">Welcome to MyRoomWatch</p>
+        <h1 style="margin:10px 0 0;font-family:Manrope,Helvetica,Arial,sans-serif;font-size:26px;line-height:1.2;letter-spacing:-.02em;color:#0D2137;font-weight:800;">
+          One email, and we'll start watching.
+        </h1>
+        <p style="margin:10px 0 0;font-size:15px;line-height:1.7;color:#5B6672;">
+          Your account is live. There's exactly one thing left to do — and it takes
+          about ten seconds.
+        </p>
+      </td></tr>
+
+      <tr><td style="padding:22px 30px 0;">
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#E4F5EE;border-radius:13px;">
+          <tr><td align="center" style="padding:20px 18px;">
+            <p style="margin:0;font-size:12.5px;letter-spacing:.06em;text-transform:uppercase;color:#0A7A52;font-weight:600;">Forward your booking to</p>
+            <p style="margin:8px 0 0;font-family:Manrope,Helvetica,Arial,sans-serif;font-size:23px;font-weight:800;letter-spacing:-.02em;color:#0A7A52;word-break:break-all;">
+              {{ event.forward_to|default:"save@myroomwatch.com" }}
+            </p>
+            <p style="margin:8px 0 0;font-size:13.5px;line-height:1.6;color:#0A7A52;">
+              Send it from this address so we know it's yours.
+            </p>
+          </td></tr>
+        </table>
+      </td></tr>
+
+      <tr><td style="padding:22px 30px 0;">
+        <a href="mailto:{{ event.forward_to|default:'save@myroomwatch.com' }}" style="display:block;background:#00A870;color:#FFFFFF;text-decoration:none;text-align:center;padding:16px;border-radius:13px;font-family:Manrope,Helvetica,Arial,sans-serif;font-size:16px;font-weight:700;">
+          Forward a booking now →
+        </a>
+      </td></tr>
+
+      <tr><td style="padding:24px 30px 0;">
+        <p style="margin:0 0 14px;font-family:Manrope,Helvetica,Arial,sans-serif;font-size:15.5px;font-weight:700;color:#0D2137;">What happens next</p>
+
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+          <tr>
+            <td valign="top" width="30" style="padding:0 0 14px;font-family:Manrope,Helvetica,Arial,sans-serif;font-size:14px;font-weight:800;color:#0A7A52;">1</td>
+            <td style="padding:0 0 14px;font-size:14.5px;line-height:1.65;color:#5B6672;">
+              We read the hotel, dates, room and your free-cancellation deadline
+              straight from the confirmation.
+            </td>
+          </tr>
+          <tr>
+            <td valign="top" width="30" style="padding:0 0 14px;font-family:Manrope,Helvetica,Arial,sans-serif;font-size:14px;font-weight:800;color:#0A7A52;">2</td>
+            <td style="padding:0 0 14px;font-size:14.5px;line-height:1.65;color:#5B6672;">
+              We re-check that exact stay — same room, same board, still refundable —
+              more often as your deadline gets closer.
+            </td>
+          </tr>
+          <tr>
+            <td valign="top" width="30" style="padding:0;font-family:Manrope,Helvetica,Arial,sans-serif;font-size:14px;font-weight:800;color:#0A7A52;">3</td>
+            <td style="padding:0;font-size:14.5px;line-height:1.65;color:#5B6672;">
+              If it gets cheaper, you get an email with the new rate and the safe
+              order to rebook in. If it doesn't, we tell you that too — before your
+              window closes.
+            </td>
+          </tr>
+        </table>
+      </td></tr>
+
+      <tr><td style="padding:22px 30px 0;">
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#FDF3E0;border:1px solid #F0DDB8;border-radius:13px;">
+          <tr><td style="padding:16px 18px;">
+            <p style="margin:0;font-size:14px;line-height:1.65;color:#8A5A08;">
+              <strong>It has to be a refundable booking.</strong> If you can't cancel
+              for free, a lower price is no use to you — there's nothing to switch to.
+            </p>
+          </td></tr>
+        </table>
+      </td></tr>
+
+      <tr><td style="padding:20px 30px 0;">
+        <a href="https://myroomwatch.com/dashboard.html" style="display:block;background:#0D2137;color:#FFFFFF;text-decoration:none;text-align:center;padding:15px;border-radius:13px;font-family:Manrope,Helvetica,Arial,sans-serif;font-size:15.5px;font-weight:700;">
+          Open your dashboard →
+        </a>
+      </td></tr>
+
+      <tr><td style="padding:18px 30px 30px;">
+        <p style="margin:0;font-size:13.5px;line-height:1.65;color:#5B6672;">
+          We never touch your card and never change or cancel a booking. You always
+          rebook yourself — we just tell you when it's worth doing.
+        </p>
+      </td></tr>
+
+      <tr><td style="padding:0 30px 28px;">
+        <p style="margin:0;padding-top:18px;border-top:1px solid #E1E5E9;font-size:12.5px;line-height:1.6;color:#8A939C;">
+          You're getting this because you created a MyRoomWatch account.
+          Questions? Just reply — <a href="mailto:hello@myroomwatch.com" style="color:#0A7A52;">hello@myroomwatch.com</a>
+        </p>
+      </td></tr>
+
+    </table>
+  </td></tr>
+</table>

@@ -1,5 +1,7 @@
 """Email/password auth: register, login (OAuth2 password flow), and /me."""
 
+import logging
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy import select
@@ -9,6 +11,9 @@ from .. import models, schemas
 from ..database import get_db
 from ..deps import get_current_user
 from ..security import create_access_token, hash_password, verify_password
+from ..services import klaviyo
+
+logger = logging.getLogger("hotelsave.auth")
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -25,6 +30,19 @@ def register(payload: schemas.UserCreate, db: Session = Depends(get_db)) -> mode
     db.add(user)
     db.commit()
     db.refresh(user)
+
+    # Signup is the start of the activation path: the account is useless until a
+    # booking is forwarded, so tell Klaviyo immediately and let the welcome flow
+    # ask for one. The account already exists at this point — a marketing-side
+    # failure must never turn a successful signup into an error for the user.
+    try:
+        klaviyo.emit_event(
+            klaviyo.EVENT_ACCOUNT_CREATED,
+            user.email,
+            {"signup_source": "web", "forward_to": "save@myroomwatch.com"},
+        )
+    except Exception:  # pragma: no cover - defensive; emit_event handles HTTP errors itself
+        logger.exception("Account Created event failed for %s — signup still succeeded", user.email)
     return user
 
 

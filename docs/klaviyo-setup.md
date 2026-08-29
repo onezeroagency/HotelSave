@@ -33,6 +33,7 @@ After it runs, the metrics below appear under **Analytics → Metrics**.
 
 | Event (metric) | When | Properties |
 |---|---|---|
+| `Account Created` | user registers (`POST /auth/register`) | `signup_source`, `forward_to` |
 | `Booking Monitored` | job created / activated | `hotel`, `city`, `check_in`, `check_out`, `original_price`, `currency`, `cancellation_deadline` |
 | `Price Drop Found` | actionable like-for-like drop (§7) | `hotel`, `city`, `check_in`, `check_out`, `nights`, `board_type`, `adults`, `old_price`, `new_price`, `savings_amount`, `savings_pct`, `rebook_url`, `has_rebook_url`, `currency`, `cancellation_deadline` |
 | `Deadline Approaching` | 48h pre-deadline, no drop standing | `hotel`, `city`, `check_in`, `check_out`, `cancellation_deadline`, `checks_done`, `lowest_seen_price`, `currency` |
@@ -47,7 +48,7 @@ flow templates as `{{ event.savings_amount }}`, `{{ event.hotel }}`, etc.
 
 ---
 
-## 2. The transactional gotcha — configure first
+## 2. The transactional gotcha — configure first, by hand
 
 These are **transactional** alerts about a thing the user asked you to watch, so
 they must send **regardless of marketing-consent status**. On every email action
@@ -56,16 +57,22 @@ action's settings → "This is a transactional message" / smart-sending off).
 Otherwise a user who unsubscribes from marketing silently stops getting the price
 drops they're paying for.
 
+> **This cannot be done over the API.** `POST /api/flows` and
+> `PATCH /api/flow-actions/{id}` both *accept* `transactional: true` and return
+> HTTP 200 — and then store `false`. Verified 2026-08-29 against all three
+> MyRoomWatch flows. There is no error to catch, so **read the flow back and
+> check the value rather than trusting the write**. Every flow this repo created
+> is currently `transactional: false` and must be flipped in the Klaviyo UI
+> before going live.
+
 ---
 
-> **Ready-made templates:** paste-ready HTML for both flows lives in
-> [`docs/klaviyo-templates/`](klaviyo-templates/) — `price-drop.html` and
-> `deadline-guard.html`. They already brand-match the site, branch on
-> `has_rebook_url`, and use only keys the backend actually emits. In Klaviyo:
-> new email → drag in a block → source/HTML view → paste. **They cannot be
-> created via the API from this repo's tooling** — the Klaviyo connector is
-> pointed at a different account, so building them in the MyRoomWatch account's
-> UI is deliberate, not a shortcut.
+> **Ready-made templates:** paste-ready HTML for all three flows lives in
+> [`docs/klaviyo-templates/`](klaviyo-templates/) — `price-drop.html`,
+> `deadline-guard.html` and `welcome.html`. They brand-match the site, branch on
+> `has_rebook_url`, and use only keys the backend actually emits. Kept in the
+> repo so the copy is version-controlled: the live Klaviyo templates were created
+> from these files and should be re-synced from here when the copy changes.
 
 ## 3. Flow 1 — Price Drop Alert  *(trigger: `Price Drop Found`)*
 
@@ -145,6 +152,32 @@ perceived protection.
 
 ---
 
+## 4b. Flow 3 — Welcome / Activation  *(trigger: `Account Created`)*
+
+Signup is not activation. An account with no forwarded booking produces nothing —
+no checks, no alerts, no reason to come back — so this email has exactly one job:
+get the forwarding address in front of the user while they're still in the tab
+they signed up from.
+
+- **Trigger:** metric `Account Created`
+- **Timing:** send immediately
+- **Message type:** transactional (a service instruction, not a newsletter)
+- **Template:** `docs/klaviyo-templates/welcome.html`
+
+**Subject:** `You're in — now forward your first booking`
+
+The forwarding address comes from the event (`{{ event.forward_to }}`) rather
+than being hardcoded, so changing the inbound address in the backend changes the
+email too. The template defaults it to `save@myroomwatch.com` if the property is
+ever missing.
+
+**Worth adding once there's signup volume:** a time-delay branch that re-prompts
+after ~48h *only if* no `Booking Monitored` event has arrived for that profile.
+That's the whole activation funnel — nothing else in the product matters until a
+booking is forwarded.
+
+---
+
 ## 5. Onboarding / lifecycle flows (optional, v1.1)
 
 The ingestion events power light lifecycle flows (§5–§6):
@@ -162,10 +195,28 @@ The ingestion events power light lifecycle flows (§5–§6):
 
 ---
 
-## 6. Programmatic creation (optional)
+## 6. What's live in the MyRoomWatch account (`Uyzstd`)
 
-Flows can also be created via the API (`POST /api/flows`) with a `MetricTrigger`
-referencing each metric's id + a transactional `SendEmailAction`. That path is
-available but fiddlier than the UI; build in the UI first to nail the copy, then
-export/automate if you want the flows version-controlled. Metric ids come from
-`GET /api/metrics` after step 1.
+Created via the API on 2026-08-29. All three are **draft** — the API cannot
+publish a flow, so each has to be switched to Live in the UI.
+
+| Flow | Flow id | Trigger metric | Template |
+|---|---|---|---|
+| Price Drop Alert | `VZFycG` | `Price Drop Found` (`RKceqK`) | `WakNR8` |
+| Deadline Guard | `RKMJqA` | `Deadline Approaching` (`XnX9Yd`) | `XhJDAt` |
+| Welcome — Forward your first booking | `UQYHkE` | `Account Created` (`UdnqFF`) | `TFzSsN` |
+
+Klaviyo clones the template into the flow message on create, so editing the
+template above does **not** change a flow already built from it — edit the
+message inside the flow, or rebuild it from `docs/klaviyo-templates/`.
+
+### Before any of this sends
+
+1. **Flip each flow Draft → Live** (UI only).
+2. **Mark each email transactional** — see §2; the API silently refuses.
+3. **Verify the sending domain** for `hello@myroomwatch.com`. The account's
+   default sender email is currently blank, so nothing sends until it's set.
+
+Metric ids come from `GET /api/metrics`. A metric only exists once an event of
+that name has been received, so bootstrap it (step 1, or a `backfill: true`
+sample event) before building a flow that triggers on it.
