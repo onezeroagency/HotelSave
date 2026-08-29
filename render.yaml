@@ -1,0 +1,86 @@
+# Render blueprint: deploys the MyRoomWatch backend as three pieces —
+#   1. myroomwatch-api        FastAPI web service (auth, jobs, inbound webhook)
+#   2. myroomwatch-scheduler  always-on worker running the deadline-clocked loop (§8)
+#   3. hotelsave-db           managed Postgres
+#
+# Deploy: Render dashboard → New → Blueprint → pick this repo. Render reads this
+# file, creates all three, runs `alembic upgrade head` before each web deploy,
+# and prompts for the secret env vars marked `sync: false`.
+# Full runbook (env vars, custom domain, Postmark inbound DNS): docs/deployment.md
+
+databases:
+  - name: hotelsave-db
+    plan: basic-256mb
+    databaseName: hotelsave
+    user: hotelsave
+
+services:
+  - type: web
+    name: myroomwatch-api
+    runtime: python
+    plan: starter # free tier spins down on idle and drops inbound webhooks — don't use it here
+    buildCommand: pip install .
+    preDeployCommand: alembic upgrade head
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.7
+      - key: DATABASE_URL
+        fromDatabase:
+          name: hotelsave-db
+          property: connectionString
+      - key: ENVIRONMENT
+        value: production
+      - key: SECRET_KEY
+        generateValue: true # JWT signing key — Render generates a strong one
+      - key: PRICE_SOURCE
+        value: liteapi
+      - key: LITEAPI_KEY
+        sync: false # paste at deploy time (sandbox key now; swap to production at launch)
+      - key: LITEAPI_COUNTRY_CODE
+        value: ""
+      - key: LITEAPI_GUEST_NATIONALITY
+        value: LV
+      - key: PARSER
+        value: claude
+      - key: ANTHROPIC_API_KEY
+        sync: false # for parsing real forwarded confirmation emails (§6a)
+      - key: CLAUDE_MODEL
+        value: claude-opus-5
+      - key: INBOUND_WEBHOOK_SECRET
+        generateValue: true # shared secret for the Postmark webhook URL (?token=...)
+      - key: KLAVIYO_API_KEY
+        sync: false # private key of the MyRoomWatch Klaviyo account; blank = dry-run logs
+      - key: STRIPE_SECRET_KEY
+        sync: false # leave blank until billing goes live
+      - key: STRIPE_WEBHOOK_SECRET
+        sync: false
+      - key: STRIPE_PRICE_ID
+        sync: false
+
+  - type: worker
+    name: myroomwatch-scheduler
+    runtime: python
+    plan: starter
+    buildCommand: pip install .
+    startCommand: python -m app.scheduler.worker --loop
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.7
+      - key: DATABASE_URL
+        fromDatabase:
+          name: hotelsave-db
+          property: connectionString
+      - key: ENVIRONMENT
+        value: production
+      - key: PRICE_SOURCE
+        value: liteapi
+      - key: LITEAPI_KEY
+        sync: false
+      - key: LITEAPI_COUNTRY_CODE
+        value: ""
+      - key: LITEAPI_GUEST_NATIONALITY
+        value: LV
+      - key: KLAVIYO_API_KEY
+        sync: false
