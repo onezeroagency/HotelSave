@@ -36,7 +36,7 @@ After it runs, the metrics below appear under **Analytics → Metrics**.
 | `Account Created` | user registers (`POST /auth/register`) | `signup_source`, `forward_to` |
 | `Booking Monitored` | job created / activated | `hotel`, `city`, `check_in`, `check_out`, `original_price`, `currency`, `cancellation_deadline` |
 | `Price Drop Found` | actionable like-for-like drop (§7) | `hotel`, `city`, `check_in`, `check_out`, `nights`, `board_type`, `adults`, `booked_room`, `found_room`, `found_on`, `old_price`, `new_price`, `savings_amount`, `savings_pct`, `rebook_url`, `has_rebook_url`, `currency`, `cancellation_deadline` |
-| `Deadline Approaching` | 48h pre-deadline, no drop standing | `hotel`, `city`, `check_in`, `check_out`, `cancellation_deadline`, `checks_done`, `lowest_seen_price`, `currency` |
+| `Deadline Approaching` | 48h pre-deadline, no *reachable* drop standing | `hotel`, `city`, `check_in`, `check_out`, `cancellation_deadline`, `checks_done`, `lowest_seen_price`, `currency`, `saw_movement`, `check_url`, `has_check_url` |
 | `Monitoring Ended` | deadline passed / checked out | `hotel`, `best_savings_seen`, `outcome` |
 | `Forwarded Without Account` | unknown sender forwarded a booking | `subject` |
 | `Refundable Confirmation Needed` | parsed booking isn't refundable | `hotel`, `check_in` |
@@ -62,8 +62,9 @@ drops they're paying for.
 > HTTP 200 — and then store `false`. Verified 2026-08-29 against all three
 > MyRoomWatch flows. There is no error to catch, so **read the flow back and
 > check the value rather than trusting the write**. Every flow this repo created
-> is currently `transactional: false` and must be flipped in the Klaviyo UI
-> before going live.
+> is currently `transactional: false` and must be flipped in the Klaviyo UI.
+> Re-confirmed 2026-08-29 after the flows went live: still `false`. Until it is
+> flipped, anyone not opted into marketing silently receives nothing.
 
 ---
 
@@ -150,6 +151,24 @@ On a service that produces a saving only ~40–50% of the time, this email is wh
 stops the other half from asking "why am I paying." It converts silence into
 perceived protection.
 
+### Mode A: movement changes the wording, never the trigger
+
+`saw_movement` is true when the lowest rate we've seen beat the original by more
+than the drop floor. The email then says rates **have moved** and offers
+`check_url` — today's price for the same stay on a real OTA — instead of quoting
+a figure. There is deliberately no price tag in that branch: the detection feed
+prices a different market, so any number we printed could be one the user cannot
+get (see the post-mortem in `price-source-migration.md`).
+
+Movement does **not** trigger the email. The trigger stays the deadline, which we
+know from the user's own confirmation; a lower price on a feed we can't rebook
+from says nothing reliable about the channel they booked on. So the user gets one
+email near their deadline either way, and its content depends on what we saw.
+
+`check_url` must be rendered `{{ event.check_url|safe }}` in the **plaintext**
+part. Klaviyo autoescapes, so without it the URL arrives as `...&amp;checkin=` —
+correct inside an HTML `href`, broken in text/plain.
+
 ---
 
 ## 4b. Flow 3 — Welcome / Activation  *(trigger: `Account Created`)*
@@ -220,3 +239,17 @@ message inside the flow, or rebuild it from `docs/klaviyo-templates/`.
 Metric ids come from `GET /api/metrics`. A metric only exists once an event of
 that name has been received, so bootstrap it (step 1, or a `backfill: true`
 sample event) before building a flow that triggers on it.
+
+### Live state (re-checked 2026-08-29)
+
+- All three flows are **live**.
+- Sending domain `mail.myroomwatch.com` is **active** (purpose: transactional).
+  ⚠️ The flows send from `hello@myroomwatch.com`, which is the *root* domain, not
+  the verified subdomain. Confirm in the Klaviyo UI that this from-address is
+  accepted against that sending domain — if it isn't, mail may go unauthenticated
+  or fail outright. Not verifiable over the API.
+- `transactional` is still **false** on all three (§2) — the one remaining
+  hand-flip.
+- Editing a template does **not** update a live flow: Klaviyo clones the template
+  into the flow message on assignment. Re-point the flow action at the template
+  to force a fresh clone, then re-render to confirm.
