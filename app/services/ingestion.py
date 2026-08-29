@@ -115,7 +115,9 @@ def _resolve_hotel(job: models.MonitoringJob, parsed: ParsedBooking) -> None:
     """High-confidence single match → store hotel_id. Otherwise stash the
     candidates so we can ask the user once, and never ask again (§6b)."""
     try:
-        matches = get_price_source().resolve_hotel(parsed.hotel_name, parsed.city)
+        matches = get_price_source().resolve_hotel(
+            parsed.hotel_name, parsed.city, country=parsed.country
+        )
     except Exception:  # pragma: no cover - resolution failures are non-fatal
         logger.exception("Hotel resolution failed for %s", parsed.hotel_name)
         return

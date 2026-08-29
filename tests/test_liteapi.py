@@ -180,3 +180,38 @@ def test_cross_currency_fee_skips_rate(source):
     ]))
     candidates = source.check("lp1", date(2026, 10, 8), date(2026, 10, 10), 2, 0)
     assert [c.total_price for c in candidates] == [Decimal("150.0")]
+
+
+def test_country_from_booking_scopes_the_lookup(source):
+    """LiteAPI 400s on /data/hotels without countryCode (seen live 2026-08-29),
+    so the booking's own country must reach the request."""
+    source._client = _FakeClient(lookup={"data": [{"id": "lp1", "name": "H"}]})
+    source.resolve_hotel("Hotel Artemide", "Rome", country="it")
+    _, _, params = source._client.calls[0]
+    assert params["countryCode"] == "IT"  # normalized to ISO-2 upper
+    assert params["cityName"] == "Rome"
+
+
+def test_country_falls_back_to_setting_then_warns(source, caplog):
+    """No country on the booking → deployment default; neither → warn, since the
+    request would 400."""
+    source._client = _FakeClient(lookup={"data": []})
+    source.resolve_hotel("Amrita Hotel", "Liepaja")  # settings has LV
+    _, _, params = source._client.calls[0]
+    assert params["countryCode"] == "LV"
+
+    settings.liteapi_country_code = None
+    source._client = _FakeClient(lookup={"data": []})
+    with caplog.at_level("WARNING"):
+        source.resolve_hotel("Amrita Hotel", "Liepaja")
+    _, _, params2 = source._client.calls[0]
+    assert "countryCode" not in params2
+    assert "needs a countryCode" in caplog.text
+
+
+def test_bogus_country_is_ignored(source):
+    """Anything that isn't ISO-2 (e.g. 'Latvia') must not be sent as a code."""
+    source._client = _FakeClient(lookup={"data": []})
+    source.resolve_hotel("Amrita Hotel", "Liepaja", country="Latvia")
+    _, _, params = source._client.calls[0]
+    assert params["countryCode"] == "LV"  # fell back to the setting, not "LATVIA"

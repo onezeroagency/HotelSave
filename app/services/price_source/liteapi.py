@@ -98,12 +98,30 @@ class LiteAPIPriceSource(PriceSource):
         city: str | None = None,
         lat: float | None = None,
         lng: float | None = None,
+        country: str | None = None,
     ) -> list[HotelMatch]:
+        # LiteAPI rejects /data/hotels with 400 unless the search is scoped by
+        # countryCode (confirmed live 2026-08-29). Prefer the booking's own
+        # country; fall back to the deployment default for bookings that don't
+        # state one. ISO-3166 alpha-2 only — anything else is not a country code.
+        code = (country or "").strip().upper()
+        if len(code) != 2:
+            code = (settings.liteapi_country_code or "").strip().upper()
+
         params: dict = {"hotelName": name, "limit": 10}
         if city:
             params["cityName"] = city
-        if settings.liteapi_country_code:
-            params["countryCode"] = settings.liteapi_country_code
+        if len(code) == 2:
+            params["countryCode"] = code
+        else:
+            # Without a country the request would 400; say so rather than
+            # burning a call and failing opaquely (§6b then asks the user).
+            logger.warning(
+                "No country for %r (%s) — LiteAPI lookup needs a countryCode; "
+                "set LITEAPI_COUNTRY_CODE as a default or capture it in the booking.",
+                name,
+                city,
+            )
         resp = self._client.get(LOOKUP_URL, params=params)
         resp.raise_for_status()
         hotels = resp.json().get("data", []) or []

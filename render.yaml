@@ -39,7 +39,9 @@ services:
       - key: LITEAPI_KEY
         sync: false # paste at deploy time (sandbox key now; swap to production at launch)
       - key: LITEAPI_COUNTRY_CODE
-        value: ""
+        value: LV # fallback only: LiteAPI's hotel lookup 400s without a country,
+        # and a booking that doesn't state one falls back to this. The booking's
+        # own country always wins, so worldwide stays still resolve correctly.
       - key: LITEAPI_GUEST_NATIONALITY
         value: LV
       - key: PARSER
@@ -81,7 +83,7 @@ services:
       - key: LITEAPI_KEY
         sync: false
       - key: LITEAPI_COUNTRY_CODE
-        value: ""
+        value: LV # fallback when a booking states no country (see api service)
       - key: LITEAPI_GUEST_NATIONALITY
         value: LV
       - key: KLAVIYO_API_KEY
