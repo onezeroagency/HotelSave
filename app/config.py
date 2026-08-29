@@ -39,6 +39,12 @@ class Settings(BaseSettings):
     booking_affiliate_id: str | None = None
     booking_env: str = "sandbox"  # sandbox | production
 
+    # LiteAPI (§9) — self-serve data feed for detection (read-only; no bookings).
+    # Sandbox key is enough for dev/validation; see docs/price-source-migration.md.
+    liteapi_key: str | None = None
+    liteapi_country_code: str | None = None  # optional ISO-2 filter for hotel lookup
+    liteapi_guest_nationality: str = "LV"  # required by the rates endpoint
+
     # Parse (§6a): booking parser + LLM model
     parser: str = "mock"  # mock | claude
     anthropic_api_key: str | None = None

@@ -13,6 +13,10 @@ def get_price_source() -> PriceSource:
     name = settings.price_source.lower()
     if name == "mock":
         return MockPriceSource()
+    if name == "liteapi":
+        from .liteapi import LiteAPIPriceSource  # §9 — self-serve detection feed
+
+        return LiteAPIPriceSource()
     if name == "booking":
         from .booking import BookingPriceSource  # §9 — Booking.com Demand API (affiliate)
 
