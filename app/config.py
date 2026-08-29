@@ -15,6 +15,13 @@ class Settings(BaseSettings):
 
     database_url: str = "sqlite:///./hotelsave.db"
 
+    # Browser origins allowed to call the API (the marketing site + local dev).
+    # Comma-separated; never "*" — these requests carry an auth token.
+    cors_origins: str = (
+        "https://myroomwatch.com,https://www.myroomwatch.com,"
+        "http://localhost:8000,http://127.0.0.1:5500"
+    )
+
     # Auth
     secret_key: str = "dev-insecure-change-me"
     access_token_expire_minutes: int = 60 * 24 * 7
@@ -63,6 +70,10 @@ class Settings(BaseSettings):
 
     # Klaviyo (§10)
     klaviyo_api_key: str | None = None
+
+    @property
+    def cors_origin_list(self) -> list[str]:
+        return [o.strip() for o in self.cors_origins.split(",") if o.strip()]
 
     @property
     def is_sqlite(self) -> bool:

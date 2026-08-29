@@ -105,14 +105,18 @@
       <div class="price-box">
         <div class="amount num">€15</div>
         <div class="per">per month, all bookings</div>
-        <form class="waitlist-form" id="waitlist-form" novalidate>
-          <input type="email" name="email" id="waitlist-email" required
+        <form class="waitlist-form" id="signup-form" novalidate>
+          <input type="email" name="email" id="signup-email" required
                  autocomplete="email" placeholder="you@example.com"
                  aria-label="Email address">
-          <button class="btn btn-primary btn-block" type="submit" id="waitlist-submit">Join the waitlist</button>
+          <input type="password" name="password" id="signup-password" required
+                 autocomplete="new-password" minlength="8" placeholder="Password (8+ characters)"
+                 aria-label="Password">
+          <button class="btn btn-primary btn-block" type="submit" id="signup-submit">Create my account</button>
         </form>
-        <p class="form-status" id="waitlist-status" role="status" aria-live="polite" hidden></p>
-        <p class="form-fine">One email when we launch. No spam, unsubscribe anytime.</p>
+        <p class="form-status" id="signup-status" role="status" aria-live="polite" hidden></p>
+        <p class="form-fine">Free while in beta. Already have an account?
+          <a href="/dashboard.html">Sign in</a>.</p>
       </div>
     </div>
   </section>
@@ -121,25 +125,23 @@
 <footer class="site-footer">
   <div class="wrap">
     <a class="logo" href="#"><span class="logo-mark"></span>MyRoomWatch</a>
-    <p>© 2026 MyRoomWatch · We never touch your card or your booking — you always rebook yourself.
-       · <a href="mailto:hello@myroomwatch.com">hello@myroomwatch.com</a></p>
+    <p>© 2026 MyRoomWatch · We never touch your card or your booking — you always rebook yourself.<br>
+       <a href="/privacy.html">Privacy</a> · <a href="/terms.html">Terms</a> ·
+       <a href="/dashboard.html">Sign in</a> ·
+       <a href="mailto:hello@myroomwatch.com">hello@myroomwatch.com</a></p>
   </div>
 </footer>
 
 <script>
 (function () {
-  // Waitlist → Klaviyo (client subscribe API — safe to expose: public site key only).
-  // Wire-up: create a MyRoomWatch-specific Klaviyo account (NOT a client account),
-  // make a "Waitlist" list, then fill these two in and redeploy:
-  var KLAVIYO_COMPANY_ID = "Uyzstd";   // Klaviyo public API key / Site ID (MyRoomWatch account)
-  var KLAVIYO_LIST_ID = "S4RfZC";      // the Waitlist list id
-  // Until configured, submissions fall back to a pre-filled email to hello@ —
-  // the form never dead-ends a visitor.
-
-  var form = document.getElementById("waitlist-form");
-  var input = document.getElementById("waitlist-email");
-  var button = document.getElementById("waitlist-submit");
-  var status = document.getElementById("waitlist-status");
+  // Signup posts to the MyRoomWatch API. On success we store the token and go
+  // straight to the dashboard, so a new user lands somewhere useful.
+  var API = "https://api.myroomwatch.com";
+  var form = document.getElementById("signup-form");
+  var email = document.getElementById("signup-email");
+  var password = document.getElementById("signup-password");
+  var button = document.getElementById("signup-submit");
+  var status = document.getElementById("signup-status");
   if (!form) return;
 
   function show(msg, ok) {
@@ -148,51 +150,55 @@
     status.classList.toggle("ok", !!ok);
   }
 
+  function firstError(payload, fallback) {
+    // FastAPI returns {detail: "..."} or {detail: [{msg, loc}, ...]}.
+    var d = payload && payload.detail;
+    if (typeof d === "string") return d;
+    if (Array.isArray(d) && d.length && d[0].msg) return d[0].msg;
+    return fallback;
+  }
+
   form.addEventListener("submit", function (e) {
     e.preventDefault();
-    var email = (input.value || "").trim();
-    if (!email || input.validity.typeMismatch || email.indexOf("@") < 1) {
-      show("Please enter a valid email address.", false);
-      input.focus();
-      return;
-    }
-
-    if (!KLAVIYO_COMPANY_ID || !KLAVIYO_LIST_ID) {
-      // Not wired to a list yet — hand off to email so the signup isn't lost.
-      window.location.href = "mailto:hello@myroomwatch.com"
-        + "?subject=" + encodeURIComponent("Waitlist signup")
-        + "&body=" + encodeURIComponent("Please add me to the MyRoomWatch waitlist: " + email);
-      show("Almost there — send the email that just opened and you're on the list.", true);
-      return;
-    }
+    var mail = (email.value || "").trim();
+    var pass = password.value || "";
+    if (!mail || email.validity.typeMismatch) { show("Please enter a valid email address.", false); email.focus(); return; }
+    if (pass.length < 8) { show("Password must be at least 8 characters.", false); password.focus(); return; }
 
     button.disabled = true;
-    button.textContent = "Joining…";
-    fetch("https://a.klaviyo.com/client/subscriptions/?company_id=" + encodeURIComponent(KLAVIYO_COMPANY_ID), {
+    button.textContent = "Creating…";
+    fetch(API + "/auth/register", {
       method: "POST",
-      headers: { "Content-Type": "application/json", "revision": "2024-10-15" },
-      body: JSON.stringify({
-        data: {
-          type: "subscription",
-          attributes: {
-            custom_source: "myroomwatch.com waitlist",
-            profile: { data: { type: "profile", attributes: { email: email } } }
-          },
-          relationships: { list: { data: { type: "list", id: KLAVIYO_LIST_ID } } }
-        }
-      })
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email: mail, password: pass })
     }).then(function (resp) {
-      if (resp.ok || resp.status === 202) {
-        form.hidden = true;
-        show("You're on the list — we'll email you at launch.", true);
-      } else {
-        throw new Error("HTTP " + resp.status);
+      return resp.json().then(function (body) { return { ok: resp.ok, status: resp.status, body: body }; });
+    }).then(function (r) {
+      if (!r.ok) {
+        if (r.status === 400 || r.status === 409) {
+          throw new Error("That email is already registered — sign in instead.");
+        }
+        throw new Error(firstError(r.body, "Could not create your account. Please try again."));
       }
-    }).catch(function () {
-      show("Something went wrong — email hello@myroomwatch.com and we'll add you.", false);
+      // Registered — log in to get a token, then hand off to the dashboard.
+      var creds = new URLSearchParams({ username: mail, password: pass });
+      return fetch(API + "/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: creds.toString()
+      }).then(function (lr) { return lr.json(); }).then(function (tok) {
+        if (tok && tok.access_token) {
+          try { localStorage.setItem("mrw_token", tok.access_token); } catch (err) { /* private mode */ }
+          window.location.href = "/dashboard.html";
+        } else {
+          show("Account created — please sign in.", true);
+        }
+      });
+    }).catch(function (err) {
+      show(err.message || "Something went wrong. Please try again.", false);
     }).finally(function () {
       button.disabled = false;
-      button.textContent = "Join the waitlist";
+      button.textContent = "Create my account";
     });
   });
 })();
