@@ -46,6 +46,8 @@ services:
         value: claude
       - key: ANTHROPIC_API_KEY
         sync: false # for parsing real forwarded confirmation emails (§6a)
+      - key: ANTHROPIC_WORKSPACE_ID
+        sync: false # only needed for identity-linked keys; blank for workspace-scoped
       - key: CLAUDE_MODEL
         value: claude-opus-5
       - key: INBOUND_WEBHOOK_SECRET

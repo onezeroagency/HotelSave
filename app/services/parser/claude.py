@@ -23,9 +23,22 @@ SYSTEM_PROMPT = (
 
 class ClaudeParser(BookingParser):
     def __init__(self) -> None:
+        # Identity-linked API keys (as opposed to workspace-scoped ones) are
+        # rejected with a 400 unless the request names the workspace it acts in:
+        #   "anthropic-workspace-id is required when authenticating with an
+        #    identity-linked API key"
+        # Set ANTHROPIC_WORKSPACE_ID for those keys; workspace-scoped keys need
+        # nothing and the header is simply omitted.
+        headers = (
+            {"anthropic-workspace-id": settings.anthropic_workspace_id}
+            if settings.anthropic_workspace_id
+            else None
+        )
         # api_key defaults to ANTHROPIC_API_KEY / an `ant auth login` profile when
         # settings.anthropic_api_key is None.
-        self._client = anthropic.Anthropic(api_key=settings.anthropic_api_key)
+        self._client = anthropic.Anthropic(
+            api_key=settings.anthropic_api_key, default_headers=headers
+        )
         self._model = settings.claude_model
 
     def parse(self, raw_email_text: str) -> ParsedBooking | None:

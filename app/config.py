@@ -48,6 +48,9 @@ class Settings(BaseSettings):
     # Parse (§6a): booking parser + LLM model
     parser: str = "mock"  # mock | claude
     anthropic_api_key: str | None = None
+    # Required only for identity-linked API keys, which 400 without it; leave
+    # blank for workspace-scoped keys (see app/services/parser/claude.py).
+    anthropic_workspace_id: str | None = None
     claude_model: str = "claude-opus-5"
 
     # Inbound email (§5)
