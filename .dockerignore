@@ -1,0 +1,12 @@
+.git
+.venv
+__pycache__
+*.pyc
+*.db
+.env
+landing/
+docs/
+tests/
+scripts/
+vercel.json
+README.md
