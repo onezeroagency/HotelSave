@@ -58,6 +58,15 @@ drops they're paying for.
 
 ---
 
+> **Ready-made templates:** paste-ready HTML for both flows lives in
+> [`docs/klaviyo-templates/`](klaviyo-templates/) — `price-drop.html` and
+> `deadline-guard.html`. They already brand-match the site, branch on
+> `has_rebook_url`, and use only keys the backend actually emits. In Klaviyo:
+> new email → drag in a block → source/HTML view → paste. **They cannot be
+> created via the API from this repo's tooling** — the Klaviyo connector is
+> pointed at a different account, so building them in the MyRoomWatch account's
+> UI is deliberate, not a shortcut.
+
 ## 3. Flow 1 — Price Drop Alert  *(trigger: `Price Drop Found`)*
 
 Immediate send. Subject leads with the number. One job: show the saving, the

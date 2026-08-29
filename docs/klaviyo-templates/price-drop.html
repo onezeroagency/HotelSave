@@ -1,0 +1,96 @@
+<!-- MyRoomWatch — Flow 1: Price Drop Alert
+     Trigger: metric "Price Drop Found" · send immediately · MARK AS TRANSACTIONAL
+     Paste into a Klaviyo email template (drag a "Text"/HTML block and use source view).
+     Every {{ event.* }} key below is emitted by app/scheduler/worker.py.
+     The has_rebook_url branch keeps the CTA from becoming a dead link before an
+     affiliate program supplies deep-links. -->
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#F4F6F7;padding:28px 0;font-family:'Public Sans',Helvetica,Arial,sans-serif;">
+  <tr><td align="center">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#FFFFFF;border:1px solid #E1E5E9;border-radius:18px;overflow:hidden;">
+
+      <tr><td style="padding:26px 30px 0;">
+        <p style="margin:0;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:#00A870;font-weight:600;">Price drop found</p>
+        <h1 style="margin:10px 0 0;font-family:Manrope,Helvetica,Arial,sans-serif;font-size:26px;line-height:1.2;letter-spacing:-.02em;color:#0D2137;font-weight:800;">
+          Your room at {{ event.hotel }} just got cheaper.
+        </h1>
+        <p style="margin:10px 0 0;font-size:14.5px;line-height:1.6;color:#5B6672;">
+          {{ event.city }} · {{ event.check_in }} → {{ event.check_out }}{% if event.adults %} · {{ event.adults }} guest(s){% endif %}{% if event.board_type %} · {{ event.board_type }}{% endif %}
+        </p>
+      </td></tr>
+
+      <tr><td style="padding:22px 30px 0;">
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-top:1px solid #E1E5E9;">
+          <tr>
+            <td style="padding:18px 0 0;font-size:14.5px;color:#5B6672;">You paid</td>
+            <td align="right" style="padding:18px 0 0;font-size:15px;color:#5B6672;text-decoration:line-through;">{{ event.currency }} {{ event.old_price }}</td>
+          </tr>
+          <tr>
+            <td style="padding:8px 0 0;font-size:14.5px;color:#0D2137;">New rate — same room, still refundable</td>
+            <td align="right" style="padding:8px 0 0;font-family:Manrope,Helvetica,Arial,sans-serif;font-size:22px;font-weight:800;color:#0A7A52;">{{ event.currency }} {{ event.new_price }}</td>
+          </tr>
+        </table>
+      </td></tr>
+
+      <tr><td style="padding:20px 30px 0;">
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#E4F5EE;border-radius:13px;">
+          <tr><td align="center" style="padding:18px;">
+            <p style="margin:0;font-size:12.5px;letter-spacing:.06em;text-transform:uppercase;color:#0A7A52;font-weight:600;">You save</p>
+            <p style="margin:6px 0 0;font-family:Manrope,Helvetica,Arial,sans-serif;font-size:34px;font-weight:800;letter-spacing:-.03em;color:#0A7A52;">
+              {{ event.currency }} {{ event.savings_amount }}
+            </p>
+            <p style="margin:4px 0 0;font-size:13.5px;color:#0A7A52;">that's {{ event.savings_pct }}% off what you paid</p>
+          </td></tr>
+        </table>
+      </td></tr>
+
+      {% if event.has_rebook_url %}
+      <tr><td style="padding:22px 30px 0;">
+        <a href="{{ event.rebook_url }}" style="display:block;background:#00A870;color:#FFFFFF;text-decoration:none;text-align:center;padding:16px;border-radius:13px;font-family:Manrope,Helvetica,Arial,sans-serif;font-size:16px;font-weight:700;">
+          Rebook at the lower rate →
+        </a>
+      </td></tr>
+      {% else %}
+      <tr><td style="padding:22px 30px 0;">
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #E1E5E9;border-radius:13px;">
+          <tr><td style="padding:16px 18px;">
+            <p style="margin:0;font-size:14.5px;line-height:1.65;color:#0D2137;font-weight:600;">How to grab it</p>
+            <p style="margin:8px 0 0;font-size:14px;line-height:1.7;color:#5B6672;">
+              Search <strong style="color:#0D2137;">{{ event.hotel }}</strong> for
+              {{ event.check_in }} – {{ event.check_out }}{% if event.adults %}, {{ event.adults }} guest(s){% endif %},
+              and take any <strong style="color:#0D2137;">refundable</strong> rate at or below
+              <strong style="color:#0D2137;">{{ event.currency }} {{ event.new_price }}</strong>.
+            </p>
+          </td></tr>
+        </table>
+      </td></tr>
+      {% endif %}
+
+      <tr><td style="padding:20px 30px 0;">
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#FDF3E0;border:1px solid #F0DDB8;border-radius:13px;">
+          <tr><td style="padding:16px 18px;">
+            <p style="margin:0;font-size:14px;line-height:1.65;color:#8A5A08;">
+              <strong>Book the new rate first, confirm it, then cancel the original.</strong>
+              Never cancel first — you could lose the room.
+            </p>
+          </td></tr>
+        </table>
+      </td></tr>
+
+      <tr><td style="padding:18px 30px 30px;">
+        <p style="margin:0;font-size:13.5px;line-height:1.65;color:#5B6672;">
+          Your free-cancellation window closes <strong style="color:#0D2137;">{{ event.cancellation_deadline }}</strong>,
+          so don't sit on it. Prices move — check the rate before you book.
+        </p>
+      </td></tr>
+
+      <tr><td style="padding:0 30px 28px;">
+        <p style="margin:0;padding-top:18px;border-top:1px solid #E1E5E9;font-size:12.5px;line-height:1.6;color:#8A939C;">
+          You're getting this because you asked MyRoomWatch to watch this booking.
+          We never touch your card or your booking — you always rebook yourself.
+          <a href="https://myroomwatch.com/dashboard.html" style="color:#0A7A52;">See all your bookings</a>
+        </p>
+      </td></tr>
+
+    </table>
+  </td></tr>
+</table>

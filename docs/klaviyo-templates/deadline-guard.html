@@ -1,0 +1,64 @@
+<!-- MyRoomWatch — Flow 2: Deadline Guard
+     Trigger: metric "Deadline Approaching" · send immediately · MARK AS TRANSACTIONAL
+     This is the email that fires when we found NOTHING — the retention story.
+     Every {{ event.* }} key below is emitted by app/scheduler/worker.py. -->
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#F4F6F7;padding:28px 0;font-family:'Public Sans',Helvetica,Arial,sans-serif;">
+  <tr><td align="center">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#FFFFFF;border:1px solid #E1E5E9;border-radius:18px;overflow:hidden;">
+
+      <tr><td style="padding:26px 30px 0;">
+        <p style="margin:0;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:#8A5A08;font-weight:600;">Deadline approaching</p>
+        <h1 style="margin:10px 0 0;font-family:Manrope,Helvetica,Arial,sans-serif;font-size:26px;line-height:1.2;letter-spacing:-.02em;color:#0D2137;font-weight:800;">
+          Your free-cancellation window at {{ event.hotel }} closes soon.
+        </h1>
+        <p style="margin:10px 0 0;font-size:14.5px;line-height:1.6;color:#5B6672;">
+          {{ event.city }} · {{ event.check_in }} → {{ event.check_out }}
+        </p>
+      </td></tr>
+
+      <tr><td style="padding:22px 30px 0;">
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#FDF3E0;border:1px solid #F0DDB8;border-radius:13px;">
+          <tr><td style="padding:18px;">
+            <p style="margin:0;font-size:12.5px;letter-spacing:.06em;text-transform:uppercase;color:#8A5A08;font-weight:600;">Cancel free until</p>
+            <p style="margin:6px 0 0;font-family:Manrope,Helvetica,Arial,sans-serif;font-size:22px;font-weight:800;letter-spacing:-.02em;color:#0D2137;">
+              {{ event.cancellation_deadline }}
+            </p>
+          </td></tr>
+        </table>
+      </td></tr>
+
+      <tr><td style="padding:22px 30px 0;">
+        <p style="margin:0;font-size:15px;line-height:1.7;color:#5B6672;">
+          We've checked this stay <strong style="color:#0D2137;">{{ event.checks_done }} times</strong>
+          and haven't found a cheaper like-for-like refundable rate{% if event.lowest_seen_price %} —
+          the best we've seen is <strong style="color:#0D2137;">{{ event.currency }} {{ event.lowest_seen_price }}</strong>{% endif %}.
+        </p>
+        <p style="margin:12px 0 0;font-size:15px;line-height:1.7;color:#5B6672;">
+          We'll keep watching right up until your window closes. If anything drops,
+          you'll hear from us straight away — nothing else for you to do.
+        </p>
+      </td></tr>
+
+      <tr><td style="padding:22px 30px 0;">
+        <a href="https://myroomwatch.com/dashboard.html" style="display:block;background:#0D2137;color:#FFFFFF;text-decoration:none;text-align:center;padding:15px;border-radius:13px;font-family:Manrope,Helvetica,Arial,sans-serif;font-size:15.5px;font-weight:700;">
+          See this booking →
+        </a>
+      </td></tr>
+
+      <tr><td style="padding:18px 30px 30px;">
+        <p style="margin:0;font-size:13.5px;line-height:1.65;color:#5B6672;">
+          Happy with your booking? Do nothing — it stands exactly as you made it.
+          We never change or cancel anything on your behalf.
+        </p>
+      </td></tr>
+
+      <tr><td style="padding:0 30px 28px;">
+        <p style="margin:0;padding-top:18px;border-top:1px solid #E1E5E9;font-size:12.5px;line-height:1.6;color:#8A939C;">
+          You're getting this because you asked MyRoomWatch to watch this booking.
+          <a href="https://myroomwatch.com/dashboard.html" style="color:#0A7A52;">See all your bookings</a>
+        </p>
+      </td></tr>
+
+    </table>
+  </td></tr>
+</table>
