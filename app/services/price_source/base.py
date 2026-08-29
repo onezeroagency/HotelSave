@@ -5,7 +5,7 @@ of the system only ever talks to `PriceSource` — never to a vendor SDK directl
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from datetime import date
+from datetime import date, datetime
 from decimal import Decimal
 
 
@@ -34,6 +34,17 @@ class RateCandidate:
     children: int | None
     refundable: bool
     deep_link: str | None  # affiliate rebook link (§9)
+    # What the provider calls this room ("Standard Double Room"). Kept so §7 can
+    # reject a cheaper *different* room and so an alert can name what it found —
+    # without it, diagnosing a suspicious drop means re-querying the provider by
+    # hand. Providers that don't name rooms leave it None, which never blocks a
+    # match on its own.
+    room_name: str | None = None
+    # When this rate stops being free to cancel. `refundable` alone is too weak:
+    # a rate can be refundable and still have a *worse* window than the booking
+    # the user already holds, which is not the same product. None means the
+    # provider didn't tell us — treated as unverified, never as equivalent.
+    free_cancellation_until: datetime | None = None
 
 
 class PriceSource(ABC):

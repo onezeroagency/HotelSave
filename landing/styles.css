@@ -5,6 +5,11 @@
   --amber:#C98A16;--amber-ink:#8A5A08;--amber-soft:#FDF3E0;--amber-line:#F0DDB8;--amber-on-dark:#F0C069;
 }
 *{box-sizing:border-box}
+/* Any author `display` beats the UA stylesheet's [hidden]{display:none}, so the
+   hidden attribute silently stops working on styled elements — that left "Sign
+   out" showing on the signed-out dashboard. The JS toggles .hidden throughout,
+   so enforce it once here. */
+[hidden]{display:none!important}
 body{margin:0;background:var(--bg);color:var(--ink);font-family:"Public Sans",system-ui,sans-serif;-webkit-font-smoothing:antialiased}
 a{color:var(--accent-ink);text-decoration:none}
 a:hover{color:var(--ink)}
@@ -28,6 +33,10 @@ h1,h2,h3{font-family:Manrope,sans-serif;margin:0}
 .btn-primary:hover{background:var(--accent-ink);color:var(--on-accent)}
 .btn-dark{padding:11px 20px;border-radius:11px;background:var(--ink);color:#fff;font-size:14px}
 .btn-dark:hover{color:#fff;opacity:.9}
+/* Secondary header action — reads as a button so returning users can find it,
+   without competing with the signup CTA next to it. */
+.btn-ghost{padding:10px 18px;border-radius:11px;border:1px solid var(--line);background:transparent;color:var(--ink);font-size:14px}
+.btn-ghost:hover{color:var(--ink);border-color:var(--ink)}
 .btn-block{display:block;width:100%}
 
 /* Hero */
@@ -76,6 +85,10 @@ h1,h2,h3{font-family:Manrope,sans-serif;margin:0}
 .cadence .bar{flex:1;height:8px;border-radius:4px;background:var(--line);overflow:hidden;position:relative}
 .cadence .bar i{position:absolute;inset:0;right:auto;background:var(--accent);border-radius:4px}
 .cadence .rate{font:700 13.5px/1 Manrope,sans-serif;white-space:nowrap}
+/* Rows without a progress bar (the worked example) still push the figure to the
+   right edge, and carry it at a size that reads as the point of the panel. */
+.cadence .row > .rate:last-child{margin-left:auto;font-size:19px;letter-spacing:-.02em}
+.cadence .fine{font:400 12.5px/1.55 "Public Sans",sans-serif;color:var(--muted);margin:20px 0 0;padding-top:16px;border-top:1px solid var(--line)}
 
 /* CTA */
 .cta-section{padding:0 0 64px}
@@ -97,7 +110,12 @@ h1,h2,h3{font-family:Manrope,sans-serif;margin:0}
 /* Mobile */
 @media (max-width:900px){
   .wrap{padding:0 22px}
+  /* Drop the section links on small screens, but never the actions — hiding
+     every nav link left the mobile header with no way to sign up or sign in. */
+  .nav{gap:10px}
   .nav a{display:none}
+  .nav a.btn{display:inline-block}
+  .nav .btn-dark,.nav .btn-ghost{padding:10px 14px;font-size:13.5px}
   .hero{grid-template-columns:1fr;gap:30px;padding:40px 0 44px}
   .hero h1{font-size:39px;line-height:1.06;letter-spacing:-.04em;margin-top:16px}
   .hero .sub{font-size:15.5px;margin-top:14px}
@@ -176,6 +194,9 @@ h1,h2,h3{font-family:Manrope,sans-serif;margin:0}
 .job-note{font:400 13.5px/1.6 "Public Sans",sans-serif;margin:18px 0 0;padding:12px 14px;border-radius:11px}
 .win-note{background:var(--accent-soft);color:var(--accent-ink)}
 .warn-note{background:var(--amber-soft);color:var(--amber-ink)}
+/* Every note that tells the user something changed ends in something to click —
+   a card that says "rates moved" and offers no action is a dead end. */
+.job-cta{margin-top:12px;padding:14px;font-size:15px;border-radius:12px}
 .empty{background:var(--surface);border:1px dashed var(--line-strong);border-radius:18px;padding:44px 30px;text-align:center}
 .empty h3{font-size:19px;font-weight:800}
 .empty p{font:400 15px/1.65 "Public Sans",sans-serif;color:var(--muted);margin:10px auto 0;max-width:46ch}

@@ -48,7 +48,7 @@
           <a href="mailto:save@myroomwatch.com">save@myroomwatch.com</a> to add one.</p>
       </div>
       <div class="totals">
-        <div class="total"><b class="num green" id="total-saved">—</b><span>found so far</span></div>
+        <div class="total"><b class="num green" id="total-saved">—</b><span>worth a look</span></div>
         <div class="total"><b class="num" id="total-watching">—</b><span>being watched</span></div>
         <div class="total"><b class="num" id="total-checks">—</b><span>price checks run</span></div>
       </div>
@@ -128,28 +128,39 @@
       return;
     }
 
-    var saved = 0, watching = 0, checks = 0, currency = "EUR";
+    var attention = 0, watching = 0, checks = 0;
     jobs.forEach(function (j) {
       checks += j.check_count || 0;
       if (["active", "drop_found", "deadline_soon"].indexOf(j.status) >= 0) watching++;
-      if (j.currency) currency = j.currency;
-      // "Found so far" = the best gap we've actually seen vs. what they paid.
-      if (j.lowest_seen_price !== null && j.lowest_seen_price !== undefined) {
-        var gap = Number(j.original_price) - Number(j.lowest_seen_price);
-        if (gap > 0) saved += gap;
+      // A money total here would be a running claim about savings we've never
+      // verified. Count what the user should act on instead — that's the
+      // question a dashboard is actually answering.
+      if (j.lowest_seen_price !== null && j.lowest_seen_price !== undefined
+          && Number(j.original_price) > Number(j.lowest_seen_price)) {
+        attention++;
       }
     });
-    document.getElementById("total-saved").textContent = saved > 0 ? money(saved, currency) : money(0, currency);
+    document.getElementById("total-saved").textContent = String(attention);
     document.getElementById("total-watching").textContent = String(watching);
     document.getElementById("total-checks").textContent = String(checks);
 
     jobsEl.innerHTML = jobs.map(function (j) {
       var st = STATE[j.status] || { label: j.status, cls: "muted" };
+      // Jobs alerted before the rebook-link rule existed are still stored as
+      // drop_found; showing that chip next to "nothing you can book" would
+      // contradict itself. The link is the source of truth either way.
+      if (j.status === "drop_found" && !j.current_best_url) st = STATE.active;
       var best = j.current_best_price !== null && j.current_best_price !== undefined
         ? Number(j.current_best_price) : null;
       var orig = Number(j.original_price);
       var diff = best !== null ? orig - best : null;
-      var showWin = diff !== null && diff > 0;
+      // A lower number we can't hand the user a way to book is not a win, and
+      // telling them to "book the new rate first" when there is no new rate to
+      // book is the worst thing this page can do. Only claim a saving when
+      // there's a link behind it.
+      var canRebook = !!j.current_best_url;
+      var showWin = diff !== null && diff > 0 && canRebook;
+      var unreachable = diff !== null && diff > 0 && !canRebook;
       return '' +
         '<article class="job">' +
           '<div class="job-head">' +
@@ -166,8 +177,15 @@
           '</div>' +
           '<div class="job-grid">' +
             '<div><span>You paid</span><b class="num">' + money(orig, j.currency) + '</b></div>' +
-            '<div><span>Best we\'ve seen</span><b class="num' + (showWin ? " green" : "") + '">' +
-              money(j.lowest_seen_price, j.currency) + '</b></div>' +
+            // Only ever print a second price when it's one the user can actually
+            // book. An unreachable figure next to "You paid" reads as a saving
+            // on offer — the exact false promise the rest of this page avoids.
+            // Without a link, report what we know qualitatively instead.
+            (showWin
+              ? '<div><span>Same room, now</span><b class="num green">' +
+                money(j.current_best_price, j.currency) + '</b></div>'
+              : '<div><span>Rates since you booked</span><b class="num">' +
+                (unreachable ? "moved" : "no change yet") + '</b></div>') +
             '<div><span>Cancel free until</span><b class="num">' + fmtDate(j.cancellation_deadline) + '</b></div>' +
             '<div><span>Checks run</span><b class="num">' + (j.check_count || 0) + '</b></div>' +
           '</div>' +
@@ -179,7 +197,18 @@
             : "") +
           (showWin
             ? '<p class="job-note win-note"><strong>' + money(diff, j.currency) + ' cheaper</strong> right now. ' +
-              'Book the new rate first, confirm it, then cancel the original — never the other way round.</p>'
+              'Book the new rate first, confirm it, then cancel the original — never the other way round.</p>' +
+              '<a class="btn btn-primary btn-block job-cta" href="' + j.current_best_url +
+              '" target="_blank" rel="noopener">Rebook at the lower rate →</a>'
+            : "") +
+          (unreachable
+            ? '<p class="job-note">Rates for your dates have <strong>moved since you booked</strong>. ' +
+              'Prices differ between booking sites, so we won\'t quote you a figure we can\'t ' +
+              'guarantee — but while you can still cancel free, it\'s worth a look.</p>' +
+              (j.check_url
+                ? '<a class="btn btn-primary btn-block job-cta" href="' + j.check_url +
+                  '" target="_blank" rel="noopener">Check today\'s price →</a>'
+                : "")
             : "") +
         '</article>';
     }).join("");
@@ -195,7 +224,14 @@
       })
       .then(function (jobs) { if (jobs) { showDash(); render(jobs); } })
       .catch(function (err) {
-        dashStatus.textContent = err.message || "Something went wrong.";
+        // The error line lives inside the dash panel, so it has to be on screen
+        // or a failed load leaves the page completely blank.
+        showDash();
+        // A network-level failure rejects with "Failed to fetch", which tells
+        // the user nothing — say what actually happened.
+        dashStatus.textContent = err instanceof TypeError
+          ? "We couldn't reach MyRoomWatch. Check your connection and refresh."
+          : (err.message || "Something went wrong.");
         dashStatus.hidden = false;
       });
   }

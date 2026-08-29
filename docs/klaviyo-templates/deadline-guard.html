@@ -27,6 +27,43 @@
         </table>
       </td></tr>
 
+      {% if event.saw_movement %}
+      <!-- Mode A: rates moved on a feed we can't rebook from. We say movement
+           happened and send them to look — we never quote a number, because we
+           can't guarantee it exists on the channel they booked. -->
+      <tr><td style="padding:22px 30px 0;">
+        <p style="margin:0;font-size:15px;line-height:1.7;color:#5B6672;">
+          We've checked this stay <strong style="color:#0D2137;">{{ event.checks_done }} times</strong>,
+          and rates for your dates <strong style="color:#0D2137;">have moved since you booked</strong>.
+        </p>
+        <p style="margin:12px 0 0;font-size:15px;line-height:1.7;color:#5B6672;">
+          We can't tell you what you'd pay today — prices differ between booking
+          sites, and we'd rather send you to look than quote you a number you
+          might not be able to get. While you can still cancel for free, it's
+          worth two minutes to check.
+        </p>
+      </td></tr>
+
+      {% if event.has_check_url %}
+      <tr><td style="padding:22px 30px 0;">
+        <a href="{{ event.check_url }}" style="display:block;background:#00A870;color:#FFFFFF;text-decoration:none;text-align:center;padding:16px;border-radius:13px;font-family:Manrope,Helvetica,Arial,sans-serif;font-size:16px;font-weight:700;">
+          Check today's price →
+        </a>
+      </td></tr>
+      {% endif %}
+
+      <tr><td style="padding:20px 30px 0;">
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#FDF3E0;border:1px solid #F0DDB8;border-radius:13px;">
+          <tr><td style="padding:16px 18px;">
+            <p style="margin:0;font-size:14px;line-height:1.65;color:#8A5A08;">
+              Only if you find something genuinely cheaper for the same room:
+              <strong>book the new rate first, confirm it, then cancel the original.</strong>
+              Never cancel first — you could lose the room.
+            </p>
+          </td></tr>
+        </table>
+      </td></tr>
+      {% else %}
       <tr><td style="padding:22px 30px 0;">
         <p style="margin:0;font-size:15px;line-height:1.7;color:#5B6672;">
           We've checked this stay <strong style="color:#0D2137;">{{ event.checks_done }} times</strong>
@@ -38,6 +75,7 @@
           you'll hear from us straight away — nothing else for you to do.
         </p>
       </td></tr>
+      {% endif %}
 
       <tr><td style="padding:22px 30px 0;">
         <a href="https://myroomwatch.com/dashboard.html" style="display:block;background:#0D2137;color:#FFFFFF;text-decoration:none;text-align:center;padding:15px;border-radius:13px;font-family:Manrope,Helvetica,Arial,sans-serif;font-size:15.5px;font-weight:700;">
@@ -62,3 +100,8 @@
     </table>
   </td></tr>
 </table>
+<!-- PLAINTEXT NOTE: the text/plain version of this email must render the link as
+     {{ event.check_url|safe }}. Klaviyo autoescapes, and without |safe the URL
+     arrives as ...&amp;checkin=... — correct inside an HTML href, broken in
+     plaintext, where the query params stop parsing. Caught by rendering the
+     live template (Klaviyo template XhJDAt) rather than by reading it. -->

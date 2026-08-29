@@ -1,5 +1,7 @@
 """End-to-end API tests for the skeleton: health, auth, and MonitoringJob CRUD."""
 
+from app.services import klaviyo
+
 
 def test_health(client):
     resp = client.get("/health")
@@ -26,6 +28,38 @@ def test_register_login_me(client):
 
 def test_me_requires_auth(client):
     assert client.get("/auth/me").status_code == 401
+
+
+def test_register_emits_account_created(client, monkeypatch):
+    """The welcome flow triggers off this event — no event, no onboarding email."""
+    events = []
+    monkeypatch.setattr(
+        "app.services.klaviyo.emit_event",
+        lambda name, email, props: (events.append((name, email, props)), True)[1],
+    )
+    assert client.post("/auth/register", json={"email": "new@x.com", "password": "password123"}).status_code == 201
+    assert events == [
+        (
+            klaviyo.EVENT_ACCOUNT_CREATED,
+            "new@x.com",
+            {"signup_source": "web", "forward_to": "save@myroomwatch.com"},
+        )
+    ]
+
+    # A rejected duplicate must not re-trigger the welcome flow.
+    events.clear()
+    assert client.post("/auth/register", json={"email": "new@x.com", "password": "password123"}).status_code == 409
+    assert events == []
+
+
+def test_register_survives_klaviyo_failure(client, monkeypatch):
+    """A dead Klaviyo must never cost us a signup."""
+    monkeypatch.setattr(
+        "app.services.klaviyo.emit_event",
+        lambda *a, **k: (_ for _ in ()).throw(RuntimeError("klaviyo down")),
+    )
+    r = client.post("/auth/register", json={"email": "resilient@x.com", "password": "password123"})
+    assert r.status_code == 201
 
 
 def _job_payload(**overrides):
@@ -95,3 +129,32 @@ def test_jobs_are_scoped_to_owner(client):
     ).json()["access_token"]
     r = client.get(f"/jobs/{job_id}", headers={"Authorization": f"Bearer {t2}"})
     assert r.status_code == 404
+
+
+def test_jobs_expose_a_check_prices_link(client):
+    """The dashboard needs the same link the deadline email sends — a card that
+    says "rates moved" with nothing to click is a dead end."""
+    client.post("/auth/register", json={"email": "cta@x.com", "password": "password123"})
+    token = client.post(
+        "/auth/login", data={"username": "cta@x.com", "password": "password123"}
+    ).json()["access_token"]
+    auth = {"Authorization": f"Bearer {token}"}
+    client.post(
+        "/jobs",
+        headers=auth,
+        json={
+            "hotel_name_raw": "Grand Poet Hotel",
+            "city": "Riga",
+            "check_in": "2026-09-26",
+            "check_out": "2026-09-28",
+            "nights": 2,
+            "adults": 2,
+            "original_price": "436.00",
+            "currency": "EUR",
+            "refundable": True,
+        },
+    )
+    job = client.get("/jobs", headers=auth).json()[0]
+    assert job["check_url"], "dashboard has no CTA without this"
+    assert "checkin=2026-09-26" in job["check_url"]
+    assert "Grand+Poet" in job["check_url"] or "Grand%20Poet" in job["check_url"]

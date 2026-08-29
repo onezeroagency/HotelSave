@@ -71,7 +71,10 @@ def test_expired_when_deadline_passed(db_session, monkeypatch):
 
     events: list[str] = []
     monkeypatch.setattr(
-        "app.services.klaviyo.emit_event", lambda name, email, props: events.append(name)
+        # Must report delivery success — the worker only closes a job once the
+        # user has actually been told (see test_expiry_retries_when_undelivered).
+        "app.services.klaviyo.emit_event",
+        lambda name, email, props: (events.append(name), True)[1],
     )
     worker.run_once(db=session)
     session.refresh(job)
@@ -81,6 +84,32 @@ def test_expired_when_deadline_passed(db_session, monkeypatch):
     # Past the deadline we never price or fire an actionable alert (§8):
     assert job.check_count == 0  # no aggregator call
     assert events == ["Monitoring Ended"]  # not "Price Drop Found"
+
+
+def test_expiry_retries_when_undelivered(db_session, monkeypatch):
+    """Expiring on a failed send would clear next_check_at and strand the wrap-up."""
+    session, _ = db_session
+    now = datetime.now(timezone.utc)
+    job = _seed_job(session, cancellation_deadline=now - timedelta(hours=1))
+
+    monkeypatch.setattr("app.services.klaviyo.emit_event", lambda *a, **k: False)
+    worker.run_once(db=session)
+    session.refresh(job)
+
+    assert job.status == JobStatus.active.value  # still open, not silently closed
+    assert job.next_check_at is not None  # and it will come back around
+
+    # The retry is deliberately an hour out, so wind the clock forward to it.
+    job.next_check_at = now - timedelta(minutes=1)
+    session.commit()
+
+    # Once Klaviyo recovers, that pass closes it out.
+    monkeypatch.setattr("app.services.klaviyo.emit_event", lambda *a, **k: True)
+    worker.run_once(db=session)
+    session.refresh(job)
+
+    assert job.status == JobStatus.expired.value
+    assert job.next_check_at is None
 
 
 def test_paused_plan_is_skipped(db_session):
@@ -181,3 +210,160 @@ def test_failed_alert_is_retried_then_sent_once(db_session, monkeypatch):
     session.commit()
     worker.run_once(session)
     assert worker.klaviyo.EVENT_PRICE_DROP_FOUND not in sent
+
+
+class _LinklessSource:
+    """A price source that finds a real drop but can't say where to rebook it —
+    the shape of the LiteAPI feed before an affiliate program supplies links."""
+
+    def __init__(self, room_name="Standard Double Room"):
+        self.room_name = room_name
+
+    def resolve_hotel(self, *a, **k):
+        return []
+
+    def check(self, *a, **k):
+        from app.services.price_source.base import RateCandidate
+
+        return [
+            RateCandidate(
+                ota="LiteAPI",
+                total_price=Decimal("305.09"),  # well under the 400 original
+                currency="EUR",
+                board_type="BB",
+                adults=None,
+                children=None,
+                refundable=True,
+                deep_link=None,
+                room_name=self.room_name,
+            )
+        ]
+
+
+def test_unreachable_drop_is_held_not_emailed(db_session, monkeypatch):
+    """Live 2026-08-29: a booking made 20 min earlier at the cheapest refundable
+    rate its OTA sold was reported as a EUR 94.91 drop, from a supplier the user
+    had no link to. Detecting it is fine; emailing it is not."""
+    session, _ = db_session
+    job = _seed_job(session)
+
+    events = []
+    monkeypatch.setattr(worker, "get_price_source", lambda: _LinklessSource())
+    monkeypatch.setattr(
+        "app.services.klaviyo.emit_event",
+        lambda name, email, props: (events.append(name), True)[1],
+    )
+    worker.run_once(db=session)
+    session.refresh(job)
+
+    assert worker.klaviyo.EVENT_PRICE_DROP_FOUND not in events
+    assert job.status == JobStatus.active.value
+    assert job.drop_alert_sent_at is None
+    # Detection still ran: the dashboard must show what we saw, or the product
+    # looks asleep rather than honest.
+    assert job.lowest_seen_price == Decimal("305.09")
+    assert job.check_count == 1
+
+
+def test_held_drop_still_lets_the_deadline_email_through(db_session, monkeypatch):
+    """Holding the drop must not silence the deadline guard too — otherwise the
+    user gets nothing at all."""
+    session, _ = db_session
+    now = datetime.now(timezone.utc)
+    _seed_job(session, cancellation_deadline=now + timedelta(hours=12))
+
+    events = []
+    monkeypatch.setattr(worker, "get_price_source", lambda: _LinklessSource())
+    monkeypatch.setattr(
+        "app.services.klaviyo.emit_event",
+        lambda name, email, props: (events.append(name), True)[1],
+    )
+    worker.run_once(db=session)
+
+    assert worker.klaviyo.EVENT_PRICE_DROP_FOUND not in events
+    assert worker.klaviyo.EVENT_DEADLINE_APPROACHING in events
+
+
+def test_drop_is_emailed_once_links_exist(db_session, monkeypatch):
+    """The gate is temporary — with the affiliate layer live it must not block."""
+    session, _ = db_session
+    job = _seed_job(session)
+
+    monkeypatch.setattr(worker.settings, "require_rebook_url_for_alerts", False)
+    events = []
+    monkeypatch.setattr(worker, "get_price_source", lambda: _LinklessSource())
+    monkeypatch.setattr(
+        "app.services.klaviyo.emit_event",
+        lambda name, email, props: (events.append(name), True)[1],
+    )
+    worker.run_once(db=session)
+    session.refresh(job)
+
+    assert worker.klaviyo.EVENT_PRICE_DROP_FOUND in events
+    assert job.status == JobStatus.drop_found.value
+
+
+def test_deadline_email_says_movement_and_carries_a_check_link(db_session, monkeypatch):
+    """Mode A (§9): rates moved on a feed we can't rebook from, so the deadline
+    email prompts a check instead of quoting a figure."""
+    session, _ = db_session
+    now = datetime.now(timezone.utc)
+    _seed_job(session, cancellation_deadline=now + timedelta(hours=12))
+
+    events = []
+    monkeypatch.setattr(worker, "get_price_source", lambda: _LinklessSource())
+    monkeypatch.setattr(
+        worker.klaviyo,
+        "emit_event",
+        lambda name, email, props: (events.append((name, props)), True)[1],
+    )
+    worker.run_once(db=session)
+
+    props = next(p for name, p in events if name == worker.klaviyo.EVENT_DEADLINE_APPROACHING)
+    assert props["saw_movement"] is True
+    assert props["has_check_url"] is True
+    assert "checkin=2026" in props["check_url"] or "checkin=" in props["check_url"]
+    # The whole point of mode A: no figure the template could promise with.
+    assert "new_price" not in props
+    assert "savings_amount" not in props
+
+
+def test_deadline_email_reports_no_movement_when_nothing_moved(db_session, monkeypatch):
+    """Below the drop floor is not movement — otherwise every booking gets a
+    'rates moved' nudge and the signal is worthless."""
+    session, _ = db_session
+    now = datetime.now(timezone.utc)
+    job = _seed_job(session, cancellation_deadline=now + timedelta(hours=12))
+
+    class _Barely:
+        def resolve_hotel(self, *a, **k):
+            return []
+
+        def check(self, *a, **k):
+            from app.services.price_source.base import RateCandidate
+
+            return [
+                RateCandidate(
+                    ota="LiteAPI",
+                    total_price=job.original_price - Decimal("2.00"),  # under the floor
+                    currency="EUR",
+                    board_type="BB",
+                    adults=None,
+                    children=None,
+                    refundable=True,
+                    deep_link=None,
+                    room_name="Standard Double Room",
+                )
+            ]
+
+    events = []
+    monkeypatch.setattr(worker, "get_price_source", lambda: _Barely())
+    monkeypatch.setattr(
+        worker.klaviyo,
+        "emit_event",
+        lambda name, email, props: (events.append((name, props)), True)[1],
+    )
+    worker.run_once(db=session)
+
+    props = next(p for name, p in events if name == worker.klaviyo.EVENT_DEADLINE_APPROACHING)
+    assert props["saw_movement"] is False

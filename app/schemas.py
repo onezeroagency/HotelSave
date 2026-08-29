@@ -3,9 +3,10 @@
 from datetime import date, datetime
 from decimal import Decimal
 
-from pydantic import BaseModel, ConfigDict, EmailStr, Field
+from pydantic import BaseModel, ConfigDict, EmailStr, Field, computed_field
 
 from .enums import BoardType, JobStatus, PlanStatus
+from .services import rebook
 
 # --- auth ---
 
@@ -111,3 +112,13 @@ class MonitoringJobRead(BaseModel):
     current_best_ota: str | None
     current_best_url: str | None
     lowest_seen_price: Decimal | None
+
+    # Where the user can go and look at today's price for this stay (§9 mode A).
+    # Derived, not stored: it's built from the booking itself, so it stays right
+    # if the search base or the affiliate params change. The dashboard needs the
+    # same link the deadline email sends — a screen that says "rates moved" with
+    # nothing to click is a dead end.
+    @computed_field  # type: ignore[prop-decorator]
+    @property
+    def check_url(self) -> str | None:
+        return rebook.check_prices_url(self)

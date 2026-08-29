@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>MyRoomWatch — Stop overpaying for hotels you've already booked</title>
-<meta name="description" content="Book refundable. We watch your exact room for a cheaper like-for-like rate and guard your free-cancellation deadline. First booking free, then €15/month.">
+<title>MyRoomWatch — Your hotel can get cheaper after you book</title>
+<meta name="description" content="You booked refundable, so you can still switch — until your free-cancellation window closes. Forward the confirmation and we watch that exact room until the deadline, then tell you in time to act. First booking free, no card.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Public+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
@@ -18,6 +18,7 @@
     <nav class="nav">
       <a href="#how">How it works</a>
       <a href="#pricing">Pricing</a>
+      <a class="btn btn-ghost" href="/dashboard.html">Sign in</a>
       <a class="btn btn-dark" href="#pricing">Start free</a>
     </nav>
   </div>
@@ -27,29 +28,46 @@
   <section class="wrap hero">
     <div>
       <span class="pill">For refundable hotel bookings</span>
-      <h1>Stop overpaying for hotels you've already booked.</h1>
-      <p class="sub">Book refundable. We watch your exact room for a cheaper like-for-like rate — and we guard your free-cancellation deadline, so the good news never arrives too late.</p>
+      <h1>Your hotel can get cheaper after you book. You'd never find out.</h1>
+      <p class="sub">You booked refundable, so you can still switch — but only until your free-cancellation window closes, and nobody is going to remind you. Forward the confirmation. We watch that exact room until the deadline and tell you if it's worth a second look.</p>
       <div class="hero-cta">
         <a class="btn btn-primary" href="#pricing">Watch my first booking free</a>
-        <span class="note">Then €15/month.<br>Cancel anytime.</span>
+        <span class="note">Then €15/month. <br>Cancel anytime.</span>
       </div>
       <div class="hero-stats">
-        <div class="stat"><b class="green num">€60–120</b><span>saved per rebook,<br>on average</span></div>
-        <div class="stat"><b class="num">4×/day</b><span>checks in the final<br>72 hours</span></div>
-        <div class="stat"><b class="num">0</b><span>card details we<br>ever touch</span></div>
+        <div class="stat"><b class="green num">48h</b><span>warning before your <br>window closes</span></div>
+        <div class="stat"><b class="num">4×/day</b><span>checks in the final <br>72 hours</span></div>
+        <div class="stat"><b class="num">0</b><span>card details we <br>ever touch</span></div>
       </div>
     </div>
 
     <aside class="alert-card">
-      <div class="eyebrow">A real alert</div>
+      <div class="eyebrow">Example alert</div>
       <div class="hotel">Hotel Artemide, Rome<br><small>12–15 Sep · Superior Double, breakfast</small></div>
       <hr>
-      <div class="row num"><span>You paid</span><span><s>€642</s></span></div>
-      <div class="row num"><span>New rate, same room</span><span class="new">€570</span></div>
-      <div class="eyebrow" style="margin-top:24px">You save</div>
-      <div class="save num">€72</div>
-      <div class="warn"><strong>Book new first, then cancel.</strong> Never cancel first, or you could lose your room.</div>
+      <div class="row num"><span>Checks run so far</span><span>31</span></div>
+      <div class="row num"><span>Rates since you booked</span><span class="new">moved</span></div>
+      <div class="eyebrow" style="margin-top:24px">Cancel free until</div>
+      <div class="save num">14 Sep</div>
+      <div class="warn"><strong>Worth two minutes.</strong> We'll point you at today's price for the same stay. If it's better, book the new rate first, then cancel — never the other way round.</div>
     </aside>
+  </section>
+
+  <section class="wrap deadline">
+    <div>
+      <span class="pill pill-amber">Why this has to exist</span>
+      <h2>Your booking site will never tell you the price dropped.</h2>
+      <p class="body">Why would it? You've already paid. That refundable rate you chose is the one piece of leverage you have — a free option to change your mind — and it expires quietly, on a date nobody puts in front of you. Checking it yourself means about 45 visits over three weeks, at the right times, and remembering the deadline. Nobody does that. So the option goes unused, every time.</p>
+    </div>
+    <div class="cadence">
+      <h3>The maths, if it happens</h3>
+      <div class="rows">
+        <div class="row"><span class="when">You paid</span><span class="rate num">€400</span></div>
+        <div class="row"><span class="when">Same room, later</span><span class="rate num">€340</span></div>
+        <div class="row"><span class="when">You rebook and keep</span><span class="rate num" style="color:var(--accent-ink)">€60</span></div>
+      </div>
+      <p class="fine">An illustration, not a forecast — we don't know what your hotel will do. If it never drops, you've lost one email and we still tell you before your window shuts.</p>
+    </div>
   </section>
 
   <section class="steps-section" id="how">
@@ -68,8 +86,8 @@
         </div>
         <div class="step">
           <div class="n">3</div>
-          <div><h3>You rebook and pocket it</h3>
-          <p>We send the lower rate and the safe order to do it in. You book, you cancel, you keep the difference.</p></div>
+          <div><h3>You get told in time</h3>
+          <p>Before your window shuts we tell you what we've seen, and point you at today's price for the same stay. You check, you decide, you book and cancel yourself — in that order.</p></div>
         </div>
       </div>
     </div>
@@ -77,9 +95,9 @@
 
   <section class="wrap deadline">
     <div>
-      <span class="pill pill-amber">The part free tools miss</span>
-      <h2>We guard your free-cancellation deadline.</h2>
-      <p class="body">A price drop is worthless if it lands after you can still cancel for free. We clock every check against your deadline — daily at first, every six hours in the final stretch — and if nothing drops, we tell you that too.</p>
+      <span class="pill pill-amber">Timing is everything</span>
+      <h2>A price drop after your deadline is worthless.</h2>
+      <p class="body">So we don't check on a lazy weekly timer — every check is clocked against <em>your</em> cancellation date, and we check hardest in the last three days, when a change still leaves you time to act and a missed one costs you the whole option. You always get a message before the window shuts, whether or not anything moved. Nobody finds out too late.</p>
     </div>
     <div class="cadence">
       <h3>Check cadence</h3>
@@ -91,15 +109,35 @@
     </div>
   </section>
 
+  <section class="steps-section">
+    <div class="wrap">
+      <h2>The obvious questions.</h2>
+      <div class="steps">
+        <div class="step">
+          <div><h3>What if the price never drops?</h3>
+          <p>Then you've lost one forwarded email. You'll still hear from us before your free-cancellation window closes, so you're never the person who finds out too late. And you can cancel us any month, no notice.</p></div>
+        </div>
+        <div class="step">
+          <div><h3>Can you touch my booking or my card?</h3>
+          <p>No — and we never ask for card details. We can't book, change or cancel anything. We read a forwarded confirmation and send you email. Every decision stays yours.</p></div>
+        </div>
+        <div class="step">
+          <div><h3>Why can't I just check myself?</h3>
+          <p>You can. It's roughly 45 checks across three weeks, timed so the last ones land while you can still cancel free. Miss the window and the price no longer matters. That's the bit we do.</p></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <section class="wrap cta-section" id="pricing">
     <div class="cta">
       <div>
-        <h2>Your first booking is on us.</h2>
-        <p class="body">Forward one refundable confirmation and see what we find. Keep watching every booking after that for €15/month — cancel any time, no notice.</p>
+        <h2>One email. Then find out.</h2>
+        <p class="body">Forward a refundable confirmation and we'll watch it free — no card, nothing to install. If it's worth switching you'll hear from us in time to act. If it isn't, you'll hear that too, before your window closes. Keep every booking watched after that for €15/month, cancel any month.</p>
         <div class="trust">
           <span>✓ &nbsp;We never touch your card</span>
           <span>✓ &nbsp;We never change your booking</span>
-          <span>✓ &nbsp;You rebook yourself</span>
+          <span>✓ &nbsp;We never promise a saving we can't show you</span>
         </div>
       </div>
       <div class="price-box">

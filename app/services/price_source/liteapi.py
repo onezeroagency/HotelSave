@@ -34,7 +34,7 @@ skipped (logged) rather than under-priced.
 """
 
 import logging
-from datetime import date
+from datetime import date, datetime
 from decimal import Decimal
 
 import httpx
@@ -61,6 +61,60 @@ _BOARD_MAP = {
     "FB": "FB",
     "AI": "AI",
 }
+
+
+# The exact key/format inside cancelPolicyInfos is documented only as
+# "cancellation time" (SDK README), with no sample payload to copy, and this
+# adapter is not written from guesswork (see the Hotellook post-mortem). So try
+# the plausible spellings, and log the keys actually present when none match —
+# one production line then settles the shape for good.
+_CANCEL_TIME_KEYS = ("cancelTime", "cancellationTime", "cancel_time", "deadline", "from")
+_CANCEL_TIME_FORMATS = ("%Y-%m-%d %H:%M:%S", "%Y-%m-%dT%H:%M:%S", "%Y-%m-%d")
+
+
+def _free_cancellation_until(rate: dict, hotel_id: str) -> datetime | None:
+    """The moment this rate stops being free to cancel, or None if unverifiable."""
+    policies = rate.get("cancellationPolicies") or {}
+    infos = policies.get("cancelPolicyInfos") or []
+    if isinstance(infos, dict):  # docs describe it as both Array and Object
+        infos = [infos]
+
+    stamps: list[datetime] = []
+    for info in infos:
+        if not isinstance(info, dict):
+            continue
+        raw = next((info[k] for k in _CANCEL_TIME_KEYS if info.get(k)), None)
+        if raw is None:
+            logger.warning(
+                "LiteAPI cancelPolicyInfos on %s has no recognised time key; keys=%s",
+                hotel_id,
+                sorted(info),
+            )
+            continue
+        parsed = _parse_stamp(str(raw))
+        if parsed is None:
+            logger.warning("LiteAPI cancel time %r on %s not in a known format", raw, hotel_id)
+            continue
+        stamps.append(parsed)
+
+    # Several tiers can apply (free until X, 50% until Y). The free window ends
+    # at the EARLIEST stated boundary — taking the latest would tell the user
+    # they have longer to act than they do.
+    return min(stamps) if stamps else None
+
+
+def _parse_stamp(raw: str) -> datetime | None:
+    text = raw.strip().replace("Z", "+00:00")
+    try:
+        return datetime.fromisoformat(text)
+    except ValueError:
+        pass
+    for fmt in _CANCEL_TIME_FORMATS:
+        try:
+            return datetime.strptime(text, fmt)
+        except ValueError:
+            continue
+    return None
 
 
 def _board_type(rate: dict) -> str | None:
@@ -169,11 +223,9 @@ class LiteAPIPriceSource(PriceSource):
             logger.exception("LiteAPI rates search failed for hotel_id=%s", hotel_id)
             return []
 
-        return self._to_candidates(hotels, hotel_id, adults, children)
+        return self._to_candidates(hotels, hotel_id)
 
-    def _to_candidates(
-        self, hotels: list[dict], hotel_id: str, adults: int | None, children: int | None
-    ) -> list[RateCandidate]:
+    def _to_candidates(self, hotels: list[dict], hotel_id: str) -> list[RateCandidate]:
         candidates: list[RateCandidate] = []
         for hotel in hotels:
             if str(hotel.get("hotelId")) != str(hotel_id):
@@ -208,6 +260,11 @@ class LiteAPIPriceSource(PriceSource):
                     if skip:
                         continue
                     policies = rate.get("cancellationPolicies") or {}
+                    # Occupancy as the *rate* reports it, not as we asked. Echoing
+                    # the request made the §7 occupancy check a tautology that
+                    # could never fail; None means "provider didn't say", which
+                    # §7 treats as unknown rather than as a match.
+                    occ = rate.get("occupancyNumber") or rate.get("maxOccupancy")
                     candidates.append(
                         RateCandidate(
                             # Wholesale feed: LiteAPI is the counterparty, not an OTA.
@@ -215,12 +272,14 @@ class LiteAPIPriceSource(PriceSource):
                             total_price=total,
                             currency=currency,
                             board_type=_board_type(rate),
-                            adults=adults,
-                            children=children,
+                            adults=int(occ) if isinstance(occ, (int, str)) and str(occ).isdigit() else None,
+                            children=None,
                             refundable=policies.get("refundableTag") == "RFN",
                             # Detection-only feed — the rebook link is the affiliate
                             # layer's job (docs/price-source-migration.md §8).
                             deep_link=None,
+                            room_name=(rate.get("name") or room_type.get("name")),
+                            free_cancellation_until=_free_cancellation_until(rate, hotel_id),
                         )
                     )
         return candidates

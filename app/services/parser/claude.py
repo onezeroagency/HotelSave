@@ -17,7 +17,22 @@ SYSTEM_PROMPT = (
     "You extract structured hotel booking data from a forwarded confirmation "
     "email. Use null for anything not clearly stated. Do not guess. Dates are "
     "ISO 8601. Currency is an ISO 4217 code (e.g. EUR). board_type is one of "
-    "RO (room only), BB (bed & breakfast), HB (half board), FB (full board)."
+    "RO (room only), BB (bed & breakfast), HB (half board), FB (full board).\n"
+    # The deadline is the actionability clock: everything downstream is timed
+    # against it, and erring late is the one error the user cannot recover from
+    # — they'd act after free cancellation has already closed.
+    "cancellation_deadline: when the wording is a boundary rather than an "
+    "instant, always resolve it to the EARLIEST moment it could mean, never the "
+    "latest. 'Free cancellation before 25 September' means the deadline is the "
+    "end of 24 September, not any time on the 25th. If a time of day is not "
+    "stated, assume the start of the day, not the end of it. Never output a "
+    "deadline later than the email supports.\n"
+    "total_price: the all-in total the guest actually pays for the whole stay, "
+    "including taxes and fees when the email states an inclusive total. It is "
+    "compared against tax-inclusive rates elsewhere, so a per-night or "
+    "pre-tax figure makes the comparison wrong.\n"
+    "room_type_raw: copy the room name exactly as written ('Standard Double "
+    "Room'). It decides whether a cheaper rate is the same product."
 )
 
 

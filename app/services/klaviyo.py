@@ -16,6 +16,7 @@ KLAVIYO_EVENTS_URL = "https://a.klaviyo.com/api/events/"
 KLAVIYO_REVISION = "2024-10-15"
 
 # Core event names the backend emits (§10). Flows trigger off these.
+EVENT_ACCOUNT_CREATED = "Account Created"  # signup → welcome/activation flow (§10)
 EVENT_BOOKING_MONITORED = "Booking Monitored"
 EVENT_PRICE_DROP_FOUND = "Price Drop Found"
 EVENT_DEADLINE_APPROACHING = "Deadline Approaching"
