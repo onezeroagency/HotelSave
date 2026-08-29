@@ -85,6 +85,10 @@ h1,h2,h3{font-family:Manrope,sans-serif;margin:0}
 .cadence .bar{flex:1;height:8px;border-radius:4px;background:var(--line);overflow:hidden;position:relative}
 .cadence .bar i{position:absolute;inset:0;right:auto;background:var(--accent);border-radius:4px}
 .cadence .rate{font:700 13.5px/1 Manrope,sans-serif;white-space:nowrap}
+/* Rows without a progress bar (the worked example) still push the figure to the
+   right edge, and carry it at a size that reads as the point of the panel. */
+.cadence .row > .rate:last-child{margin-left:auto;font-size:19px;letter-spacing:-.02em}
+.cadence .fine{font:400 12.5px/1.55 "Public Sans",sans-serif;color:var(--muted);margin:20px 0 0;padding-top:16px;border-top:1px solid var(--line)}
 
 /* CTA */
 .cta-section{padding:0 0 64px}
