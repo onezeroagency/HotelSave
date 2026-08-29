@@ -33,6 +33,17 @@ class Settings(BaseSettings):
     drop_floor_pct: float = 0.03
     deadline_alert_hours: int = 48
 
+    # Only alert on a drop the user can actually act on — i.e. one carrying a
+    # rebook link. Live 2026-08-29: a Riga booking made 20 minutes earlier at the
+    # cheapest refundable rate Booking.com sells (EUR 436) was reported as a
+    # EUR 94.91 drop, because the detection feed prices a different supplier's
+    # inventory. Booking's own floor that day was EUR 436 refundable / EUR 394
+    # non-refundable, so the rate was real but unreachable — no link, not on the
+    # channel the user booked. Promising a saving nobody can collect is worse
+    # than staying quiet, so those alerts are held. Flip to False only when the
+    # price source returns working deep-links (affiliate program live).
+    require_rebook_url_for_alerts: bool = True
+
     # Travelpayouts / Hotellook (§9) — DEFUNCT (Hotellook shut down 20 Oct 2025).
     # Kept only for the reference source; see docs/price-source-migration.md.
     travelpayouts_token: str | None = None

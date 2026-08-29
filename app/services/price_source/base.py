@@ -34,6 +34,12 @@ class RateCandidate:
     children: int | None
     refundable: bool
     deep_link: str | None  # affiliate rebook link (§9)
+    # What the provider calls this room ("Standard Double Room"). Kept so §7 can
+    # reject a cheaper *different* room and so an alert can name what it found —
+    # without it, diagnosing a suspicious drop means re-querying the provider by
+    # hand. Providers that don't name rooms leave it None, which never blocks a
+    # match on its own.
+    room_name: str | None = None
 
 
 class PriceSource(ABC):

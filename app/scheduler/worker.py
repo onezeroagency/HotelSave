@@ -159,7 +159,24 @@ def process_job(job: MonitoringJob, source: PriceSource, db: Session, now: datet
             job.lowest_seen_price = best.total_price
 
     # --- drop detection (§8) ---
-    if is_actionable_drop(best, job):
+    # A drop the user cannot reach is not a saving. Until the price source
+    # supplies rebook links, detection keeps running and lowest_seen_price keeps
+    # updating (so the dashboard and the deadline email stay honest) — we just
+    # don't email a number nobody can collect. See settings for the live case
+    # that forced this.
+    found_drop = is_actionable_drop(best, job)
+    held = found_drop and settings.require_rebook_url_for_alerts and not best.deep_link
+    if held:
+        logger.warning(
+            "Job %s: holding a %s %s drop from %s — no rebook link, so the user "
+            "could not act on it (require_rebook_url_for_alerts).",
+            job.id,
+            job.currency,
+            job.original_price - best.total_price,
+            best.ota,
+        )
+
+    if found_drop and not held:
         deeper = (
             job.lowest_alerted_price is not None
             and best.total_price < job.lowest_alerted_price - drop_floor(job.original_price)
@@ -179,6 +196,12 @@ def process_job(job: MonitoringJob, source: PriceSource, db: Session, now: datet
                     "nights": job.nights,
                     "board_type": job.board_type,
                     "adults": job.adults,
+                    # What we actually matched, so the user can sanity-check the
+                    # claim before acting — and so a bad match is visible in the
+                    # email instead of only in the logs.
+                    "booked_room": job.room_type_raw,
+                    "found_room": best.room_name,
+                    "found_on": best.ota,
                     "old_price": float(job.original_price),
                     "new_price": float(best.total_price),
                     "savings_amount": float(savings),
@@ -209,11 +232,14 @@ def process_job(job: MonitoringJob, source: PriceSource, db: Session, now: datet
                 )
 
     # --- deadline guard (§8): only if no actionable drop currently stands ---
+    # A *held* drop must not suppress this: if we're staying quiet about a rate
+    # the user can't reach, the deadline email is the only thing they get, and
+    # it's the honest one — "we watched, nothing you can act on came up."
     if (
         hrs is not None
         and hrs <= settings.deadline_alert_hours
         and job.deadline_alert_sent_at is None
-        and not is_actionable_drop(best, job)
+        and not (found_drop and not held)
     ):
         delivered = klaviyo.emit_event(
             klaviyo.EVENT_DEADLINE_APPROACHING,

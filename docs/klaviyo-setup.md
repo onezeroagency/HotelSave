@@ -35,7 +35,7 @@ After it runs, the metrics below appear under **Analytics → Metrics**.
 |---|---|---|
 | `Account Created` | user registers (`POST /auth/register`) | `signup_source`, `forward_to` |
 | `Booking Monitored` | job created / activated | `hotel`, `city`, `check_in`, `check_out`, `original_price`, `currency`, `cancellation_deadline` |
-| `Price Drop Found` | actionable like-for-like drop (§7) | `hotel`, `city`, `check_in`, `check_out`, `nights`, `board_type`, `adults`, `old_price`, `new_price`, `savings_amount`, `savings_pct`, `rebook_url`, `has_rebook_url`, `currency`, `cancellation_deadline` |
+| `Price Drop Found` | actionable like-for-like drop (§7) | `hotel`, `city`, `check_in`, `check_out`, `nights`, `board_type`, `adults`, `booked_room`, `found_room`, `found_on`, `old_price`, `new_price`, `savings_amount`, `savings_pct`, `rebook_url`, `has_rebook_url`, `currency`, `cancellation_deadline` |
 | `Deadline Approaching` | 48h pre-deadline, no drop standing | `hotel`, `city`, `check_in`, `check_out`, `cancellation_deadline`, `checks_done`, `lowest_seen_price`, `currency` |
 | `Monitoring Ended` | deadline passed / checked out | `hotel`, `best_savings_seen`, `outcome` |
 | `Forwarded Without Account` | unknown sender forwarded a booking | `subject` |

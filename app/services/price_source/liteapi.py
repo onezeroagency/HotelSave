@@ -169,11 +169,9 @@ class LiteAPIPriceSource(PriceSource):
             logger.exception("LiteAPI rates search failed for hotel_id=%s", hotel_id)
             return []
 
-        return self._to_candidates(hotels, hotel_id, adults, children)
+        return self._to_candidates(hotels, hotel_id)
 
-    def _to_candidates(
-        self, hotels: list[dict], hotel_id: str, adults: int | None, children: int | None
-    ) -> list[RateCandidate]:
+    def _to_candidates(self, hotels: list[dict], hotel_id: str) -> list[RateCandidate]:
         candidates: list[RateCandidate] = []
         for hotel in hotels:
             if str(hotel.get("hotelId")) != str(hotel_id):
@@ -208,6 +206,11 @@ class LiteAPIPriceSource(PriceSource):
                     if skip:
                         continue
                     policies = rate.get("cancellationPolicies") or {}
+                    # Occupancy as the *rate* reports it, not as we asked. Echoing
+                    # the request made the §7 occupancy check a tautology that
+                    # could never fail; None means "provider didn't say", which
+                    # §7 treats as unknown rather than as a match.
+                    occ = rate.get("occupancyNumber") or rate.get("maxOccupancy")
                     candidates.append(
                         RateCandidate(
                             # Wholesale feed: LiteAPI is the counterparty, not an OTA.
@@ -215,12 +218,13 @@ class LiteAPIPriceSource(PriceSource):
                             total_price=total,
                             currency=currency,
                             board_type=_board_type(rate),
-                            adults=adults,
-                            children=children,
+                            adults=int(occ) if isinstance(occ, (int, str)) and str(occ).isdigit() else None,
+                            children=None,
                             refundable=policies.get("refundableTag") == "RFN",
                             # Detection-only feed — the rebook link is the affiliate
                             # layer's job (docs/price-source-migration.md §8).
                             deep_link=None,
+                            room_name=(rate.get("name") or room_type.get("name")),
                         )
                     )
         return candidates

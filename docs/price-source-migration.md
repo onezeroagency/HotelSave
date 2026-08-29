@@ -283,3 +283,60 @@ the alert used the cheapest *refundable* rate (§7 rule 3 held in production
 conditions). `rebook_url` was `None`, as expected until an affiliate program
 supplies the deep-link. Remaining §9-adjacent work: tax-inclusive totals
 (above), affiliate deep-link, production LiteAPI key at launch.
+
+### Post-mortem (2026-08-29): the detection feed is not the user's market
+
+The first real user booking exposed the flaw the Amrita milestone above could
+not: **a "drop" the user cannot reach is not a saving, and this pairing produces
+them constantly.**
+
+Grand Poet Hotel & SPA, Riga, 26–28 Sep 2026, 2 adults, room only, booked on
+Booking.com for **€436** (cheapest free-cancellation rate on the page, Genius
+applied). Twenty minutes later the first scheduler pass reported **€341.09 — a
+€94.91 / 21.8% drop.** Booking.com's live availability at that moment:
+
+| Rate | Price | Refundable |
+|---|---|---|
+| Room only | €394 | no |
+| Room only | **€436** | **yes** ← what the user booked |
+| Breakfast | €442 | no |
+| Breakfast | €490 | yes |
+
+The user already held the cheapest refundable rate. €341.09 sat 13% below even
+Booking's *non-refundable* floor, so it was never a Booking.com price — it was
+another supplier's inventory, reachable only through LiteAPI as merchant of
+record, with no link we could hand over.
+
+**The matching rules were not at fault.** Board type parsed correctly (RO);
+room class was irrelevant (the booking was already the entry-level Standard
+Double); refundability was enforced. The mismatch is structural: we price
+LiteAPI's supplier inventory and compare it to a retail OTA booking. Different
+markets, so a gap is the normal case, not the exception — it fires on the first
+check, on nearly every booking, forever.
+
+**Fixes shipped:**
+
+- `require_rebook_url_for_alerts` (default **True**) — a drop with no rebook
+  link is detected, recorded, and shown on the dashboard, but not emailed.
+  Detection and `lowest_seen_price` are unaffected; the deadline guard still
+  fires, so a held drop leaves the user informed rather than silent.
+  **Flip to False when an affiliate program supplies working deep-links** — that
+  is the single switch that turns this product back on.
+- Room class is now compared (§7 rule 2). `RateCandidate.room_name` carries what
+  the provider called the room; `matching.room_class()` compares tier words so
+  "Standard Double Room" still matches "Double Room - Standard". Unnamed rooms
+  stay unknown and never block on their own.
+- `RateCandidate.adults` reads the rate's occupancy instead of echoing the
+  request, which had made the §7 occupancy check unable to fail.
+- Drop alerts now carry `booked_room`, `found_room` and `found_on`, so a
+  questionable match is visible in the email instead of needing a manual check
+  against the OTA.
+- Parser prompt now resolves ambiguous deadline wording to the **earliest**
+  meaning ("before 25 Sep" → end of 24 Sep). Erring late is the one deadline
+  error a user cannot recover from. This matched what the model already did
+  here, but nothing had required it.
+
+**Still open:** the affiliate deep-link is now the critical path, not a
+nice-to-have — until it lands the product can detect but not deliver. A second
+option worth pricing: compare against the *same channel the user booked on*, so
+the number quoted is one they can actually reach.
