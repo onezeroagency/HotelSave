@@ -138,3 +138,45 @@ def test_board_type_fallbacks():
     assert _board_type({"boardName": "Bed and breakfast"}) == "BB"
     assert _board_type({"boardName": "All-inclusive"}) == "AI"
     assert _board_type({}) is None
+
+
+def _rate_env(hotel_id, rates):
+    return {"data": [{"hotelId": hotel_id, "roomTypes": [{"rates": rates}]}]}
+
+
+def test_non_included_taxes_are_added_to_total(source):
+    """§7: LiteAPI `total` can exclude VAT (included=false, seen live on
+    lp52d95) — the candidate total must be all-in or phantom drops appear."""
+    source._client = _FakeClient(rates=_rate_env("lp1", [{
+        "boardType": "RO",
+        "retailRate": {
+            "total": [{"amount": 122.54, "currency": "EUR"}],
+            "taxesAndFees": [
+                {"included": False, "description": "VAT", "amount": 14.7, "currency": "EUR"},
+                {"included": True, "description": "City tax", "amount": 3.0, "currency": "EUR"},
+            ],
+        },
+        "cancellationPolicies": {"refundableTag": "RFN"},
+    }]))
+    (c,) = source.check("lp1", date(2026, 10, 8), date(2026, 10, 10), 2, 0)
+    assert c.total_price == Decimal("137.24")  # 122.54 + 14.70; included 3.00 NOT re-added
+
+
+def test_cross_currency_fee_skips_rate(source):
+    """A non-included fee in another currency can't be summed safely — the rate
+    is dropped rather than under-priced."""
+    source._client = _FakeClient(rates=_rate_env("lp1", [
+        {
+            "retailRate": {
+                "total": [{"amount": 100.0, "currency": "EUR"}],
+                "taxesAndFees": [{"included": False, "amount": 10.0, "currency": "USD"}],
+            },
+            "cancellationPolicies": {"refundableTag": "RFN"},
+        },
+        {
+            "retailRate": {"total": [{"amount": 150.0, "currency": "EUR"}]},
+            "cancellationPolicies": {"refundableTag": "RFN"},
+        },
+    ]))
+    candidates = source.check("lp1", date(2026, 10, 8), date(2026, 10, 10), 2, 0)
+    assert [c.total_price for c in candidates] == [Decimal("150.0")]

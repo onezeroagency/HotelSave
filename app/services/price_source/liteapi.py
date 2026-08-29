@@ -23,12 +23,14 @@ Hotel" Liepaja LV → lp52d95): lookup params, rates body, and every mapped fiel
 confirmed against the live service — retailRate.total[].amount, refundableTag
 (both RFN and NRFN observed), boardType 'BI'→BB and 'RO'. 200 rates parsed clean.
 
-KNOWN NUANCE (§7 follow-up): retailRate.taxesAndFees can carry entries with
-included=false (e.g. VAT), meaning the `total` amount may EXCLUDE a tax that the
-user's original booking total (OTA-style) includes. Before comparing against
-original_price, the matching layer should add non-included taxesAndFees to the
-candidate total — otherwise phantom "drops" appear. Not yet implemented here;
-tracked in docs/price-source-migration.md.
+TAX-INCLUSIVE TOTALS (§7): retailRate.taxesAndFees can carry entries with
+included=false (VAT observed live on lp52d95), meaning `total` EXCLUDES a tax the
+user's original OTA-style booking total includes. Comparing an ex-tax candidate
+against a tax-inclusive original manufactures phantom "drops", so this adapter
+adds every non-included, same-currency tax/fee to the candidate total before it
+leaves here — RateCandidate.total_price is always the all-in comparable price.
+A non-included fee in a *different* currency can't be added safely; that rate is
+skipped (logged) rather than under-priced.
 """
 
 import logging
@@ -160,19 +162,40 @@ class LiteAPIPriceSource(PriceSource):
                 continue  # defensive: only our hotel
             for room_type in hotel.get("roomTypes", []) or []:
                 for rate in room_type.get("rates", []) or []:
-                    totals = (rate.get("retailRate") or {}).get("total") or []
+                    retail = rate.get("retailRate") or {}
+                    totals = retail.get("total") or []
                     if not totals:
                         continue
                     amount = totals[0].get("amount")
                     if amount is None:
+                        continue
+                    currency = totals[0].get("currency") or "EUR"
+                    # §7: make the total all-in — LiteAPI can report taxes/fees
+                    # (e.g. VAT) with included=false, excluded from `total`.
+                    total = Decimal(str(amount))
+                    skip = False
+                    for fee in retail.get("taxesAndFees") or []:
+                        if fee.get("included") or fee.get("amount") is None:
+                            continue
+                        if (fee.get("currency") or currency) != currency:
+                            logger.warning(
+                                "Skipping rate on %s: non-included fee in %s vs total in %s",
+                                hotel_id,
+                                fee.get("currency"),
+                                currency,
+                            )
+                            skip = True
+                            break
+                        total += Decimal(str(fee["amount"]))
+                    if skip:
                         continue
                     policies = rate.get("cancellationPolicies") or {}
                     candidates.append(
                         RateCandidate(
                             # Wholesale feed: LiteAPI is the counterparty, not an OTA.
                             ota="LiteAPI",
-                            total_price=Decimal(str(amount)),
-                            currency=totals[0].get("currency") or "EUR",
+                            total_price=total,
+                            currency=currency,
                             board_type=_board_type(rate),
                             adults=adults,
                             children=children,

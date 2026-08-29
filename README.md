@@ -159,9 +159,10 @@ KLAVIYO_API_KEY=pk_... python scripts/bootstrap_klaviyo_metrics.py you@example.c
 live-validated 2026-08-29 — first end-to-end run detected a real €56.86 drop on a
 real hotel and fired `Price Drop Found`), and Step 4 (alerting: backend events
 done; flows documented as deployable config) are in. Detection runs on
-`PRICE_SOURCE=liteapi` (sandbox key; production key at launch). Still open: the
-**rebook deep-link** (needs an affiliate program — Booking EU reapplication or
-Expedia/Hotels.com via CJ) and the tax-inclusive-total fix in matching — see
+`PRICE_SOURCE=liteapi` (sandbox key; production key at launch), and candidate
+totals are tax-inclusive (non-included VAT/fees are added in the adapter, §7).
+Still open: the **rebook deep-link** (needs an affiliate program — Booking EU
+reapplication or Expedia/Hotels.com via CJ) — see
 [`docs/price-source-migration.md`](docs/price-source-migration.md). (The original
 Hotellook source was shut down by Travelpayouts on 20 Oct 2025 and is kept only
 as a defunct reference.)

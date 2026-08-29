@@ -250,12 +250,14 @@ confirmed — 200 rates parsed, 126 refundable. Read-only; `deep_link=None` unti
 an affiliate program (Booking EU reapplication, or Expedia/Hotels.com on CJ)
 supplies the rebook link.
 
-**Open item (§7 correctness):** LiteAPI's `retailRate.taxesAndFees` can be
-`included=false` (VAT observed on lp52d95), i.e. `total` may exclude a tax the
-user's original OTA total includes. The matching layer must add non-included
-taxes to candidate totals before comparing against `original_price`, or phantom
-"drops" appear. Also note: production key at launch swaps sandbox test rates for
-live prices with no code change.
+**Resolved (§7 correctness, 2026-08-29):** LiteAPI's `retailRate.taxesAndFees`
+can be `included=false` (VAT observed on lp52d95), i.e. `total` may exclude a
+tax the user's original OTA total includes. The adapter now adds every
+non-included same-currency tax/fee to the candidate total before it leaves the
+price source (a non-included fee in a different currency skips that rate rather
+than under-pricing it) — `RateCandidate.total_price` is always all-in. Covered
+by tests. Note: production key at launch swaps sandbox test rates for live
+prices with no code change.
 
 ---
 
