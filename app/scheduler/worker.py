@@ -21,7 +21,7 @@ from ..config import settings
 from ..database import SessionLocal
 from ..enums import JobStatus
 from ..models import MonitoringJob, PriceCheck
-from ..services import klaviyo
+from ..services import klaviyo, rebook
 from ..services.matching import best_like_for_like, drop_floor, is_actionable_drop
 from ..services.price_source import PriceSource, get_price_source
 
@@ -241,6 +241,15 @@ def process_job(job: MonitoringJob, source: PriceSource, db: Session, now: datet
         and job.deadline_alert_sent_at is None
         and not (found_drop and not held)
     ):
+        # Mode A (§9): rates moved somewhere, but on a feed we can't rebook from
+        # — so movement changes the WORDING, never the trigger. The trigger is
+        # the deadline, which we know from the user's own confirmation. Alerting
+        # on cross-market movement itself would repeat the mistake that produced
+        # the phantom EUR 94.91: a signal from a market the user isn't in.
+        saw_movement = job.lowest_seen_price is not None and job.lowest_seen_price < (
+            job.original_price - drop_floor(job.original_price)
+        )
+        check_url = rebook.check_prices_url(job)
         delivered = klaviyo.emit_event(
             klaviyo.EVENT_DEADLINE_APPROACHING,
             job.user.email,
@@ -258,6 +267,12 @@ def process_job(job: MonitoringJob, source: PriceSource, db: Session, now: datet
                 if job.lowest_seen_price is not None
                 else None,
                 "currency": job.currency,
+                # Mode A: "we've seen movement, worth a look" vs "nothing came
+                # up". Deliberately no price figure attached to the movement
+                # case — there is no tag a template could promise with.
+                "saw_movement": saw_movement,
+                "check_url": check_url,
+                "has_check_url": bool(check_url),
             },
         )
         if delivered:

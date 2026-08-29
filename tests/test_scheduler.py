@@ -301,3 +301,69 @@ def test_drop_is_emailed_once_links_exist(db_session, monkeypatch):
 
     assert worker.klaviyo.EVENT_PRICE_DROP_FOUND in events
     assert job.status == JobStatus.drop_found.value
+
+
+def test_deadline_email_says_movement_and_carries_a_check_link(db_session, monkeypatch):
+    """Mode A (§9): rates moved on a feed we can't rebook from, so the deadline
+    email prompts a check instead of quoting a figure."""
+    session, _ = db_session
+    now = datetime.now(timezone.utc)
+    _seed_job(session, cancellation_deadline=now + timedelta(hours=12))
+
+    events = []
+    monkeypatch.setattr(worker, "get_price_source", lambda: _LinklessSource())
+    monkeypatch.setattr(
+        worker.klaviyo,
+        "emit_event",
+        lambda name, email, props: (events.append((name, props)), True)[1],
+    )
+    worker.run_once(db=session)
+
+    props = next(p for name, p in events if name == worker.klaviyo.EVENT_DEADLINE_APPROACHING)
+    assert props["saw_movement"] is True
+    assert props["has_check_url"] is True
+    assert "checkin=2026" in props["check_url"] or "checkin=" in props["check_url"]
+    # The whole point of mode A: no figure the template could promise with.
+    assert "new_price" not in props
+    assert "savings_amount" not in props
+
+
+def test_deadline_email_reports_no_movement_when_nothing_moved(db_session, monkeypatch):
+    """Below the drop floor is not movement — otherwise every booking gets a
+    'rates moved' nudge and the signal is worthless."""
+    session, _ = db_session
+    now = datetime.now(timezone.utc)
+    job = _seed_job(session, cancellation_deadline=now + timedelta(hours=12))
+
+    class _Barely:
+        def resolve_hotel(self, *a, **k):
+            return []
+
+        def check(self, *a, **k):
+            from app.services.price_source.base import RateCandidate
+
+            return [
+                RateCandidate(
+                    ota="LiteAPI",
+                    total_price=job.original_price - Decimal("2.00"),  # under the floor
+                    currency="EUR",
+                    board_type="BB",
+                    adults=None,
+                    children=None,
+                    refundable=True,
+                    deep_link=None,
+                    room_name="Standard Double Room",
+                )
+            ]
+
+    events = []
+    monkeypatch.setattr(worker, "get_price_source", lambda: _Barely())
+    monkeypatch.setattr(
+        worker.klaviyo,
+        "emit_event",
+        lambda name, email, props: (events.append((name, props)), True)[1],
+    )
+    worker.run_once(db=session)
+
+    props = next(p for name, p in events if name == worker.klaviyo.EVENT_DEADLINE_APPROACHING)
+    assert props["saw_movement"] is False

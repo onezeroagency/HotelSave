@@ -44,6 +44,16 @@ class Settings(BaseSettings):
     # price source returns working deep-links (affiliate program live).
     require_rebook_url_for_alerts: bool = True
 
+    # Where "check today's price" sends the user (§9 mode A). Job-level search,
+    # not a rate-level deep link — see app/services/rebook.py for why.
+    # VERIFY THE PARAM NAMES IN A BROWSER before trusting a new base URL; they
+    # are an OTA's public search interface, not a documented API.
+    rebook_search_base_url: str = "https://www.booking.com/searchresults.html"
+    # Raw query string appended to every check link (e.g. "aid=304142&label=mrw").
+    # Set this the day an affiliate program is approved — links start earning
+    # with no code change. Unset, links still work and simply earn nothing.
+    rebook_affiliate_params: str | None = None
+
     # Travelpayouts / Hotellook (§9) — DEFUNCT (Hotellook shut down 20 Oct 2025).
     # Kept only for the reference source; see docs/price-source-migration.md.
     travelpayouts_token: str | None = None
