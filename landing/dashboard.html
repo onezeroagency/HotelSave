@@ -195,7 +195,14 @@
       })
       .then(function (jobs) { if (jobs) { showDash(); render(jobs); } })
       .catch(function (err) {
-        dashStatus.textContent = err.message || "Something went wrong.";
+        // The error line lives inside the dash panel, so it has to be on screen
+        // or a failed load leaves the page completely blank.
+        showDash();
+        // A network-level failure rejects with "Failed to fetch", which tells
+        // the user nothing — say what actually happened.
+        dashStatus.textContent = err instanceof TypeError
+          ? "We couldn't reach MyRoomWatch. Check your connection and refresh."
+          : (err.message || "Something went wrong.");
         dashStatus.hidden = false;
       });
   }
