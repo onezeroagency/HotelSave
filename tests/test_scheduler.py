@@ -93,3 +93,33 @@ def test_paused_plan_is_skipped(db_session):
     assert processed == 0
     session.refresh(job)
     assert job.check_count == 0
+
+
+def test_unresolved_job_is_resolved_on_scheduler_retry(db_session):
+    """§6b retry (found live 2026-08-29): create-time resolution can fail
+    transiently; the worker must retry instead of idling the job forever."""
+    session, _ = db_session
+    job = _seed_job(session, hotel_id=None, city="Vilnius")
+
+    worker.run_once(session)
+    session.refresh(job)
+
+    # Mock source resolves name+city to a single 0.95 match → job self-heals
+    # on this very pass and gets priced (mock best is well under 400).
+    assert job.hotel_id is not None
+    assert job.check_count == 1
+    assert job.current_best_price is not None
+
+
+def test_unresolvedable_job_is_rescheduled_not_priced(db_session):
+    """Ambiguous resolution (no city → multi-match in the mock) must NOT
+    auto-resolve; the job is rescheduled and left for the ask-the-user flow."""
+    session, _ = db_session
+    job = _seed_job(session, hotel_id=None, city=None)
+
+    worker.run_once(session)
+    session.refresh(job)
+
+    assert job.hotel_id is None
+    assert job.check_count == 0
+    assert job.next_check_at is not None

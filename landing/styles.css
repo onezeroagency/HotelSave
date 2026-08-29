@@ -123,3 +123,17 @@ h1,h2,h3{font-family:Manrope,sans-serif;margin:0}
   .cta h2{font-size:24px}
   .price-box{width:100%}
 }
+
+/* Waitlist form (in the dark price-box) */
+.waitlist-form{display:flex;flex-direction:column;gap:10px;margin-top:22px}
+.waitlist-form input{
+  width:100%;padding:15px 16px;border-radius:13px;border:1px solid rgba(255,255,255,.22);
+  background:rgba(255,255,255,.08);color:#fff;font:400 15px/1 "Public Sans",sans-serif;
+}
+.waitlist-form input::placeholder{color:rgba(255,255,255,.45)}
+.waitlist-form input:focus{outline:2px solid var(--accent);outline-offset:1px;border-color:var(--accent)}
+.waitlist-form .btn{margin-top:0;padding:16px;border-radius:13px;font-size:15.5px}
+.waitlist-form .btn[disabled]{opacity:.6;cursor:wait}
+.form-status{font:600 13.5px/1.45 "Public Sans",sans-serif;color:var(--amber-on-dark);margin:12px 0 0}
+.form-status.ok{color:var(--accent)}
+.form-fine{font:400 12px/1.5 "Public Sans",sans-serif;color:rgba(255,255,255,.5);margin:12px 0 0}

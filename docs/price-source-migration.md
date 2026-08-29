@@ -238,6 +238,27 @@ integration never had.
 3. Confirm the like-for-like path (§7) and the scheduler (§8) fire on a simulated
    drop; then flip `booking_env` to production.
 
+### Status update (2026-08-20): LiteAPI is the working, validated detection feed
+
+Booking.com's NA affiliate program rejected the (pre-launch, wrong-region)
+application, and the Demand API remains gated — so the fallback became the
+mainline. `app/services/price_source/liteapi.py` (PRICE_SOURCE=liteapi) was
+**live-validated** with a sandbox key via `scripts/validate_liteapi.py` against
+"Amrita Hotel", Liepāja (lp52d95): lookup, rates body, `retailRate.total`,
+`refundableTag` (RFN + NRFN observed), and board mapping (BI→BB, RO) all
+confirmed — 200 rates parsed, 126 refundable. Read-only; `deep_link=None` until
+an affiliate program (Booking EU reapplication, or Expedia/Hotels.com on CJ)
+supplies the rebook link.
+
+**Resolved (§7 correctness, 2026-08-29):** LiteAPI's `retailRate.taxesAndFees`
+can be `included=false` (VAT observed on lp52d95), i.e. `total` may exclude a
+tax the user's original OTA total includes. The adapter now adds every
+non-included same-currency tax/fee to the candidate total before it leaves the
+price source (a non-included fee in a different currency skips that rate rather
+than under-pricing it) — `RateCandidate.total_price` is always all-in. Covered
+by tests. Note: production key at launch swaps sandbox test rates for live
+prices with no code change.
+
 ---
 
 ### Sources
@@ -250,3 +271,15 @@ integration never had.
 - [LiteAPI — hotel rates JSON structure & refundable tags](https://docs.liteapi.travel/docs/hotel-rates-api-json-data-structure)
 - Live probe results: `scripts/validate_hotellook.py` run + `curl -i` against
   `engine.hotellook.com/api/v2/*` on 2026-08-02 (all 404).
+
+### Milestone (2026-08-29): first end-to-end detection on a real hotel
+
+Full loop ran live from a dev machine (`PRICE_SOURCE=liteapi`, sandbox key):
+POST /jobs ("Amrita Hotel", Liepāja, €180 original, refundable BB) → scheduler
+pass → §6b retry resolved `lp52d95` → live rates → §7 matching → **Price Drop
+Found: €180 → €123.14, savings €56.86 (31.6%)**, deadline-stamped. Notably the
+two cheapest live rates (€122.54, €122.83) were NRFN and correctly skipped —
+the alert used the cheapest *refundable* rate (§7 rule 3 held in production
+conditions). `rebook_url` was `None`, as expected until an affiliate program
+supplies the deep-link. Remaining §9-adjacent work: tax-inclusive totals
+(above), affiliate deep-link, production LiteAPI key at launch.
