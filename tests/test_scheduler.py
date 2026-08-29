@@ -123,3 +123,25 @@ def test_unresolvedable_job_is_rescheduled_not_priced(db_session):
     assert job.hotel_id is None
     assert job.check_count == 0
     assert job.next_check_at is not None
+
+
+def test_drop_event_identifies_the_stay_and_flags_missing_rebook_url(db_session, monkeypatch):
+    """The alert must name which stay dropped (a user can watch several) and tell
+    the template whether a rebook link exists — the mock source supplies one, so
+    has_rebook_url is True here; it is False until an affiliate program lands."""
+    session, _ = db_session
+    events: list[tuple[str, str, dict]] = []
+    monkeypatch.setattr(
+        worker.klaviyo, "emit_event", lambda name, email, props: events.append((name, email, props))
+    )
+    job = _seed_job(session, city="Vilnius")
+
+    worker.run_once(session)
+
+    drop = next(p for name, _, p in events if name == worker.klaviyo.EVENT_PRICE_DROP_FOUND)
+    assert drop["city"] == "Vilnius"
+    assert drop["check_in"] == job.check_in.isoformat()
+    assert drop["check_out"] == job.check_out.isoformat()
+    assert drop["adults"] == job.adults
+    assert drop["has_rebook_url"] is bool(drop["rebook_url"])
+    assert drop["savings_amount"] > 0

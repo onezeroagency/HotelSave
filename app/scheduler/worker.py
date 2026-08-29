@@ -161,11 +161,23 @@ def process_job(job: MonitoringJob, source: PriceSource, db: Session, now: datet
                 job.user.email,
                 {
                     "hotel": job.hotel_name_raw,
+                    # Which stay: a user watching two bookings must be able to
+                    # tell them apart from the alert alone.
+                    "city": job.city,
+                    "check_in": job.check_in.isoformat(),
+                    "check_out": job.check_out.isoformat(),
+                    "nights": job.nights,
+                    "board_type": job.board_type,
+                    "adults": job.adults,
                     "old_price": float(job.original_price),
                     "new_price": float(best.total_price),
                     "savings_amount": float(savings),
                     "savings_pct": round(float(savings / job.original_price * 100), 1),
                     "rebook_url": best.deep_link,
+                    # Templates must branch on this: until an affiliate program
+                    # supplies deep-links, rebook_url is null and a CTA button
+                    # bound to it would render a dead link.
+                    "has_rebook_url": bool(best.deep_link),
                     "currency": job.currency,
                     "cancellation_deadline": job.cancellation_deadline.isoformat()
                     if job.cancellation_deadline
@@ -188,10 +200,18 @@ def process_job(job: MonitoringJob, source: PriceSource, db: Session, now: datet
             job.user.email,
             {
                 "hotel": job.hotel_name_raw,
+                "city": job.city,
+                "check_in": job.check_in.isoformat(),
+                "check_out": job.check_out.isoformat(),
                 "cancellation_deadline": job.cancellation_deadline.isoformat()
                 if job.cancellation_deadline
                 else None,
                 "checks_done": job.check_count,
+                # The reassurance number: "we watched, it just never dropped."
+                "lowest_seen_price": float(job.lowest_seen_price)
+                if job.lowest_seen_price is not None
+                else None,
+                "currency": job.currency,
             },
         )
         job.status = JobStatus.deadline_soon.value
