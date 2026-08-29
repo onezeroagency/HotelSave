@@ -62,6 +62,29 @@ def _jitter_seconds() -> int:
     return random.randint(0, 30 * 60)
 
 
+def _retry_resolution(job: MonitoringJob, source: PriceSource) -> None:
+    """§6b retry: same rule as create/ingestion — only a single high-confidence
+    match may auto-resolve; ambiguity stays with the ask-the-user flow."""
+    try:
+        matches = source.resolve_hotel(job.hotel_name_raw, job.city, job.lat, job.lng)
+    except Exception:
+        logger.exception(
+            "Hotel resolution retry failed for job %s (%r)", job.id, job.hotel_name_raw
+        )
+        return
+    if len(matches) == 1 and matches[0].confidence >= 0.9:
+        job.hotel_id = matches[0].hotel_id
+        logger.info(
+            "Resolved job %s to hotel_id=%s on scheduler retry", job.id, job.hotel_id
+        )
+    elif matches:
+        logger.info(
+            "Job %s resolution still ambiguous (%d candidates) — leaving for §6b flow",
+            job.id,
+            len(matches),
+        )
+
+
 def process_job(job: MonitoringJob, source: PriceSource, db: Session, now: datetime) -> None:
     hrs = hours_until(job.cancellation_deadline, now)
 
@@ -84,9 +107,19 @@ def process_job(job: MonitoringJob, source: PriceSource, db: Session, now: datet
         )
         return
 
-    # Can't price a job we couldn't resolve to a hotel_id yet (§6b).
+    # No hotel_id yet (§6b) — create-time resolution can fail transiently (bad
+    # credentials, network, aggregator hiccup), so retry here instead of letting
+    # the job idle forever. Found live 2026-08-29: a job sat unresolved and every
+    # pass silently rescheduled it with no log.
     if not job.hotel_id:
-        job.next_check_at = now + timedelta(hours=cadence_hours(None))
+        _retry_resolution(job, source)
+    if not job.hotel_id:
+        logger.warning(
+            "Job %s (%r) still has no hotel_id — cannot price it; rescheduling",
+            job.id,
+            job.hotel_name_raw,
+        )
+        job.next_check_at = now + timedelta(hours=cadence_hours(hrs))
         return
 
     candidates = source.check(

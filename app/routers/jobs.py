@@ -1,5 +1,6 @@
 """MonitoringJob CRUD, scoped to the authenticated user."""
 
+import logging
 from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -12,6 +13,8 @@ from ..deps import get_current_user
 from ..enums import JobStatus
 from ..services import klaviyo, lifecycle
 from ..services.price_source import get_price_source
+
+logger = logging.getLogger("hotelsave.jobs")
 
 router = APIRouter(prefix="/jobs", tags=["monitoring-jobs"])
 
@@ -68,7 +71,12 @@ def create_job(
         if len(matches) == 1 and matches[0].confidence >= 0.9:
             job.hotel_id = matches[0].hotel_id
     except Exception:  # pragma: no cover - resolution is non-fatal at create time
-        pass
+        # Non-fatal, but never silent: the scheduler retries (§6b), and this log
+        # is the only breadcrumb when e.g. the price-source credentials are bad.
+        logger.exception(
+            "Hotel resolution failed at create for %r — job starts without hotel_id",
+            payload.hotel_name_raw,
+        )
 
     db.add(job)
     db.commit()
