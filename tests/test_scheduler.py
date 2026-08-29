@@ -145,3 +145,39 @@ def test_drop_event_identifies_the_stay_and_flags_missing_rebook_url(db_session,
     assert drop["adults"] == job.adults
     assert drop["has_rebook_url"] is bool(drop["rebook_url"])
     assert drop["savings_amount"] > 0
+
+
+def test_failed_alert_is_retried_then_sent_once(db_session, monkeypatch):
+    """A drop alert that Klaviyo rejects must NOT be recorded as sent — otherwise
+    the saving is lost silently and never retried (seen live 2026-08-29: a 401
+    from Klaviyo still marked the job alerted). Once delivered, it must not
+    repeat."""
+    session, _ = db_session
+    job = _seed_job(session)
+
+    # Delivery fails (e.g. bad API key) → nothing recorded, job stays alertable.
+    monkeypatch.setattr(worker.klaviyo, "emit_event", lambda *a, **k: False)
+    worker.run_once(session)
+    session.refresh(job)
+    assert job.drop_alert_sent_at is None
+    assert job.status == JobStatus.active.value
+
+    # Delivery succeeds on a later pass → recorded exactly once.
+    sent: list[str] = []
+    monkeypatch.setattr(
+        worker.klaviyo, "emit_event", lambda name, *a, **k: (sent.append(name), True)[1]
+    )
+    job.next_check_at = datetime.now(timezone.utc) - timedelta(minutes=1)
+    session.commit()
+    worker.run_once(session)
+    session.refresh(job)
+    assert job.drop_alert_sent_at is not None
+    assert job.status == JobStatus.drop_found.value
+    assert sent.count(worker.klaviyo.EVENT_PRICE_DROP_FOUND) == 1
+
+    # And never again for the same drop.
+    sent.clear()
+    job.next_check_at = datetime.now(timezone.utc) - timedelta(minutes=1)
+    session.commit()
+    worker.run_once(session)
+    assert worker.klaviyo.EVENT_PRICE_DROP_FOUND not in sent

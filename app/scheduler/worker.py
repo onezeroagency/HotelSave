@@ -94,9 +94,7 @@ def process_job(job: MonitoringJob, source: PriceSource, db: Session, now: datet
     # the stay is over, stop — never price or fire an actionable alert on a
     # booking the user can no longer act on. Checked before any aggregator call.
     if (hrs is not None and hrs <= 0) or job.check_out <= now.date():
-        job.status = JobStatus.expired.value
-        job.next_check_at = None
-        klaviyo.emit_event(
+        delivered = klaviyo.emit_event(
             klaviyo.EVENT_MONITORING_ENDED,
             job.user.email,
             {
@@ -107,6 +105,18 @@ def process_job(job: MonitoringJob, source: PriceSource, db: Session, now: datet
                 "outcome": "drop_found" if job.drop_alert_sent_at else "no_drop",
             },
         )
+        if delivered:
+            job.status = JobStatus.expired.value
+            job.next_check_at = None
+        else:
+            # Keep the job alive so the wrap-up is retried; expiring it here
+            # would clear next_check_at and strand the undelivered event.
+            logger.error(
+                "Monitoring-ended event for job %s was NOT delivered — retrying "
+                "next pass",
+                job.id,
+            )
+            job.next_check_at = now + timedelta(hours=1)
         return
 
     # No hotel_id yet (§6b) — create-time resolution can fail transiently (bad
@@ -156,7 +166,7 @@ def process_job(job: MonitoringJob, source: PriceSource, db: Session, now: datet
         )
         if job.drop_alert_sent_at is None or deeper:
             savings = job.original_price - best.total_price
-            klaviyo.emit_event(
+            delivered = klaviyo.emit_event(
                 klaviyo.EVENT_PRICE_DROP_FOUND,
                 job.user.email,
                 {
@@ -184,9 +194,19 @@ def process_job(job: MonitoringJob, source: PriceSource, db: Session, now: datet
                     else None,
                 },
             )
-            job.status = JobStatus.drop_found.value
-            job.drop_alert_sent_at = now
-            job.lowest_alerted_price = best.total_price
+            # Only record "the user has been told" if the alert actually went
+            # out. Marking it on a failed send loses the saving silently and
+            # never retries it — the one outcome this product must not produce.
+            if delivered:
+                job.status = JobStatus.drop_found.value
+                job.drop_alert_sent_at = now
+                job.lowest_alerted_price = best.total_price
+            else:
+                logger.error(
+                    "Drop alert for job %s was NOT delivered — leaving it unsent "
+                    "so the next pass retries",
+                    job.id,
+                )
 
     # --- deadline guard (§8): only if no actionable drop currently stands ---
     if (
@@ -195,7 +215,7 @@ def process_job(job: MonitoringJob, source: PriceSource, db: Session, now: datet
         and job.deadline_alert_sent_at is None
         and not is_actionable_drop(best, job)
     ):
-        klaviyo.emit_event(
+        delivered = klaviyo.emit_event(
             klaviyo.EVENT_DEADLINE_APPROACHING,
             job.user.email,
             {
@@ -214,8 +234,15 @@ def process_job(job: MonitoringJob, source: PriceSource, db: Session, now: datet
                 "currency": job.currency,
             },
         )
-        job.status = JobStatus.deadline_soon.value
-        job.deadline_alert_sent_at = now
+        if delivered:
+            job.status = JobStatus.deadline_soon.value
+            job.deadline_alert_sent_at = now
+        else:
+            logger.error(
+                "Deadline alert for job %s was NOT delivered — leaving it unsent "
+                "so the next pass retries",
+                job.id,
+            )
 
     # --- schedule next check (expiry was handled up front) ---
     job.next_check_at = now + timedelta(hours=cadence_hours(hrs)) + timedelta(
