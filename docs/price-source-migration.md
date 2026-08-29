@@ -269,3 +269,15 @@ live prices with no code change.
 - [LiteAPI — hotel rates JSON structure & refundable tags](https://docs.liteapi.travel/docs/hotel-rates-api-json-data-structure)
 - Live probe results: `scripts/validate_hotellook.py` run + `curl -i` against
   `engine.hotellook.com/api/v2/*` on 2026-08-02 (all 404).
+
+### Milestone (2026-08-29): first end-to-end detection on a real hotel
+
+Full loop ran live from a dev machine (`PRICE_SOURCE=liteapi`, sandbox key):
+POST /jobs ("Amrita Hotel", Liepāja, €180 original, refundable BB) → scheduler
+pass → §6b retry resolved `lp52d95` → live rates → §7 matching → **Price Drop
+Found: €180 → €123.14, savings €56.86 (31.6%)**, deadline-stamped. Notably the
+two cheapest live rates (€122.54, €122.83) were NRFN and correctly skipped —
+the alert used the cheapest *refundable* rate (§7 rule 3 held in production
+conditions). `rebook_url` was `None`, as expected until an affiliate program
+supplies the deep-link. Remaining §9-adjacent work: tax-inclusive totals
+(above), affiliate deep-link, production LiteAPI key at launch.

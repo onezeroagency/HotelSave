@@ -155,7 +155,13 @@ KLAVIYO_API_KEY=pk_... python scripts/bootstrap_klaviyo_metrics.py you@example.c
 
 5. **Launch narrow** — one traveler niche, first-booking-free funnel.
 
-✅ Step 1 (skeleton), Step 2 (ingestion), and Step 4 (alerting: backend events
-done; flows documented as deployable config) are in. ⚠️ Step 3 (real price source)
-is **blocked**: it was built against Hotellook, which was shut down 20 Oct 2025 —
-a replacement aggregator must be picked ([`docs/price-source-migration.md`](docs/price-source-migration.md)).
+✅ Step 1 (skeleton), Step 2 (ingestion), Step 3 (real price source: **LiteAPI**,
+live-validated 2026-08-29 — first end-to-end run detected a real €56.86 drop on a
+real hotel and fired `Price Drop Found`), and Step 4 (alerting: backend events
+done; flows documented as deployable config) are in. Detection runs on
+`PRICE_SOURCE=liteapi` (sandbox key; production key at launch). Still open: the
+**rebook deep-link** (needs an affiliate program — Booking EU reapplication or
+Expedia/Hotels.com via CJ) and the tax-inclusive-total fix in matching — see
+[`docs/price-source-migration.md`](docs/price-source-migration.md). (The original
+Hotellook source was shut down by Travelpayouts on 20 Oct 2025 and is kept only
+as a defunct reference.)
