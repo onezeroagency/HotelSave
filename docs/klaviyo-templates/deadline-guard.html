@@ -100,3 +100,8 @@
     </table>
   </td></tr>
 </table>
+<!-- PLAINTEXT NOTE: the text/plain version of this email must render the link as
+     {{ event.check_url|safe }}. Klaviyo autoescapes, and without |safe the URL
+     arrives as ...&amp;checkin=... — correct inside an HTML href, broken in
+     plaintext, where the query params stop parsing. Caught by rendering the
+     live template (Klaviyo template XhJDAt) rather than by reading it. -->
