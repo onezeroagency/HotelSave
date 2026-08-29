@@ -44,14 +44,21 @@ def booking_monitored_properties(job) -> dict:
     }
 
 
-def emit_event(event_name: str, email: str, properties: dict) -> None:
+def emit_event(event_name: str, email: str, properties: dict) -> bool:
     """Push an event to Klaviyo (or log it if no key is configured).
+
+    Returns True when the event was accepted (or deliberately dry-run), False
+    when delivery failed. Callers that record "the user has been told" must gate
+    that on the return value — marking an alert sent after a failed delivery
+    silently loses it, and it is never retried.
 
     NOTE: these are transactional alerts (§10 gotcha) — they must reach the user
     regardless of marketing-consent status. Configure that on the Klaviyo side."""
     if not settings.klaviyo_api_key:
+        # Dry-run is an intentional mode (local dev / no key yet), not a failure:
+        # report success so callers don't retry forever.
         logger.info("[klaviyo:dry-run] %s -> %s %s", event_name, email, properties)
-        return
+        return True
 
     payload = {
         "data": {
@@ -74,3 +81,5 @@ def emit_event(event_name: str, email: str, properties: dict) -> None:
         resp.raise_for_status()
     except httpx.HTTPError:  # pragma: no cover - network path
         logger.exception("Failed to emit Klaviyo event %s for %s", event_name, email)
+        return False
+    return True
