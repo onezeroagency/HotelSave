@@ -34,8 +34,8 @@ After it runs, the metrics below appear under **Analytics → Metrics**.
 | Event (metric) | When | Properties |
 |---|---|---|
 | `Booking Monitored` | job created / activated | `hotel`, `city`, `check_in`, `check_out`, `original_price`, `currency`, `cancellation_deadline` |
-| `Price Drop Found` | actionable like-for-like drop (§7) | `hotel`, `old_price`, `new_price`, `savings_amount`, `savings_pct`, `rebook_url`, `currency`, `cancellation_deadline` |
-| `Deadline Approaching` | 48h pre-deadline, no drop standing | `hotel`, `cancellation_deadline`, `checks_done` |
+| `Price Drop Found` | actionable like-for-like drop (§7) | `hotel`, `city`, `check_in`, `check_out`, `nights`, `board_type`, `adults`, `old_price`, `new_price`, `savings_amount`, `savings_pct`, `rebook_url`, `has_rebook_url`, `currency`, `cancellation_deadline` |
+| `Deadline Approaching` | 48h pre-deadline, no drop standing | `hotel`, `city`, `check_in`, `check_out`, `cancellation_deadline`, `checks_done`, `lowest_seen_price`, `currency` |
 | `Monitoring Ended` | deadline passed / checked out | `hotel`, `best_savings_seen`, `outcome` |
 | `Forwarded Without Account` | unknown sender forwarded a booking | `subject` |
 | `Refundable Confirmation Needed` | parsed booking isn't refundable | `hotel`, `check_in` |
@@ -71,13 +71,20 @@ rebook button, and the safe sequence.
 
 **Body:**
 
-> Good news — the price on your exact room at **{{ event.hotel }}** dropped.
+> Good news — the price on your exact room at **{{ event.hotel }}**
+> ({{ event.city }}, {{ event.check_in }} → {{ event.check_out }}) dropped.
 >
-> - You paid: €{{ event.old_price }}
-> - New rate (same room, same dates, free cancellation): **€{{ event.new_price }}**
-> - You save: **€{{ event.savings_amount }} ({{ event.savings_pct }}%)**
+> - You paid: {{ event.currency }} {{ event.old_price }}
+> - New rate (same room, same dates, free cancellation): **{{ event.currency }} {{ event.new_price }}**
+> - You save: **{{ event.currency }} {{ event.savings_amount }} ({{ event.savings_pct }}%)**
 >
+> {% if event.has_rebook_url %}
 > **[ Rebook at the lower rate → ]({{ event.rebook_url }})**
+> {% else %}
+> Search **{{ event.hotel }}** for {{ event.check_in }}–{{ event.check_out }},
+> {{ event.adults }} guest(s), and pick the refundable rate at or below
+> {{ event.currency }} {{ event.new_price }}.
+> {% endif %}
 >
 > ⚠️ Do it in this order: **book the new rate first, confirm it, then cancel your
 > original.** Never cancel first — you could lose the room.
@@ -90,8 +97,11 @@ rebook button, and the safe sequence.
 - One 24h follow-up **only if** not clicked **and** deadline is near (add a time
   delay + a "clicked email?" conditional split + a `cancellation_deadline`
   filter).
-- The `rebook_url` is the affiliate deep-link — this flow both delights the user
-  and books the commission.
+- **`rebook_url` is null until an affiliate program is live.** Branch on
+  `has_rebook_url` (as the body above does) so the CTA is never a dead link: with
+  a deep-link it's a one-click rebook that also books the commission; without one
+  the user gets precise instructions to rebook manually. Remove the conditional
+  once the affiliate deep-links land.
 
 ---
 
@@ -111,9 +121,12 @@ even when there's no win.
 > Quick heads-up: your free-cancellation window at **{{ event.hotel }}** closes in
 > about **48 hours** ({{ event.cancellation_deadline }}).
 >
-> We've checked {{ event.checks_done }} times and haven't found a lower rate yet —
-> and we'll keep watching right up until the window closes. If anything drops,
-> you'll hear from us instantly.
+> We've checked {{ event.checks_done }} times on your stay at {{ event.city }}
+> ({{ event.check_in }} → {{ event.check_out }}) and haven't found a lower
+> like-for-like refundable rate yet{% if event.lowest_seen_price %} — the best we
+> saw was {{ event.currency }} {{ event.lowest_seen_price }}{% endif %}. We'll keep
+> watching right up until the window closes; if anything drops, you'll hear from
+> us instantly.
 >
 > Either way, here are your booking details so nothing slips by. Safe travels.
 
