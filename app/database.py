@@ -9,14 +9,8 @@ from .config import settings
 
 connect_args = {"check_same_thread": False} if settings.is_sqlite else {}
 
-# Some hosts (Render, Heroku lineage) hand out postgres:// URLs, which
-# SQLAlchemy 2 rejects — normalize to the psycopg2 dialect.
-_db_url = settings.database_url
-if _db_url.startswith("postgres://"):
-    _db_url = _db_url.replace("postgres://", "postgresql+psycopg2://", 1)
-
 engine = create_engine(
-    _db_url,
+    settings.sqlalchemy_url,  # normalizes host-issued postgres:// URLs
     connect_args=connect_args,
     pool_pre_ping=True,
     future=True,
