@@ -141,7 +141,9 @@
         if (gap > 0) saved += gap;
       }
     });
-    document.getElementById("total-saved").textContent = saved > 0 ? money(saved, currency) : money(0, currency);
+    // "EUR 0.00" reads as failure next to a card that says rates moved. Nothing
+    // confirmed yet is not the same as nothing there — show it as unknown.
+    document.getElementById("total-saved").textContent = saved > 0 ? money(saved, currency) : "—";
     document.getElementById("total-watching").textContent = String(watching);
     document.getElementById("total-checks").textContent = String(checks);
 
@@ -191,12 +193,18 @@
             : "") +
           (showWin
             ? '<p class="job-note win-note"><strong>' + money(diff, j.currency) + ' cheaper</strong> right now. ' +
-              'Book the new rate first, confirm it, then cancel the original — never the other way round.</p>'
+              'Book the new rate first, confirm it, then cancel the original — never the other way round.</p>' +
+              '<a class="btn btn-primary btn-block job-cta" href="' + j.current_best_url +
+              '" target="_blank" rel="noopener">Rebook at the lower rate →</a>'
             : "") +
           (unreachable
-            ? '<p class="job-note">We\'ve seen a lower rate from another supplier, but we can\'t yet give ' +
-              'you a way to book it — so we\'re not calling it a saving. Nothing for you to do; ' +
-              'we\'ll tell you if a bookable one appears before your deadline.</p>'
+            ? '<p class="job-note">Rates for your dates have <strong>moved since you booked</strong>. ' +
+              'Prices differ between booking sites, so we won\'t quote you a figure we can\'t ' +
+              'guarantee — but while you can still cancel free, it\'s worth a look.</p>' +
+              (j.check_url
+                ? '<a class="btn btn-primary btn-block job-cta" href="' + j.check_url +
+                  '" target="_blank" rel="noopener">Check today\'s price →</a>'
+                : "")
             : "") +
         '</article>';
     }).join("");

@@ -194,6 +194,9 @@ h1,h2,h3{font-family:Manrope,sans-serif;margin:0}
 .job-note{font:400 13.5px/1.6 "Public Sans",sans-serif;margin:18px 0 0;padding:12px 14px;border-radius:11px}
 .win-note{background:var(--accent-soft);color:var(--accent-ink)}
 .warn-note{background:var(--amber-soft);color:var(--amber-ink)}
+/* Every note that tells the user something changed ends in something to click —
+   a card that says "rates moved" and offers no action is a dead end. */
+.job-cta{margin-top:12px;padding:14px;font-size:15px;border-radius:12px}
 .empty{background:var(--surface);border:1px dashed var(--line-strong);border-radius:18px;padding:44px 30px;text-align:center}
 .empty h3{font-size:19px;font-weight:800}
 .empty p{font:400 15px/1.65 "Public Sans",sans-serif;color:var(--muted);margin:10px auto 0;max-width:46ch}
