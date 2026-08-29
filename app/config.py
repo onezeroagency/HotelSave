@@ -65,6 +65,19 @@ class Settings(BaseSettings):
     def is_sqlite(self) -> bool:
         return self.database_url.startswith("sqlite")
 
+    @property
+    def sqlalchemy_url(self) -> str:
+        """The URL to hand SQLAlchemy/Alembic.
+
+        Managed hosts (Render, the Heroku lineage) still issue `postgres://`
+        URLs, a scheme SQLAlchemy 2 refuses to load a dialect for. Everything
+        that builds an engine must go through this, not `database_url`.
+        """
+        url = self.database_url
+        if url.startswith("postgres://"):
+            return url.replace("postgres://", "postgresql+psycopg2://", 1)
+        return url
+
 
 @lru_cache
 def get_settings() -> Settings:
