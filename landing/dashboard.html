@@ -133,8 +133,10 @@
       checks += j.check_count || 0;
       if (["active", "drop_found", "deadline_soon"].indexOf(j.status) >= 0) watching++;
       if (j.currency) currency = j.currency;
-      // "Found so far" = the best gap we've actually seen vs. what they paid.
-      if (j.lowest_seen_price !== null && j.lowest_seen_price !== undefined) {
+      // "Found so far" counts only savings we could actually hand over. A rate
+      // with no rebook link is not money the user can have, and a headline
+      // number they can't collect is the same false promise as the alert.
+      if (j.lowest_seen_price !== null && j.lowest_seen_price !== undefined && j.current_best_url) {
         var gap = Number(j.original_price) - Number(j.lowest_seen_price);
         if (gap > 0) saved += gap;
       }
@@ -145,11 +147,21 @@
 
     jobsEl.innerHTML = jobs.map(function (j) {
       var st = STATE[j.status] || { label: j.status, cls: "muted" };
+      // Jobs alerted before the rebook-link rule existed are still stored as
+      // drop_found; showing that chip next to "nothing you can book" would
+      // contradict itself. The link is the source of truth either way.
+      if (j.status === "drop_found" && !j.current_best_url) st = STATE.active;
       var best = j.current_best_price !== null && j.current_best_price !== undefined
         ? Number(j.current_best_price) : null;
       var orig = Number(j.original_price);
       var diff = best !== null ? orig - best : null;
-      var showWin = diff !== null && diff > 0;
+      // A lower number we can't hand the user a way to book is not a win, and
+      // telling them to "book the new rate first" when there is no new rate to
+      // book is the worst thing this page can do. Only claim a saving when
+      // there's a link behind it.
+      var canRebook = !!j.current_best_url;
+      var showWin = diff !== null && diff > 0 && canRebook;
+      var unreachable = diff !== null && diff > 0 && !canRebook;
       return '' +
         '<article class="job">' +
           '<div class="job-head">' +
@@ -180,6 +192,11 @@
           (showWin
             ? '<p class="job-note win-note"><strong>' + money(diff, j.currency) + ' cheaper</strong> right now. ' +
               'Book the new rate first, confirm it, then cancel the original — never the other way round.</p>'
+            : "") +
+          (unreachable
+            ? '<p class="job-note">We\'ve seen a lower rate from another supplier, but we can\'t yet give ' +
+              'you a way to book it — so we\'re not calling it a saving. Nothing for you to do; ' +
+              'we\'ll tell you if a bookable one appears before your deadline.</p>'
             : "") +
         '</article>';
     }).join("");

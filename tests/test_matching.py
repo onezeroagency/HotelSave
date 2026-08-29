@@ -1,5 +1,6 @@
 """Unit tests for the like-for-like matching rules (§7)."""
 
+from dataclasses import replace
 from decimal import Decimal
 
 from app.models import MonitoringJob
@@ -105,3 +106,46 @@ def test_room_class_picks_cheapest_within_the_same_class():
     best = best_like_for_like(rates, job)
     assert best is not None
     assert best.total_price == Decimal("310.00")
+
+
+# --- rule 3b, the free-cancellation window ------------------------------------
+# "Refundable" is a boolean; the window is the product. A cheaper rate whose
+# free-cancellation closes sooner shortens the time the user has to change their
+# mind, so it is a downgrade however cheap.
+
+
+def _at(day, hour=12):
+    from datetime import datetime, timezone
+
+    return datetime(2026, 9, day, hour, tzinfo=timezone.utc)
+
+
+def test_rate_with_a_shorter_free_cancellation_window_is_not_a_match():
+    job = _job(cancellation_deadline=_at(25))
+    rate = _rate("300.00")
+    rate = replace(rate, free_cancellation_until=_at(20))  # closes 5 days sooner
+    assert best_like_for_like([rate], job) is None
+
+
+def test_rate_with_an_equal_or_longer_window_matches():
+    job = _job(cancellation_deadline=_at(25))
+    same = replace(_rate("300.00"), free_cancellation_until=_at(25))
+    longer = replace(_rate("300.00"), free_cancellation_until=_at(28))
+    assert best_like_for_like([same], job) is not None
+    assert best_like_for_like([longer], job) is not None
+
+
+def test_naive_and_aware_deadlines_compare_without_raising():
+    """Providers often omit the offset; mixing naive and aware datetimes raises."""
+    from datetime import datetime
+
+    job = _job(cancellation_deadline=_at(25))
+    naive = replace(_rate("300.00"), free_cancellation_until=datetime(2026, 9, 20, 12))
+    assert best_like_for_like([naive], job) is None
+
+
+def test_unknown_window_does_not_block_on_its_own():
+    """None means the provider didn't say. The rebook-link gate is what stops an
+    unverified rate reaching the user, not a silent zero-match here."""
+    job = _job(cancellation_deadline=_at(25))
+    assert best_like_for_like([_rate("300.00")], job) is not None

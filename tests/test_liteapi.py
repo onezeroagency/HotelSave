@@ -3,7 +3,7 @@ mocked. The response shapes mirror the official liteapi-travel/nodejs-sdk
 (data[].roomTypes[].rates[]); live field names are confirmed separately by
 scripts/validate_liteapi.py."""
 
-from datetime import date
+from datetime import date, datetime
 from decimal import Decimal
 
 import pytest
@@ -215,3 +215,71 @@ def test_bogus_country_is_ignored(source):
     source.resolve_hotel("Amrita Hotel", "Liepaja", country="Latvia")
     _, _, params = source._client.calls[0]
     assert params["countryCode"] == "LV"  # fell back to the setting, not "LATVIA"
+
+
+def _rates_with(policies):
+    return {"data": [{
+        "hotelId": "lp12345",
+        "roomTypes": [{
+            "offerId": "of_1",
+            "rates": [{
+                "name": "Standard Double",
+                "boardType": "RO",
+                "retailRate": {"total": [{"amount": 200.0, "currency": "EUR"}]},
+                "cancellationPolicies": policies,
+            }],
+        }],
+    }]}
+
+
+def _only(source, policies):
+    source._client = _FakeClient(rates=_rates_with(policies))
+    return source.check("lp12345", date(2026, 9, 12), date(2026, 9, 14), 2, 0)[0]
+
+
+def test_free_cancellation_deadline_is_read_from_the_policy(source):
+    got = _only(source, {
+        "refundableTag": "RFN",
+        "cancelPolicyInfos": [{"cancelTime": "2026-09-10 23:59:00", "amount": 0}],
+    })
+    assert got.free_cancellation_until == datetime(2026, 9, 10, 23, 59)
+
+
+def test_earliest_policy_boundary_wins(source):
+    """Tiered policies (free until X, part-refund until Y): the free window ends
+    at the earliest boundary — the latest would overstate the user's time."""
+    got = _only(source, {
+        "refundableTag": "RFN",
+        "cancelPolicyInfos": [
+            {"cancelTime": "2026-09-18 12:00:00"},
+            {"cancelTime": "2026-09-10 12:00:00"},
+        ],
+    })
+    assert got.free_cancellation_until == datetime(2026, 9, 10, 12, 0)
+
+
+def test_policy_object_instead_of_array_is_accepted(source):
+    """The SDK docs describe cancelPolicyInfos as both Array and Object."""
+    got = _only(source, {
+        "refundableTag": "RFN",
+        "cancelPolicyInfos": {"cancelTime": "2026-09-10T08:30:00Z"},
+    })
+    assert got.free_cancellation_until is not None
+
+
+def test_unrecognised_policy_shape_logs_the_real_keys(source, caplog):
+    """The live shape is unconfirmed, so an unparseable policy must say what it
+    actually saw — one production log line then settles it."""
+    with caplog.at_level("WARNING"):
+        got = _only(source, {
+            "refundableTag": "RFN",
+            "cancelPolicyInfos": [{"someUnknownKey": "2026-09-10", "amount": 0}],
+        })
+    assert got.free_cancellation_until is None  # unknown, not invented
+    assert "someUnknownKey" in caplog.text
+
+
+def test_missing_policy_block_is_simply_unknown(source):
+    got = _only(source, {"refundableTag": "RFN"})
+    assert got.refundable is True
+    assert got.free_cancellation_until is None

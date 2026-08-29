@@ -3,11 +3,13 @@
 A candidate rate counts as a drop only if ALL hold:
   1. same hotel_id + same check_in/check_out  (guaranteed by how we query)
   2. matches on {adults, children, board_type, room class}
-  3. candidate is itself refundable = true
+  3. candidate is itself refundable = true, and its free-cancellation window is
+     no shorter than the one the user already holds
   4. candidate total beats original_price by more than the floor: max(€10, 3%)
 """
 
 import re
+from datetime import datetime, timezone
 from decimal import Decimal
 
 from ..config import settings
@@ -45,6 +47,12 @@ _ROOM_CLASSES = (
 )
 
 
+def _as_utc(moment: datetime) -> datetime:
+    """Naive stamps (providers often omit the offset) are read as UTC so the two
+    deadlines can be compared at all — mixing naive and aware raises."""
+    return moment if moment.tzinfo else moment.replace(tzinfo=timezone.utc)
+
+
 def room_class(name: str | None) -> str | None:
     """The tier word in a room name, or None if it doesn't state one."""
     if not name:
@@ -58,6 +66,16 @@ def room_class(name: str | None) -> str | None:
 
 def _matches_room(candidate: RateCandidate, job: MonitoringJob) -> bool:
     if not candidate.refundable:  # rule 3 — never compare against a non-refundable trap
+        return False
+    # Rule 3b: "refundable" is a boolean, but the free-cancellation *window* is
+    # the product. A rate that stops being cancellable sooner than the booking
+    # the user already holds is a downgrade, however cheap — swapping into it
+    # silently shortens the time they have to change their mind.
+    if (
+        job.cancellation_deadline is not None
+        and candidate.free_cancellation_until is not None
+        and _as_utc(candidate.free_cancellation_until) < _as_utc(job.cancellation_deadline)
+    ):
         return False
     if job.board_type is not None and candidate.board_type != job.board_type:
         return False  # rule 2
