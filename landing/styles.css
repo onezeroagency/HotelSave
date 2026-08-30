@@ -99,7 +99,7 @@ h1,h2,h3{font-family:Manrope,sans-serif;margin:0}
 .cta .trust span{font:400 13.5px/1 "Public Sans",sans-serif;color:rgba(255,255,255,.75)}
 .price-box{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);border-radius:20px;padding:30px 32px;text-align:center;flex:none;width:280px}
 .price-box .amount{font:800 52px/1 Manrope,sans-serif;letter-spacing:-.04em}
-.price-box .per{font:400 13.5px/1 "Public Sans",sans-serif;color:rgba(255,255,255,.6);margin-top:9px}
+.price-box .per{font:400 13.5px/1.5 "Public Sans",sans-serif;color:rgba(255,255,255,.6);margin-top:9px}
 .price-box .btn{margin-top:22px;padding:16px;border-radius:13px;font-size:15.5px}
 
 /* Footer */
@@ -224,3 +224,74 @@ h1,h2,h3{font-family:Manrope,sans-serif;margin:0}
 .legal-table th,.legal-table td{text-align:left;padding:12px 14px;border-bottom:1px solid var(--line);font:400 14.5px/1.6 "Public Sans",sans-serif;color:var(--muted);vertical-align:top}
 .legal-table th{font-weight:600;color:var(--ink);white-space:nowrap}
 @media (max-width:900px){.legal{padding:32px 20px 56px}.legal h1{font-size:30px}}
+
+/* --- Premium pass: plays, year ledger, pricing, trust ----------------------- */
+.section-sub{font:400 16px/1.65 "Public Sans",sans-serif;color:var(--muted);max-width:640px;margin:14px 0 0}
+.fine.center{text-align:center;max-width:640px;margin:26px auto 0}
+.pill{display:inline-block}
+
+.plays-section{background:var(--surface);border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding:84px 0}
+.plays-section h2,.pricing-section h2,.trust-section h2{font-size:36px;line-height:1.12;letter-spacing:-.032em;font-weight:800;margin-top:14px}
+.plays{display:grid;grid-template-columns:1fr 1fr;gap:26px;margin-top:40px}
+.play{background:var(--bg);border:1px solid var(--line);border-radius:20px;padding:30px;box-shadow:0 22px 40px -32px rgba(13,33,55,.35)}
+.play-tag{display:inline-block;font:700 11.5px/1 Manrope,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:var(--accent-ink);background:var(--accent-soft);padding:7px 12px;border-radius:999px}
+.play-tag.alt{color:var(--amber-ink);background:var(--amber-soft)}
+.play h3{font-size:21px;letter-spacing:-.02em;font-weight:800;margin:16px 0 0}
+.play p{font:400 14.5px/1.65 "Public Sans",sans-serif;color:var(--muted);margin:18px 0 0}
+.ledger{margin-top:18px;border:1px solid var(--line);border-radius:14px;background:var(--surface);overflow:hidden}
+.ledger .lrow{display:flex;justify-content:space-between;gap:14px;padding:12px 16px;font:400 14px/1.4 "Public Sans",sans-serif;color:var(--muted);border-bottom:1px solid var(--line)}
+.ledger .lrow span:last-child{font:700 15px/1.4 Manrope,sans-serif;color:var(--ink)}
+.ledger .lrow.total{border-bottom:0;background:var(--bg)}
+.ledger .lrow.total span:first-child{color:var(--ink);font-weight:600}
+.ledger .green,.year-table .green{color:var(--accent-ink)}
+
+.year-section{padding:84px 0}
+.year-grid{display:grid;grid-template-columns:.9fr 1.1fr;gap:56px;align-items:center}
+.year-grid h2{font-size:32px;line-height:1.15;letter-spacing:-.03em;font-weight:800;margin-top:14px}
+.year-grid .body{font:400 15.5px/1.7 "Public Sans",sans-serif;color:var(--muted);margin-top:16px}
+.year-grid .fine{font:400 12.5px/1.55 "Public Sans",sans-serif;color:var(--muted);margin-top:14px}
+.year-table{background:var(--surface);border:1px solid var(--line);border-radius:20px;overflow:hidden;box-shadow:0 26px 48px -34px rgba(13,33,55,.4)}
+.yrow{display:grid;grid-template-columns:1.1fr 1.3fr .5fr;gap:12px;padding:15px 22px;border-bottom:1px solid var(--line);font:400 14px/1.45 "Public Sans",sans-serif;color:var(--muted)}
+.yrow span:last-child{font:700 15px/1.45 Manrope,sans-serif;color:var(--ink);text-align:right}
+.yrow.head{font:700 11.5px/1 Manrope,sans-serif;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);background:var(--bg)}
+.yrow.head span:last-child{font:inherit;color:inherit}
+.yrow.total{border-bottom:0;background:var(--ink);color:rgba(255,255,255,.75)}
+.yrow.total span:first-child{color:#fff;font-weight:600}
+.yrow.total span:last-child{color:var(--accent);font-size:18px}
+
+.pricing-section{padding:24px 0 84px;text-align:center}
+.pricing-section .section-sub{margin:14px auto 0}
+.pricing{display:grid;grid-template-columns:1fr 1.15fr 1fr;gap:22px;margin-top:44px;align-items:stretch;text-align:left}
+.price-card{background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:30px;display:flex;flex-direction:column}
+.price-card h3{font-size:15px;font-weight:700;letter-spacing:-.01em}
+.price-card .amount{font:800 40px/1 Manrope,sans-serif;letter-spacing:-.04em;margin-top:14px}
+.price-card .amount span{font-size:17px;font-weight:700;color:var(--muted);letter-spacing:0}
+.price-card .per{font:400 13px/1.4 "Public Sans",sans-serif;color:var(--muted);margin-top:6px}
+.price-card ul{list-style:none;margin:20px 0 26px;padding:0;flex:1}
+.price-card li{font:400 14px/1.5 "Public Sans",sans-serif;color:var(--muted);padding:7px 0 7px 24px;position:relative}
+.price-card li::before{content:"✓";position:absolute;left:0;color:var(--accent-ink);font-weight:700}
+.price-card.featured{background:var(--ink);border-color:var(--ink);color:#fff;box-shadow:0 34px 60px -30px rgba(13,33,55,.55);position:relative;padding-top:56px}
+.price-card.featured h3,.price-card.featured .amount{color:#fff}
+.price-card.featured .amount span,.price-card.featured .per,.price-card.featured li{color:rgba(255,255,255,.72)}
+.price-card.featured li::before{color:var(--accent)}
+.price-card.featured .flag{position:absolute;top:0;left:0;right:0;background:var(--accent);color:#fff;font:700 12px/1 Manrope,sans-serif;letter-spacing:.03em;text-align:center;padding:10px 14px;border-radius:19px 19px 0 0}
+.guarantee{max-width:760px;margin:36px auto 0;background:var(--amber-soft);border:1px solid var(--amber-line);border-radius:16px;padding:20px 26px;font:400 14.5px/1.7 "Public Sans",sans-serif;color:var(--amber-ink);text-align:left}
+.guarantee strong{color:var(--ink)}
+
+.trust-section{background:var(--surface);border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding:84px 0}
+.trust-grid{display:grid;grid-template-columns:1fr 1fr;gap:22px;margin-top:38px}
+.tcard{background:var(--bg);border:1px solid var(--line);border-radius:18px;padding:26px 28px}
+.tcard h3{font-size:16.5px;font-weight:800;letter-spacing:-.015em}
+.tcard p{font:400 14.5px/1.68 "Public Sans",sans-serif;color:var(--muted);margin:10px 0 0}
+
+@media (max-width:900px){
+  .plays,.trust-grid{grid-template-columns:1fr}
+  .year-grid{grid-template-columns:1fr;gap:30px}
+  .pricing{grid-template-columns:1fr}
+  .price-card.featured{order:-1}
+  .plays-section,.year-section,.trust-section{padding:56px 0}
+  .plays-section h2,.pricing-section h2,.trust-section h2,.year-grid h2{font-size:27px}
+  .yrow{grid-template-columns:1fr;gap:4px;padding:14px 18px}
+  .yrow span:last-child{text-align:left}
+  .yrow.head{display:none}
+}
