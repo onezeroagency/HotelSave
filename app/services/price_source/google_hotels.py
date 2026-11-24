@@ -250,27 +250,38 @@ class GoogleHotelsPriceSource(PriceSource):
             "check_out_date": check_out.isoformat(),
             "adults": adults or 2,
             "children": children or 0,
-            # §7 rule 3 discards non-refundable candidates anyway, so ask
-            # Google for free-cancellation rates only. LIVE LESSON
-            # (2026-11-24): unfiltered, the per-entry free_cancellation flag
-            # was absent on every price — the refundable rule matched nothing.
-            "free_cancellation": "true",
         }
+        # Two-step, correct in every world the live runs left open
+        # (2026-11-24). Step 1 asks for free-cancellation rates only: under an
+        # ECHOED filter, returned rates are refundable by construction — the
+        # strongest data we can get. But the filter emptied a real hotel's
+        # panel entirely (Grand Poet, Riga: 1 OTA unfiltered, 0 filtered), so
+        # an empty filtered response falls back to one unfiltered call, whose
+        # rates carry tri-state refundability: flagged True, silent None —
+        # silence feeds triggers, never quotes.
         try:
-            payload = self._get(params)
+            payload = self._get({**params, "free_cancellation": "true"})
         except httpx.HTTPError:
             logger.exception("Google Hotels details failed for token=%s", hotel_id)
             return []
+        filter_applied = False
+        if payload is not None:
+            echoed = (payload.get("search_parameters") or {}).get("free_cancellation")
+            has_rates = bool(payload.get("prices") or payload.get("featured_prices"))
+            filter_applied = str(echoed).lower() == "true" and has_rates
+            if not has_rates:
+                payload = None
         if payload is None:
-            return []
-
-        # Trust the filter ONLY when the response echoes it back: entries in a
-        # filter-applied response are refundable by construction, but if
-        # SerpApi ignored the unknown param (no echo), falling back to the
-        # per-entry flag is what keeps us from marking prepaid rates
-        # refundable. Verified live by the standalone validator's A/B run.
-        echoed = (payload.get("search_parameters") or {}).get("free_cancellation")
-        filter_applied = str(echoed).lower() == "true"
+            logger.info(
+                "Token %s: filtered response empty — falling back to unfiltered", hotel_id
+            )
+            try:
+                payload = self._get(params)
+            except httpx.HTTPError:
+                logger.exception("Google Hotels details failed for token=%s", hotel_id)
+                return []
+            if payload is None:
+                return []
 
         candidates: list[RateCandidate] = []
 
@@ -293,7 +304,9 @@ class GoogleHotelsPriceSource(PriceSource):
                     board_type=None,  # unknown, never asserted
                     adults=entry.get("num_guests"),
                     children=None,
-                    refundable=filter_applied or entry.get("free_cancellation") is True,
+                    refundable=True
+                    if (filter_applied or entry.get("free_cancellation") is True)
+                    else None,
                     # Trigger-grade only — a link here would open the alert
                     # gate and quote a figure no room-level match backs up.
                     deep_link=None,
@@ -310,9 +323,13 @@ class GoogleHotelsPriceSource(PriceSource):
                     continue
                 rates = [r for r in (room.get("rates") or []) if isinstance(r, dict)]
                 refundable = (
-                    filter_applied
-                    or room.get("free_cancellation") is True
-                    or any(r.get("free_cancellation") is True for r in rates)
+                    True
+                    if (
+                        filter_applied
+                        or room.get("free_cancellation") is True
+                        or any(r.get("free_cancellation") is True for r in rates)
+                    )
+                    else None
                 )
                 candidates.append(
                     RateCandidate(

@@ -367,3 +367,45 @@ def test_deadline_email_reports_no_movement_when_nothing_moved(db_session, monke
 
     props = next(p for name, p in events if name == worker.klaviyo.EVENT_DEADLINE_APPROACHING)
     assert props["saw_movement"] is False
+
+
+def test_unknown_refundability_is_never_quoted_even_with_a_link(db_session, monkeypatch):
+    """Tri-state rule 3 lets unknown-refundable candidates trigger; the gate is
+    what stops them being promised as a saving. A link alone is not enough."""
+    session, _ = db_session
+    job = _seed_job(session)
+
+    class _LinkedButUnknown:
+        def resolve_hotel(self, *a, **k):
+            return []
+
+        def check(self, *a, **k):
+            from app.services.price_source.base import RateCandidate
+
+            return [
+                RateCandidate(
+                    ota="Booking.com",
+                    total_price=Decimal("305.09"),
+                    currency="EUR",
+                    board_type="BB",
+                    adults=None,
+                    children=None,
+                    refundable=None,  # provider silent
+                    deep_link="https://example.test/rebook",
+                    room_name="Standard Double Room",
+                )
+            ]
+
+    events = []
+    monkeypatch.setattr(worker, "get_price_source", lambda: _LinkedButUnknown())
+    monkeypatch.setattr(
+        worker.klaviyo,
+        "emit_event",
+        lambda name, email, props: (events.append(name), True)[1],
+    )
+    worker.run_once(db=session)
+    session.refresh(job)
+
+    assert worker.klaviyo.EVENT_PRICE_DROP_FOUND not in events
+    assert job.status == JobStatus.active.value
+    assert job.lowest_seen_price == Decimal("305.09")  # trigger data still recorded

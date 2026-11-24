@@ -167,3 +167,21 @@ def test_unknown_board_does_not_block_a_trigger_grade_candidate():
     got = best_like_for_like([_rate("300.00", board=None)], job)
     assert got is not None
     assert got.board_type is None  # stays unknown — never upgraded to a claim
+
+
+# --- rule 3, tri-state refundability ------------------------------------------
+# Google's panel omits cancellation terms even for rates that ARE refundable
+# (proven live 2026-11-24: a booking known to be refundable showed no flag).
+# Silence is unknown — it may trigger "worth a look", it may never be quoted.
+
+
+def test_stated_non_refundable_still_rejects():
+    job = _job()
+    assert best_like_for_like([_rate("300.00", refundable=False)], job) is None
+
+
+def test_unknown_refundability_passes_trigger_grade():
+    job = _job()
+    got = best_like_for_like([_rate("300.00", refundable=None)], job)
+    assert got is not None
+    assert got.refundable is None  # stays unknown — the worker's gate sees it
