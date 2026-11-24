@@ -28,7 +28,17 @@ class Settings(BaseSettings):
     algorithm: str = "HS256"
 
     # Price source (§9)
-    price_source: str = "mock"  # mock | hotellook
+    price_source: str = "mock"  # mock | google_hotels | liteapi | booking | hotellook(defunct)
+
+    # Google Hotels via SerpApi (§9) — the watch engine from 2026-11. Public-
+    # market prices (the OTAs users actually book on), so movement seen here is
+    # movement in the user's own market; also keeps the daily watch off
+    # LiteAPI, whose ToS prohibit benchmarking and expect a 5000:1
+    # search-to-book ratio no watch-only product can meet. NOT yet
+    # live-validated: run scripts/validate_google_hotels.py with a real key
+    # before setting PRICE_SOURCE=google_hotels in production.
+    serpapi_key: str | None = None
+    serpapi_base_url: str = "https://serpapi.com/search"
     drop_floor_abs: float = 10.0
     drop_floor_pct: float = 0.03
     deadline_alert_hours: int = 48

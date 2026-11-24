@@ -77,8 +77,20 @@ def _matches_room(candidate: RateCandidate, job: MonitoringJob) -> bool:
         and _as_utc(candidate.free_cancellation_until) < _as_utc(job.cancellation_deadline)
     ):
         return False
-    if job.board_type is not None and candidate.board_type != job.board_type:
-        return False  # rule 2
+    # Rule 2, board: a KNOWN mismatch rejects (a room-only rate is not a cheaper
+    # version of a breakfast-inclusive booking). Unknown stays unknown — the
+    # Google Hotels watch rarely states board, and treating silence as a
+    # mismatch would blind the movement signal entirely. The line that keeps
+    # this honest: a source may only attach a deep_link (which lets the alert
+    # QUOTE a figure, via the worker's rebook-link gate) to candidates whose
+    # board it actually knows; trigger-grade candidates say "worth a look" and
+    # nothing more.
+    if (
+        job.board_type is not None
+        and candidate.board_type is not None
+        and candidate.board_type != job.board_type
+    ):
+        return False
     # Rule 2, room class: a cheaper *different* room is not a cheaper booking.
     # Only decidable when both sides name a class — an unnamed room is unknown,
     # not a match, so it can't be used to manufacture one either way.

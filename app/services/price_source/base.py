@@ -56,12 +56,18 @@ class PriceSource(ABC):
         lat: float | None = None,
         lng: float | None = None,
         country: str | None = None,
+        check_in: date | None = None,
+        check_out: date | None = None,
     ) -> list[HotelMatch]:
         """Name + city (+ country) → the aggregator's hotel IDs, ranked (§6b).
 
         `country` is an ISO-3166 alpha-2 code from the booking. Some providers
         require it to scope a city search at all (LiteAPI 400s without one), so
         callers should pass it through whenever the booking states it.
+
+        `check_in`/`check_out` are the stay dates. Google Hotels refuses a
+        search without dates, so callers that have the booking should pass
+        them; providers that don't need dates ignore them.
         """
 
     @abstractmethod

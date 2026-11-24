@@ -66,7 +66,13 @@ def create_job(
     # anything ambiguous is left for the resolve step to ask the user later.
     try:
         matches = get_price_source().resolve_hotel(
-            payload.hotel_name_raw, payload.city, payload.lat, payload.lng, payload.country
+            payload.hotel_name_raw,
+            payload.city,
+            payload.lat,
+            payload.lng,
+            payload.country,
+            check_in=payload.check_in,
+            check_out=payload.check_out,
         )
         if len(matches) == 1 and matches[0].confidence >= 0.9:
             job.hotel_id = matches[0].hotel_id

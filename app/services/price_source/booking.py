@@ -63,6 +63,8 @@ class BookingPriceSource(PriceSource):
         lat: float | None = None,
         lng: float | None = None,
         country: str | None = None,
+        check_in: date | None = None,
+        check_out: date | None = None,
     ) -> list[HotelMatch]:
         # TODO(booking): POST the accommodations search (name + city) to
         # f"{self._base_url}/accommodations/..." and map results → HotelMatch,

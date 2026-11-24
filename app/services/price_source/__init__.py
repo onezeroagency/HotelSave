@@ -13,6 +13,10 @@ def get_price_source() -> PriceSource:
     name = settings.price_source.lower()
     if name == "mock":
         return MockPriceSource()
+    if name == "google_hotels":
+        from .google_hotels import GoogleHotelsPriceSource  # §9 — public-market watch
+
+        return GoogleHotelsPriceSource()
     if name == "liteapi":
         from .liteapi import LiteAPIPriceSource  # §9 — self-serve detection feed
 
