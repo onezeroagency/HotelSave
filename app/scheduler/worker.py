@@ -67,7 +67,13 @@ def _retry_resolution(job: MonitoringJob, source: PriceSource) -> None:
     match may auto-resolve; ambiguity stays with the ask-the-user flow."""
     try:
         matches = source.resolve_hotel(
-            job.hotel_name_raw, job.city, job.lat, job.lng, job.country
+            job.hotel_name_raw,
+            job.city,
+            job.lat,
+            job.lng,
+            job.country,
+            check_in=job.check_in,
+            check_out=job.check_out,
         )
     except Exception:
         logger.exception(

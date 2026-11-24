@@ -153,6 +153,8 @@ class LiteAPIPriceSource(PriceSource):
         lat: float | None = None,
         lng: float | None = None,
         country: str | None = None,
+        check_in: date | None = None,
+        check_out: date | None = None,
     ) -> list[HotelMatch]:
         # LiteAPI rejects /data/hotels with 400 unless the search is scoped by
         # countryCode (confirmed live 2026-08-29). Prefer the booking's own

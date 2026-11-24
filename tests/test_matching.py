@@ -149,3 +149,21 @@ def test_unknown_window_does_not_block_on_its_own():
     unverified rate reaching the user, not a silent zero-match here."""
     job = _job(cancellation_deadline=_at(25))
     assert best_like_for_like([_rate("300.00")], job) is not None
+
+
+# --- rule 2, board: known mismatch rejects; unknown never blocks --------------
+# The Google Hotels watch rarely states board. Treating silence as a mismatch
+# would blind the movement signal entirely; the rebook-link gate is what stops
+# an unverified candidate being QUOTED to the user.
+
+
+def test_known_board_mismatch_still_rejects():
+    job = _job(board_type="BB")
+    assert best_like_for_like([_rate("300.00", board="RO")], job) is None
+
+
+def test_unknown_board_does_not_block_a_trigger_grade_candidate():
+    job = _job(board_type="BB")
+    got = best_like_for_like([_rate("300.00", board=None)], job)
+    assert got is not None
+    assert got.board_type is None  # stays unknown — never upgraded to a claim

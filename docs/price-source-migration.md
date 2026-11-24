@@ -340,3 +340,72 @@ check, on nearly every booking, forever.
 nice-to-have — until it lands the product can detect but not deliver. A second
 option worth pricing: compare against the *same channel the user booked on*, so
 the number quoted is one they can actually reach.
+
+---
+
+### 2026-11-24: the watch engine moves to Google Hotels (SerpApi)
+
+Two reasons, both verified against primary sources the same day:
+
+1. **Market alignment.** The post-mortem above stands: LiteAPI prices its own
+   supplier inventory, users book on public OTAs, and comparing the two
+   manufactures phantom drops. Google Hotels aggregates the public OTAs —
+   including the one the user actually booked on — so movement seen there is
+   movement in the user's own market. Candidate `ota` finally means something
+   ("Booking.com", "Expedia.com"), not a wholesaler's name.
+2. **LiteAPI's terms.** dev.liteapi.travel/terms (read 2026-11-24) prohibits,
+   verbatim: "Using LiteAPI data for competitive analysis, benchmarking, or
+   derivative works" and "Mapping LiteAPI data to third-party sources or
+   datasets" — and the free tier expects a 5000:1 search-to-book ratio
+   (docs.nuitee.com/reference/api-pricing-usage-costs). A watch-only product
+   that never books has an infinite ratio and arguably benchmarks on every
+   check. LiteAPI's correct role is the future verify-and-book step (see the
+   rebooking plan), where usage is exactly what its licence permits:
+   "enabling bookings through your travel platform".
+
+**What changed in code:**
+
+- `app/services/price_source/google_hotels.py` (`PRICE_SOURCE=google_hotels`,
+  needs `SERPAPI_KEY`). Search → `property_token` (stored as `hotel_id`);
+  details → candidates from `prices[]` (OTA-level: explicit
+  `free_cancellation` flags, no room identity) and `featured_prices[].rooms[]`
+  (room names, breakfast→BB inference).
+- **Money fields:** SerpApi rate objects carry pre-tax
+  (`extracted_before_taxes_fees`/`extracted_display_price`) and all-in
+  (`extracted_after_taxes_fees`, with `extracted_lowest` tracking it) figures.
+  The adapter uses after-tax, falls back to `extracted_lowest`, and SKIPS an
+  entry rather than compare a pre-tax number against the user's tax-inclusive
+  original (§7 — the phantom-drop bug from the other direction).
+- `resolve_hotel` gained optional `check_in`/`check_out` across the interface
+  (Google refuses a dateless search); all callers now pass the stay dates.
+  Ranked search ≠ filtered lookup, so auto-resolve returns ONLY the top hit,
+  at 0.95, when its name ≥0.75-similar to the booking's — otherwise the list
+  at 0.5 and the §6b ask-the-user flow.
+- **§7 rule 2 (board) relaxed to known-mismatch-rejects.** Google rarely
+  states board; silence-as-mismatch would blind the movement signal. The
+  honesty line moved, it didn't vanish: only candidates whose board a source
+  actually knows may carry a `deep_link`, and only `deep_link` lets an alert
+  quote a figure (the worker's rebook-link gate). Trigger-grade candidates
+  can only ever produce "worth a look".
+- Year-less `free_cancellation_until_date` ("Mar 17") is deliberately NOT
+  parsed — a wrong year inference could mis-rank a policy against the user's
+  deadline. `refundable` is True only on an explicit `free_cancellation` flag.
+
+**NOT yet live-validated** (the Hotellook rule). The build environment cannot
+reach serpapi.com; shapes were quoted from SerpApi's docs, not guessed, but
+quoting is not validating. Before production:
+
+1. Create a free SerpApi account (250 searches/month) → `SERPAPI_KEY`.
+2. `SERPAPI_KEY=xxx python scripts/validate_google_hotels.py "Grand Poet
+   Hotel and SPA by Semarah" "Riga" LV <checkin> <checkout>` — 2 searches.
+3. If resolve + candidates look like Google's own page for that hotel: set
+   `PRICE_SOURCE=google_hotels` + `SERPAPI_KEY` on BOTH Render services
+   (env vars do not propagate between them — learned three times in August).
+
+**Cost:** ~45 checks/booking (the §8 cadence) ≈ $0.45/booking on SerpApi's
+$0.01 production tier — against €29/year. DataForSEO (~$0.004) is the cheaper
+swap later; it sits behind the same `PriceSource` interface.
+
+**LiteAPI module status:** kept, untouched, no longer the watch. It becomes
+the verify-and-book layer once Nuitée confirms the rebooking use case in
+writing (see the rebooking plan, section (e)).
