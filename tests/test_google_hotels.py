@@ -190,3 +190,83 @@ def test_check_passes_stay_and_occupancy(source):
     assert params["check_in_date"] == "2026-12-10"
     assert params["adults"] == 2
     assert params["currency"] == "EUR"
+
+
+# --- lessons from the first live run (2026-11-24) -----------------------------
+
+
+def test_the_live_run_name_pair_auto_resolves(source):
+    """Verbatim from production data: Google canonicalizes hotel names, and
+    character similarity (0.67) sent the RIGHT hotel to ask-the-user. Names
+    agree on their distinctive tokens, not their generic ones."""
+    source._client = _FakeClient({
+        "properties": [
+            {"name": "GRAND POET by Semarah hotels", "property_token": "TOKgp"},
+            {"name": "Radisson Blu Latvija Conference & Spa Hotel, Riga", "property_token": "TOKr1"},
+            {"name": "Grand Hotel Kempinski Riga", "property_token": "TOKk"},
+        ]
+    })
+    matches = source.resolve_hotel("Grand Poet Hotel and SPA by Semarah", "Riga", country="LV")
+    assert len(matches) == 1
+    assert matches[0].hotel_id == "TOKgp"
+    assert matches[0].confidence >= 0.9
+
+
+def test_an_agreeing_hit_below_the_top_still_resolves(source):
+    """Google's ranking is its own; the agreement test walks the list."""
+    source._client = _FakeClient({
+        "properties": [
+            {"name": "Radisson Blu Latvija", "property_token": "TOKr1"},
+            {"name": "GRAND POET by Semarah hotels", "property_token": "TOKgp"},
+        ]
+    })
+    matches = source.resolve_hotel("Grand Poet Hotel and SPA by Semarah", "Riga")
+    assert len(matches) == 1 and matches[0].hotel_id == "TOKgp"
+
+
+def test_shared_generic_words_do_not_fake_agreement(source):
+    """'Grand Hotel Kempinski Riga' shares only 'grand' with the booking —
+    one distinctive token must not auto-resolve."""
+    source._client = _FakeClient({
+        "properties": [
+            {"name": "Grand Hotel Kempinski Riga", "property_token": "TOKk"},
+            {"name": "Wellton Riverside SPA Hotel", "property_token": "TOKw"},
+        ]
+    })
+    matches = source.resolve_hotel("Grand Poet Hotel and SPA by Semarah", "Riga")
+    assert len(matches) == 2
+    assert all(m.confidence < 0.9 for m in matches)
+
+
+def test_check_requests_free_cancellation_rates_only(source):
+    """Live run: unfiltered, no price carried a free_cancellation flag and §7
+    rule 3 matched nothing. Rule 3 discards non-refundable rates anyway, so
+    the request asks Google for free-cancellation rates up front."""
+    source._client = _FakeClient({"prices": []})
+    source.check(*_CHECK_ARGS)
+    _, params = source._client.calls[0]
+    assert params["free_cancellation"] == "true"
+
+
+def test_echoed_filter_makes_entries_refundable_by_construction(source):
+    source._client = _FakeClient({
+        "search_parameters": {"free_cancellation": "true"},
+        "prices": [
+            {"source": "Booking.com", "total_rate": {"extracted_after_taxes_fees": 436}},
+        ],
+    })
+    got = source.check(*_CHECK_ARGS)
+    assert got[0].refundable is True
+
+
+def test_unechoed_filter_falls_back_to_per_entry_flags(source):
+    """If SerpApi ignored the param (no echo), trusting it would mark prepaid
+    rates refundable — the exact trap rule 3 exists to prevent."""
+    source._client = _FakeClient({
+        "search_parameters": {},  # no free_cancellation echoed
+        "prices": [
+            {"source": "Booking.com", "total_rate": {"extracted_after_taxes_fees": 436}},
+        ],
+    })
+    got = source.check(*_CHECK_ARGS)
+    assert got[0].refundable is False

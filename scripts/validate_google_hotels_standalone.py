@@ -103,27 +103,62 @@ def main() -> int:
     if not props:
         out("NO properties[] in the response. Top-level keys were:", sorted(payload)[:15])
         return 1
+    GENERIC = {"hotel", "hotels", "the", "and", "by", "spa", "resort", "resorts",
+               "inn", "suites", "apartments", "aparthotel", "boutique",
+               "guesthouse", "hostel"}
+
+    def tokens(n):
+        import re
+        return {t for t in re.split(r"[^a-z0-9]+", n.strip().lower())
+                if t and t not in GENERIC}
+
+    def agrees(booked, cand):  # keep in sync with the adapter's _names_agree
+        bt, ct = tokens(booked), tokens(cand)
+        if bt and ct:
+            shared = bt & ct
+            if len(shared) >= 2 and len(shared) / len(bt) >= 0.6:
+                return True
+            if len(bt) == 1 and bt <= ct:
+                return True
+        return SequenceMatcher(None, booked.lower(), cand.lower()).ratio() >= 0.75
+
+    chosen = None
     for p in props[:5]:
-        sim = SequenceMatcher(None, (p.get("name") or "").lower(), name.lower()).ratio()
-        out(f"  sim={sim:.2f}  {p.get('name')!r}  token={'yes' if p.get('property_token') else 'MISSING'}")
-    top = props[0]
-    top_sim = SequenceMatcher(None, (top.get("name") or "").lower(), name.lower()).ratio()
-    out(f"  → top hit would {'AUTO-RESOLVE' if top_sim >= 0.75 else 'go to ask-the-user (sim < 0.75)'}")
+        ok = agrees(name, p.get("name") or "")
+        out(f"  {'MATCH ' if ok else '      '} {p.get('name')!r}  token={'yes' if p.get('property_token') else 'MISSING'}")
+        if ok and chosen is None and p.get("property_token"):
+            chosen = p
+    out(f"  → {'AUTO-RESOLVES to ' + chosen.get('name') if chosen else 'NO name agreement — would go to ask-the-user'}")
+    top = chosen or props[0]
     token = top.get("property_token")
     if not token:
         out("  Top hit has no property_token — adapter cannot proceed; paste this output back.")
         return 1
 
-    out(f"\n=== 2. details for the top hit, 2 adults")
-    payload = get({
+    out(f"\n=== 2. details for {top.get('name')!r}, 2 adults — A: unfiltered")
+    base_params = {
         "property_token": token,
         "check_in_date": check_in,
         "check_out_date": check_out,
         "adults": 2,
         "children": 0,
-    })
+    }
+    payload_a = get(base_params)
+    if payload_a is None:
+        return 1
+    out(f"  A: prices[]={len(payload_a.get('prices') or [])}  "
+        f"featured blocks={len(payload_a.get('featured_prices') or [])}")
+
+    out(f"\n=== 2b. same request — B: free_cancellation=true (the adapter's call)")
+    payload = get({**base_params, "free_cancellation": "true"})
     if payload is None:
         return 1
+    echoed = (payload.get("search_parameters") or {}).get("free_cancellation")
+    out(f"  B: prices[]={len(payload.get('prices') or [])}  "
+        f"featured blocks={len(payload.get('featured_prices') or [])}  "
+        f"filter echoed in search_parameters: {echoed!r}")
+    out("  → if B's counts/prices differ from A and the echo is 'true'/True, the")
+    out("    filter is honored and B's rates are refundable by construction.")
 
     prices = payload.get("prices") or []
     featured = payload.get("featured_prices") or []
@@ -156,9 +191,13 @@ def main() -> int:
             named += bool(room.get("name"))
             boarded += breakfast
             if shown < 6:
+                fc = {k: v for k, v in room.items() if "cancel" in k}
+                for r in rates:
+                    fc.update({k: v for k, v in r.items() if "cancel" in k})
                 out(f"  {block.get('source','?'):<14.14} {room.get('name')!r:<42.42} "
                     f"board={'BB' if breakfast else '?'}  "
-                    + (f"{t[0]}={t[1]}" if t else "SKIP (pre-tax only)"))
+                    + (f"{t[0]}={t[1]}" if t else "SKIP (pre-tax only)")
+                    + (f"  {fc}" if fc else ""))
                 shown += 1
 
     out("\n=== 3. verdict inputs")
