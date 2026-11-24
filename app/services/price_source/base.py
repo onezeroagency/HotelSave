@@ -32,7 +32,13 @@ class RateCandidate:
     board_type: str | None
     adults: int | None
     children: int | None
-    refundable: bool
+    # Tri-state (2026-11-24): True = the provider STATED refundable, False =
+    # stated non-refundable, None = the provider was silent. Google's price
+    # panel omits cancellation terms even for rates that are refundable
+    # (proven live: a booking known to be refundable showed no flag), so
+    # silence is unknown, not a rejection. §7 rule 3 rejects only a stated
+    # False; quoting a figure requires a stated True (the worker's gate).
+    refundable: bool | None
     deep_link: str | None  # affiliate rebook link (§9)
     # What the provider calls this room ("Standard Double Room"). Kept so §7 can
     # reject a cheaper *different* room and so an alert can name what it found —

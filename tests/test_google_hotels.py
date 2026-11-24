@@ -24,13 +24,14 @@ class _FakeResponse:
 
 
 class _FakeClient:
-    def __init__(self, payload):
-        self._payload = payload
+    def __init__(self, payload, *more):
+        self._payloads = [payload, *more]
         self.calls = []
 
     def get(self, url, params=None):
         self.calls.append((url, params))
-        return _FakeResponse(self._payload)
+        idx = min(len(self.calls) - 1, len(self._payloads) - 1)
+        return _FakeResponse(self._payloads[idx])
 
 
 @pytest.fixture()
@@ -106,6 +107,7 @@ _CHECK_ARGS = ("TOK1", date(2026, 12, 10), date(2026, 12, 12), 2, 0)
 
 def test_ota_level_prices_map_with_explicit_refundability(source):
     source._client = _FakeClient({
+        "search_parameters": {"free_cancellation": "true"},
         "prices": [
             {
                 "source": "Booking.com",
@@ -135,19 +137,20 @@ def test_ota_level_prices_map_with_explicit_refundability(source):
     assert booking.free_cancellation_until is None
 
     expedia = next(c for c in got if c.ota == "Expedia.com")
-    assert expedia.refundable is False
+    assert expedia.refundable is True  # echoed filter → refundable by construction
 
 
 def test_pre_tax_only_entries_are_skipped_not_underpriced(source):
     """Comparing a pre-tax figure against the user's tax-inclusive original is
     the phantom-drop bug from the other direction."""
-    source._client = _FakeClient({
+    payload = {
         "prices": [
             {"source": "SomeOTA",
              "total_rate": {"extracted_before_taxes_fees": 300,
                             "extracted_display_price": 300}},
         ]
-    })
+    }
+    source._client = _FakeClient(payload, payload)
     assert source.check(*_CHECK_ARGS) == []
 
 
@@ -190,6 +193,7 @@ def test_check_passes_stay_and_occupancy(source):
     assert params["check_in_date"] == "2026-12-10"
     assert params["adults"] == 2
     assert params["currency"] == "EUR"
+    assert params["free_cancellation"] == "true"  # step 1 asks for refundable rates
 
 
 # --- lessons from the first live run (2026-11-24) -----------------------------
@@ -238,35 +242,51 @@ def test_shared_generic_words_do_not_fake_agreement(source):
     assert all(m.confidence < 0.9 for m in matches)
 
 
-def test_check_requests_free_cancellation_rates_only(source):
-    """Live run: unfiltered, no price carried a free_cancellation flag and §7
-    rule 3 matched nothing. Rule 3 discards non-refundable rates anyway, so
-    the request asks Google for free-cancellation rates up front."""
-    source._client = _FakeClient({"prices": []})
-    source.check(*_CHECK_ARGS)
-    _, params = source._client.calls[0]
-    assert params["free_cancellation"] == "true"
-
-
-def test_echoed_filter_makes_entries_refundable_by_construction(source):
-    source._client = _FakeClient({
-        "search_parameters": {"free_cancellation": "true"},
-        "prices": [
-            {"source": "Booking.com", "total_rate": {"extracted_after_taxes_fees": 436}},
-        ],
-    })
+def test_empty_filtered_response_falls_back_to_unfiltered(source):
+    """Verbatim from the live runs (Grand Poet, Riga): the echoed filter
+    emptied the panel (B: 0 rates) while unfiltered had data (A: 1 OTA, no
+    flags). The adapter must not go blind — it falls back once, and silent
+    entries come back refundable=None: enough to trigger, never to quote."""
+    source._client = _FakeClient(
+        {"search_parameters": {"free_cancellation": "true"}},  # B: honored, empty
+        {"prices": [  # A: the unfiltered panel
+            {"source": "Agoda",
+             "total_rate": {"extracted_after_taxes_fees": 555},
+             },
+        ]},
+    )
     got = source.check(*_CHECK_ARGS)
-    assert got[0].refundable is True
+    assert len(source._client.calls) == 2
+    assert "free_cancellation" not in source._client.calls[1][1]
+    assert got[0].total_price == Decimal("555")
+    assert got[0].refundable is None  # unknown — not False, not True
 
 
-def test_unechoed_filter_falls_back_to_per_entry_flags(source):
-    """If SerpApi ignored the param (no echo), trusting it would mark prepaid
+def test_fallback_still_honours_explicit_flags(source):
+    source._client = _FakeClient(
+        {},  # filtered: empty
+        {"prices": [
+            {"source": "Booking.com", "free_cancellation": True,
+             "total_rate": {"extracted_after_taxes_fees": 436}},
+            {"source": "Agoda",
+             "total_rate": {"extracted_after_taxes_fees": 400}},
+        ]},
+    )
+    got = source.check(*_CHECK_ARGS)
+    assert next(c for c in got if c.ota == "Booking.com").refundable is True
+    assert next(c for c in got if c.ota == "Agoda").refundable is None
+
+
+def test_unechoed_filter_with_rates_is_treated_as_unfiltered(source):
+    """If SerpApi ignored the param (no echo) but returned rates, those rates
+    are unfiltered reality: trusting them as refundable would mark prepaid
     rates refundable — the exact trap rule 3 exists to prevent."""
     source._client = _FakeClient({
-        "search_parameters": {},  # no free_cancellation echoed
+        "search_parameters": {},  # no echo
         "prices": [
             {"source": "Booking.com", "total_rate": {"extracted_after_taxes_fees": 436}},
         ],
     })
     got = source.check(*_CHECK_ARGS)
-    assert got[0].refundable is False
+    assert len(source._client.calls) == 1  # rates present → no second call
+    assert got[0].refundable is None

@@ -409,3 +409,31 @@ swap later; it sits behind the same `PriceSource` interface.
 **LiteAPI module status:** kept, untouched, no longer the watch. It becomes
 the verify-and-book layer once Nuitée confirms the rebooking use case in
 writing (see the rebooking plan, section (e)).
+
+### 2026-11-24, later: tri-state refundability + two-step rate requests
+
+Two live validator runs against Grand Poet (Riga) broke two doc-built
+assumptions: Google canonicalizes hotel names (fixed with distinctive-token
+matching), and its price panel omits cancellation terms even for rates that
+ARE refundable — the user's own refundable booking showed no flag, and the
+free_cancellation filter, though honored (echoed), emptied the panel
+entirely (1 OTA unfiltered → 0 filtered).
+
+Resolution, correct regardless of which of those behaviours generalizes:
+
+- `RateCandidate.refundable` is tri-state: True (stated refundable), False
+  (stated non-refundable), None (provider silent). §7 rule 3 rejects only a
+  stated False — same doctrine as board: silence feeds triggers ("worth a
+  look"), never quotes. The worker's gate now requires deep_link AND
+  refundable is True before any figure is emailed.
+- `check()` is two-step: filtered first (an echoed, non-empty filtered
+  response is refundable by construction — the strongest data available),
+  falling back to one unfiltered call when the filter empties the panel.
+  Worst case 2 searches/check (~$0.90/booking at SerpApi production rates).
+- LiteAPI maps RFN→True, NRFN→False, silent→None.
+- Deadline email wording updated in the repo template: "we've seen lower
+  rates for your dates" (a lower rate may have existed from day one —
+  "moved since you booked" could be false) + cancellation-terms caveat.
+  ⚠ LIVE KLAVIYO NOT YET SYNCED (connector auth expired): template XhJDAt's
+  mode-A branch and the flow's preview text still say "moved since you
+  booked". Sync before pointing production at google_hotels.

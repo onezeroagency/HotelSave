@@ -262,6 +262,7 @@ class LiteAPIPriceSource(PriceSource):
                     if skip:
                         continue
                     policies = rate.get("cancellationPolicies") or {}
+                    tag = policies.get("refundableTag")
                     # Occupancy as the *rate* reports it, not as we asked. Echoing
                     # the request made the §7 occupancy check a tautology that
                     # could never fail; None means "provider didn't say", which
@@ -276,7 +277,7 @@ class LiteAPIPriceSource(PriceSource):
                             board_type=_board_type(rate),
                             adults=int(occ) if isinstance(occ, (int, str)) and str(occ).isdigit() else None,
                             children=None,
-                            refundable=policies.get("refundableTag") == "RFN",
+                            refundable=True if tag == "RFN" else False if tag == "NRFN" else None,
                             # Detection-only feed — the rebook link is the affiliate
                             # layer's job (docs/price-source-migration.md §8).
                             deep_link=None,

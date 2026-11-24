@@ -65,7 +65,12 @@ def room_class(name: str | None) -> str | None:
 
 
 def _matches_room(candidate: RateCandidate, job: MonitoringJob) -> bool:
-    if not candidate.refundable:  # rule 3 — never compare against a non-refundable trap
+    # Rule 3 — never compare against a STATED non-refundable trap. Unknown is
+    # not a rejection (2026-11-24): Google's panel omits cancellation terms
+    # even for refundable rates, and silence-as-mismatch blinded the whole
+    # watch. Same doctrine as board: unknown feeds triggers ("worth a look"),
+    # never quotes — a figure requires refundable is True at the worker's gate.
+    if candidate.refundable is False:
         return False
     # Rule 3b: "refundable" is a boolean, but the free-cancellation *window* is
     # the product. A rate that stops being cancellable sooner than the booking

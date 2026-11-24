@@ -171,7 +171,12 @@ def process_job(job: MonitoringJob, source: PriceSource, db: Session, now: datet
     # don't email a number nobody can collect. See settings for the live case
     # that forced this.
     found_drop = is_actionable_drop(best, job)
-    held = found_drop and settings.require_rebook_url_for_alerts and not best.deep_link
+    # Quoting a figure needs both a way to act AND known refundability —
+    # tri-state rule 3 lets unknown-refundable candidates trigger "worth a
+    # look", so the gate is what stops them being promised as savings.
+    held = found_drop and settings.require_rebook_url_for_alerts and not (
+        best.deep_link and best.refundable is True
+    )
     if held:
         logger.warning(
             "Job %s: holding a %s %s drop from %s — no rebook link, so the user "
