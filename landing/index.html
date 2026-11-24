@@ -3,301 +3,250 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>MyRoomWatch — Make "free cancellation" pay you back</title>
-<meta name="description" content="Refundable rates cost more — you're buying the right to change your mind. We guard that right until the minute it expires: price drops, deadline warnings, and the moment locking in a cheaper rate makes sense. First booking free, then €29/year.">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Public+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+<title>MyRoomWatch: use your free cancellation before it runs out</title>
+<meta name="description" content="Forward your refundable hotel booking. We keep checking rates for your dates and email you before your free-cancellation deadline. Free during beta.">
+<link rel="canonical" href="https://www.myroomwatch.com/">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://www.myroomwatch.com/">
+<meta property="og:title" content="MyRoomWatch: use your free cancellation before it runs out">
+<meta property="og:description" content="Forward your refundable hotel booking. We keep checking rates for your dates and email you before your free-cancellation deadline. Free during beta.">
+<meta property="og:image" content="https://www.myroomwatch.com/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="MyRoomWatch: use your free cancellation before it runs out">
+<meta name="twitter:description" content="Forward your refundable hotel booking. We keep checking rates for your dates and email you before your free-cancellation deadline. Free during beta.">
+<meta name="twitter:image" content="https://www.myroomwatch.com/og.png">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='9' fill='%230D2137'/%3E%3Ccircle cx='16' cy='16' r='7' fill='none' stroke='%2300A870' stroke-width='3.5'/%3E%3C/svg%3E">
 <link rel="stylesheet" href="styles.css">
 </head>
 <body>
 
 <header class="site-header">
   <div class="wrap">
-    <a class="logo" href="#"><span class="logo-mark"></span>MyRoomWatch</a>
-    <nav class="nav">
+    <a class="logo" href="/"><span class="logo-mark"></span>MyRoomWatch</a>
+    <nav class="nav" aria-label="Main">
       <a href="#how">How it works</a>
-      <a href="#maths">The maths</a>
       <a href="#pricing">Pricing</a>
+      <a href="#faq">FAQ</a>
       <a class="btn btn-ghost" href="/dashboard.html">Sign in</a>
-      <a class="btn btn-dark" href="#pricing">Start free</a>
     </nav>
+    <div class="header-cta">
+      <a class="btn btn-dark" href="#start">Start free</a>
+      <details class="mnav">
+        <summary aria-label="Menu">Menu</summary>
+        <nav class="menu" aria-label="Mobile">
+          <a href="#how">How it works</a>
+          <a href="#pricing">Pricing</a>
+          <a href="#faq">FAQ</a>
+          <a href="/dashboard.html">Sign in</a>
+        </nav>
+      </details>
+    </div>
   </div>
 </header>
 
 <main>
-  <section class="wrap hero">
-    <div>
-      <span class="pill">Hotel booking protection · Made in the EU</span>
-      <h1>You pay for "free cancellation". We make it pay you back.</h1>
-      <p class="sub">Refundable rates cost more — that premium is you buying the right to change your mind. Forward us the confirmation and we guard that right until the minute it expires: watching your exact room for a lower price, and telling you before your window closes. You keep whatever the difference is.</p>
-      <div class="hero-cta">
-        <a class="btn btn-primary" href="#pricing">Protect my first booking — free</a>
-        <span class="note">No card. 60 seconds. <br>Then €29/year for every trip.</span>
-      </div>
-      <div class="hero-stats">
-        <div class="stat"><b class="green num">2</b><span>ways a booking <br>pays you back</span></div>
-        <div class="stat"><b class="num">48h</b><span>warning before your <br>window closes</span></div>
-        <div class="stat"><b class="num">0</b><span>card details we <br>ever touch</span></div>
-      </div>
-    </div>
-
-    <aside class="alert-card">
-      <div class="eyebrow">Example alert</div>
-      <div class="hotel">Hotel Artemide, Rome<br><small>12–15 Sep · Superior Double, breakfast</small></div>
-      <hr>
-      <div class="row num"><span>Checks run so far</span><span>31</span></div>
-      <div class="row num"><span>Rates since you booked</span><span class="new">moved</span></div>
-      <div class="eyebrow" style="margin-top:24px">Cancel free until</div>
-      <div class="save num">14 Sep</div>
-      <div class="warn"><strong>Worth two minutes.</strong> We'll point you at today's price for the same stay. If it's better, book the new rate first, then cancel — never the other way round.</div>
-    </aside>
-  </section>
-
-  <section class="wrap deadline">
-    <div>
-      <span class="pill pill-amber">Why this has to exist</span>
-      <h2>Your booking site will never tell you the price dropped.</h2>
-      <p class="body">Why would it? You've already paid. So the extra you spent on a refundable rate — your one piece of leverage — expires quietly, on a date nobody puts in front of you. Using it means re-checking your room dozens of times over weeks, at the right moments, and never forgetting the deadline. Nobody does that by hand. So the option almost everyone pays for goes unused, almost every time.</p>
-    </div>
-    <div class="cadence">
-      <h3>What "watching" actually means</h3>
-      <div class="rows">
-        <div class="row"><span class="when">More than 14 days out</span><span class="bar"><i style="width:18%"></i></span><span class="rate">1× a day</span></div>
-        <div class="row"><span class="when">3–14 days out</span><span class="bar"><i style="width:40%"></i></span><span class="rate">2× a day</span></div>
-        <div class="row"><span class="when">Final 72 hours</span><span class="bar"><i style="width:100%"></i></span><span class="rate">every 6 hours</span></div>
-      </div>
-      <p class="fine">Every check is clocked against <em>your</em> cancellation deadline — hardest in the last three days, when a change still leaves you time to act. You always hear from us before the window shuts.</p>
-    </div>
-  </section>
-
-  <section class="plays-section" id="maths">
-    <div class="wrap">
-      <span class="pill">The maths</span>
-      <h2>Two ways one booking pays you back.</h2>
-      <p class="section-sub">Both use the same move: book the better rate first, confirm it, then cancel the original — never the other way round. We tell you when the moment comes.</p>
-
-      <div class="plays">
-        <article class="play">
-          <div class="play-tag">Play 1 · If the price drops</div>
-          <h3>Rebook the same room, cheaper.</h3>
-          <div class="ledger num">
-            <div class="lrow"><span>You paid (refundable)</span><span>€642</span></div>
-            <div class="lrow"><span>Same room, three weeks later</span><span>€570</span></div>
-            <div class="lrow total"><span>You rebook and keep</span><span class="green">€72</span></div>
-          </div>
-          <p>Hotel prices move after you book — sometimes down. If your exact room gets cheaper while you can still cancel free, we flag it and you pocket the gap.</p>
-        </article>
-
-        <article class="play">
-          <div class="play-tag alt">Play 2 · Even if it never drops</div>
-          <h3>Lock in once your plans are certain.</h3>
-          <div class="ledger num">
-            <div class="lrow"><span>Your refundable rate</span><span>€436</span></div>
-            <div class="lrow"><span>Same room, non-refundable</span><span>€394</span></div>
-            <div class="lrow total"><span>Switch near the deadline, keep</span><span class="green">€42</span></div>
-          </div>
-          <p>The flexible rate was only worth paying for while your plans could change. Once they're fixed — and we've warned you the window is closing — switching to the locked-in rate hands the flexibility premium back to you. Only do this when you're sure you're going.</p>
-        </article>
-      </div>
-      <p class="fine center">Illustrations with realistic rates (Play 2 is from a real two-night Riga search, Sept 2026) — not a promise. Prices are the hotel's to set; the timing is ours to catch.</p>
-    </div>
-  </section>
-
-  <section class="wrap year-section">
-    <div class="year-grid">
+  <!-- 1 · Hero -->
+  <section class="wrap hero" id="start">
+    <div class="hero-grid">
       <div>
-        <span class="pill">A year of trips</span>
-        <h2>What this looks like across three bookings.</h2>
-        <p class="body">Some trips pay you back, some don't. The point of paying yearly is that you never have to guess which is which — everything you forward is covered automatically, and one decent catch funds years of it.</p>
-        <p class="fine">A worked illustration, not a forecast. The €0 row is real life too — and even there, you knew your deadline instead of finding out too late.</p>
+        <span class="pill">Free during beta · No card</span>
+        <h1>You paid extra for free cancellation. We make sure you use it.</h1>
+        <p class="sub">Forward your refundable hotel confirmation. We keep checking rates for your dates and email you before your free-cancellation deadline, sooner if we've seen lower rates. You decide what to do. Your booking stays exactly as you made it.</p>
+
+        <form class="hero-form" id="signup-form" novalidate>
+          <div class="fields">
+            <label class="sr-only" for="signup-email">Email address</label>
+            <input type="email" name="email" id="signup-email" required
+                   autocomplete="email" placeholder="you@example.com">
+            <label class="sr-only" for="signup-password">Password (8+ characters)</label>
+            <input type="password" name="password" id="signup-password" required
+                   autocomplete="new-password" minlength="8" placeholder="Password (8+ characters)">
+            <button class="btn btn-primary" type="submit" id="signup-submit">Start watching, free</button>
+          </div>
+          <p class="form-status" id="signup-status" role="status" aria-live="polite" hidden></p>
+          <p class="micro">Next step: forward one confirmation to <code>save@myroomwatch.com</code> from this email address.</p>
+          <p class="micro">Already have an account? <a href="/dashboard.html">Sign in</a></p>
+        </form>
+
+        <ul class="proof">
+          <li>Checks get more frequent as your deadline nears</li>
+          <li>Heads-up about 48h before your window closes</li>
+          <li>No card needed during beta</li>
+        </ul>
       </div>
-      <div class="year-table num">
-        <div class="yrow head"><span>Trip</span><span>What happened</span><span>Kept</span></div>
-        <div class="yrow"><span>Riga · 2 nights · €436</span><span>No drop — locked in at the deadline</span><span class="green">€42</span></div>
-        <div class="yrow"><span>Rome · 3 nights · €642</span><span>Price fell — rebooked same room</span><span class="green">€72</span></div>
-        <div class="yrow"><span>Berlin · 2 nights · €380</span><span>Nothing moved, plans stayed loose</span><span>€0</span></div>
-        <div class="yrow total"><span>Kept over the year</span><span>vs €29 for the year</span><span class="green">€114</span></div>
+
+      <div>
+        <aside class="xcard" aria-label="Example alert email">
+          <p class="eyebrow">Example email</p>
+          <p class="title">Hotel Artemide, Rome · 12–15 Sep · Superior Double, breakfast</p>
+          <div class="rows">
+            <p class="row"><span>Checks run so far</span><b class="num">31</b></p>
+            <p class="row"><span>What we saw</span><b>Lower rates for your dates</b></p>
+          </div>
+          <p class="deadline-line num">Cancel free until 14 Sep</p>
+          <p class="note"><strong>Worth two minutes.</strong> Check today's price for the same stay. If it's better, book the new rate first, then cancel the old one. Never the other way round.</p>
+        </aside>
+        <p class="xcaption">Illustration. Not a real customer, not a promised saving.</p>
       </div>
     </div>
   </section>
 
-  <section class="steps-section" id="how">
+  <!-- 2 · How it works -->
+  <section class="section alt" id="how">
     <div class="wrap">
-      <h2>Three steps. Then nothing.</h2>
-      <div class="steps">
-        <div class="step">
-          <div class="n">1</div>
-          <div><h3>Forward your confirmation</h3>
-          <p>One email to save@myroomwatch.com. We read the hotel, room, dates and your cancellation deadline.</p></div>
-        </div>
-        <div class="step">
-          <div class="n">2</div>
-          <div><h3>We watch the exact room</h3>
-          <p>Same hotel, same dates, same board and occupancy — and it must still be refundable. Nothing else counts as a drop.</p></div>
-        </div>
-        <div class="step">
-          <div class="n">3</div>
-          <div><h3>You get told in time</h3>
-          <p>A price worth a look, or your deadline approaching — either way you hear from us while you can still act. You book, you cancel, you keep the difference.</p></div>
-        </div>
+      <h2>Three steps. Then you can forget about it.</h2>
+      <ol class="hiw-steps">
+        <li>
+          <h3>Forward your confirmation</h3>
+          <p>Send your booking email to <strong>save@myroomwatch.com</strong> from the address you signed up with. We read the hotel, dates, room, board, guests, price and your free-cancellation deadline.</p>
+        </li>
+        <li>
+          <h3>We keep checking</h3>
+          <p>We look at rates for your hotel and dates on a schedule tied to your deadline: daily at first, then more often in the last two weeks, and every 6 hours in the final 3 days.</p>
+        </li>
+        <li>
+          <h3>You hear from us in time</h3>
+          <p>Before your deadline closes we email you what we saw. If we've seen lower rates for your dates, we say so and link you to check today's price. If nothing moved, we tell you that too, so you can relax and keep your booking.</p>
+        </li>
+      </ol>
+      <div class="chips" aria-label="What we check">
+        <span>Same hotel</span><span>Same dates</span><span>Same guests and board</span><span>Before your deadline</span>
       </div>
+      <p class="fineprint">Rates change between checks and differ between booking sites, so always confirm the price and cancellation terms on the site before you book. Coverage depends on the hotel appearing on Google Hotels.</p>
+      <p class="callout"><strong>Book the new rate first, confirm it, then cancel the original. Never cancel first.</strong></p>
+      <p class="tip">Plans locked in? Near your deadline, a non-refundable rate for the same room is often cheaper. Only switch if you're sure you're going.</p>
     </div>
   </section>
 
-  <section class="wrap pricing-section" id="pricing">
-    <span class="pill">Pricing</span>
-    <h2>Less than the premium on a single booking.</h2>
-    <p class="section-sub">You're already paying €30–50 extra per stay for the right to cancel. This is what makes that money do something.</p>
-
-    <div class="pricing">
-      <article class="price-card">
-        <h3>First booking</h3>
-        <div class="amount num">Free</div>
-        <div class="per">no card, full service</div>
-        <ul>
-          <li>Every check, every alert</li>
-          <li>Deadline guard included</li>
-          <li>See it work before you pay</li>
-        </ul>
-        <a class="btn btn-dark btn-block" href="#signup">Start free</a>
-      </article>
-
-      <article class="price-card featured">
-        <div class="flag">Founding price — locked for as long as you stay</div>
-        <h3>Yearly</h3>
-        <div class="amount num">€29<span>/year</span></div>
-        <div class="per">every booking, all year, automatic</div>
-        <ul>
-          <li>Unlimited bookings watched</li>
-          <li>Price-drop and lock-in alerts</li>
-          <li>48h deadline guard on every stay</li>
-          <li>Cancel anytime — no forms, no calls</li>
-        </ul>
-        <a class="btn btn-primary btn-block" href="#signup">Become a founding member</a>
-      </article>
-
-      <article class="price-card">
-        <h3>Monthly</h3>
-        <div class="amount num">€3.99<span>/mo</span></div>
-        <div class="per">same cover, cancel any month</div>
-        <ul>
-          <li>Everything in yearly</li>
-          <li>For the commitment-shy</li>
-          <li>(Yearly is €19 cheaper)</li>
-        </ul>
-        <a class="btn btn-dark btn-block" href="#signup">Go monthly</a>
-      </article>
-    </div>
-
-    <div class="guarantee">
-      <strong>The deal, plainly:</strong> free while we're in beta — founding members keep €29/year when billing starts, and we email you well before it does. Ever feel it wasn't useful? Reply to any email with "refund" and your last payment comes back. No forms, no questions.
-    </div>
-  </section>
-
-  <section class="trust-section">
+  <!-- 3 · Why it's safe -->
+  <section class="section" id="safe">
     <div class="wrap">
-      <h2>Why you can trust us with your inbox.</h2>
-      <div class="trust-grid">
-        <div class="tcard">
-          <h3>We can't touch anything</h3>
-          <p>We never ask for card details and we can't book, change or cancel a reservation. We read one forwarded email and send you email back. Every decision — and every euro — stays in your hands.</p>
+      <h2>Your booking stays yours.</h2>
+      <div class="safe-grid">
+        <div class="scard">
+          <h3>We don't touch your reservation</h3>
+          <p>We read the email you forward and send you email back. We can't change or cancel your booking, and we never book anything in your name.</p>
         </div>
-        <div class="tcard">
+        <div class="scard">
+          <h3>No card during beta</h3>
+          <p>Watching is free while we're in beta. When paid plans start, the subscription will be charged through a payment provider's checkout, and we'll email you well before then.</p>
+          <!-- [CONFIRM before adding]: "Stripe-hosted checkout, card never touches our servers" -->
+        </div>
+        <div class="scard">
           <h3>We'd rather under-promise</h3>
-          <p>Every number on this page is a worked example, labelled as one. We will never quote you a saving we can't show you, and if we're not sure a rate is real for you, we say "worth a look" — not "you save €94".</p>
+          <p>Every number on this page is a labelled example. If we can't stand behind a price, we say "worth a look", not "you save €94".</p>
         </div>
-        <div class="tcard">
+        <div class="scard">
           <h3>A real EU company</h3>
-          <p>MyRoomWatch is built and operated by SIA ONEZERO in Latvia, under EU consumer law — which means easy cancellation and your data rights aren't a courtesy, they're the law we operate under.</p>
-        </div>
-        <div class="tcard">
-          <h3>No fake reviews — yet no reviews</h3>
-          <p>We're in beta and we won't invent testimonials; in the EU that's illegal, and it should be. This space belongs to our first hundred founding members. Your words, with your permission, here.</p>
+          <p>MyRoomWatch is run by SIA ONEZERO, registered in Latvia (EU). Under the GDPR you can ask for a copy of your data, correct it or delete it — email hello@myroomwatch.com. We don't sell your data, and this site sets no tracking or advertising cookies. <a href="/privacy.html">Privacy policy</a></p>
         </div>
       </div>
-      <!-- REVIEWS: real beta testimonials go here, with written permission, name + trip.
-           Do not populate with invented quotes — see the fourth trust card. -->
+      <p class="fineprint">No reviews yet, and no fake ones. We're in beta and won't invent testimonials.</p>
+      <!-- [PLACEHOLDER]: real founding-member quotes, with written permission, once they exist. -->
     </div>
   </section>
 
-  <section class="steps-section">
+  <!-- 4 · Pricing -->
+  <section class="section alt" id="pricing">
+    <div class="wrap">
+      <h2>Free while we're in beta.</h2>
+      <p class="lead">Everything works now, free. When billing starts we'll email you first, and nothing is ever charged silently.</p>
+      <div class="plans">
+        <div class="plan">
+          <h3>Beta, now</h3>
+          <p class="amount num">Free</p>
+          <ul>
+            <li>Every booking you forward</li>
+            <li>Deadline heads-up</li>
+            <li>Lower-rate emails</li>
+            <li>No card</li>
+          </ul>
+        </div>
+        <div class="plan featured">
+          <p class="flag">Founding price</p>
+          <h3>Yearly</h3>
+          <p class="amount num">€29<span>/year</span></p>
+          <ul>
+            <li>Every booking, all year</li>
+            <li>Founding members who join in beta keep €29/year while their subscription stays active</li>
+            <li>Cancel anytime</li>
+          </ul>
+        </div>
+        <div class="plan">
+          <h3>Monthly</h3>
+          <p class="amount num">€3.99<span>/month</span></p>
+          <ul>
+            <li>Same as yearly</li>
+            <li>Cancel anytime</li>
+          </ul>
+        </div>
+      </div>
+      <p class="pricing-fine">Prices shown are the planned prices after beta. Final terms are published in our <a href="/terms.html">Terms</a> before any payment is taken.</p>
+      <p class="pricing-cta"><a class="btn btn-primary" href="#start">Start watching, free</a></p>
+    </div>
+  </section>
+
+  <!-- 5 · FAQ -->
+  <section class="section" id="faq">
     <div class="wrap">
       <h2>The obvious questions.</h2>
-      <div class="steps">
-        <div class="step">
-          <div><h3>Is switching rates even allowed?</h3>
-          <p>Yes. You're making a normal new booking and cancelling the old one within the policy you already paid for. Hotels publish both rates knowing this — the flexible premium is priced for people who never act on it. You're just not one of them anymore.</p></div>
-        </div>
-        <div class="step">
-          <div><h3>What if nothing ever drops?</h3>
-          <p>Play 2 doesn't need a drop — once plans are certain, the locked-in rate is usually the cheaper one. And in the worst case you got every deadline warning and risked €29, not a missed window on a €400 stay.</p></div>
-        </div>
-        <div class="step">
-          <div><h3>Can you touch my booking or card?</h3>
-          <p>No. No card details, no access to your reservation, no bookings made in your name. If you ever want out, one click cancels the subscription and deleting your account is one email.</p></div>
-        </div>
-        <div class="step">
-          <div><h3>Why can't I just check myself?</h3>
-          <p>You can — it's dozens of checks over weeks, timed so the late ones land while you can still cancel free, plus never forgetting the date. For one trip, maybe. For every trip, forever? That's the €29.</p></div>
-        </div>
-        <div class="step">
-          <div><h3>What happens after the beta?</h3>
-          <p>Billing starts with clear notice by email, founding members keep €29/year, and nothing is ever charged silently. Until then, everything is free and the terms say exactly that.</p></div>
-        </div>
-        <div class="step">
-          <div><h3>What's the catch?</h3>
-          <p>Honestly: some bookings pay back and some don't, and we can't tell you in advance which is which. What we can promise is that you'll never miss the moment to find out — and that promise we keep on every single booking.</p></div>
-        </div>
+      <div class="faq">
+        <details>
+          <summary>Which bookings can I forward?</summary>
+          <p class="a">Any hotel booking with free cancellation, from any booking site or the hotel directly, anywhere in the world. Coverage is best where the hotel appears on Google Hotels. Non-refundable bookings can't be rebooked, so we'll tell you if we get one.</p>
+        </details>
+        <details>
+          <summary>Do you change or cancel my booking?</summary>
+          <p class="a">No. We only read the confirmation you forward. Any rebooking or cancelling is yours to do, on the booking site.</p>
+        </details>
+        <details>
+          <summary>How will you tell me about a lower rate?</summary>
+          <p class="a">By email: "We've seen lower rates for your dates", with a link to check today's price. We don't quote a saving we can't stand behind, because prices and cancellation terms differ between sites.</p>
+        </details>
+        <details>
+          <summary>What if nothing changes?</summary>
+          <p class="a">You'll still get a heads-up about 48 hours before your free-cancellation window closes, so you never find out about a deadline too late.</p>
+        </details>
+        <details>
+          <summary>Is rebooking allowed?</summary>
+          <p class="a">Usually, yes. A free-cancellation rate lets you cancel before the deadline, and making a new booking is a normal booking. Always check your booking's own cancellation terms first.</p>
+        </details>
+        <details>
+          <summary>What do you do with my data?</summary>
+          <p class="a">We use it only to watch your booking and email you. Our providers handle hosting, email and reading your confirmation. The full list is in our <a href="/privacy.html">Privacy policy</a>. Delete your account any time by emailing hello@myroomwatch.com.</p>
+        </details>
+        <details>
+          <summary>What happens after the beta?</summary>
+          <p class="a">We email you before billing starts. Founding members keep €29/year. You can stop at any time.</p>
+        </details>
       </div>
     </div>
   </section>
 
-  <section class="wrap cta-section" id="signup">
-    <div class="cta">
-      <div>
-        <h2>Your cancellation window is already ticking.</h2>
-        <p class="body">Forward one refundable confirmation and see the whole thing work — the checks, the alerts, the deadline guard — free, with no card. If it's not for you, you've spent sixty seconds and one email.</p>
-        <div class="trust">
-          <span>✓ &nbsp;We never touch your card</span>
-          <span>✓ &nbsp;We never change your booking</span>
-          <span>✓ &nbsp;We never promise a saving we can't show you</span>
-        </div>
-      </div>
-      <div class="price-box">
-        <div class="amount num">Free</div>
-        <div class="per">first booking · founding price €29/year after beta</div>
-        <form class="waitlist-form" id="signup-form" novalidate>
-          <input type="email" name="email" id="signup-email" required
-                 autocomplete="email" placeholder="you@example.com"
-                 aria-label="Email address">
-          <input type="password" name="password" id="signup-password" required
-                 autocomplete="new-password" minlength="8" placeholder="Password (8+ characters)"
-                 aria-label="Password">
-          <button class="btn btn-primary btn-block" type="submit" id="signup-submit">Protect my first booking</button>
-        </form>
-        <p class="form-status" id="signup-status" role="status" aria-live="polite" hidden></p>
-        <p class="form-fine">Free while in beta. Already have an account?
-          <a href="/dashboard.html">Sign in</a>.</p>
-      </div>
+  <!-- 6 · Final CTA -->
+  <section class="wrap section">
+    <div class="final">
+      <h2>Your free-cancellation window is already counting down.</h2>
+      <p>Forward one refundable booking and see it work: the checks, the deadline heads-up and what we find. Free, no card.</p>
+      <a class="btn btn-primary" href="#start">Start watching, free</a>
     </div>
   </section>
 </main>
 
 <footer class="site-footer">
   <div class="wrap">
-    <a class="logo" href="#"><span class="logo-mark"></span>MyRoomWatch</a>
-    <p>© 2026 MyRoomWatch · SIA ONEZERO, Latvia, EU · We never touch your card or your booking — you always rebook yourself.<br>
-       <a href="/privacy.html">Privacy</a> · <a href="/terms.html">Terms</a> ·
-       <a href="/dashboard.html">Sign in</a> ·
-       <a href="mailto:hello@myroomwatch.com">hello@myroomwatch.com</a></p>
+    <a class="logo" href="/"><span class="logo-mark"></span>MyRoomWatch</a>
+    <p>© 2026 MyRoomWatch · SIA ONEZERO, Latvia, EU · <a href="/privacy.html">Privacy</a> · <a href="/terms.html">Terms</a> · <a href="/dashboard.html">Sign in</a> · <a href="mailto:hello@myroomwatch.com">hello@myroomwatch.com</a><br>
+       We read the booking you forward and email you back. You always rebook yourself.</p>
   </div>
 </footer>
 
 <script>
 (function () {
   // Signup posts to the MyRoomWatch API. On success we store the token and go
-  // straight to the dashboard, so a new user lands somewhere useful.
+  // straight to the dashboard, which shows the forwarding address.
   var API = "https://api.myroomwatch.com";
   var form = document.getElementById("signup-form");
   var email = document.getElementById("signup-email");
@@ -360,7 +309,7 @@
       show(err.message || "Something went wrong. Please try again.", false);
     }).finally(function () {
       button.disabled = false;
-      button.textContent = "Protect my first booking";
+      button.textContent = "Start watching, free";
     });
   });
 })();
