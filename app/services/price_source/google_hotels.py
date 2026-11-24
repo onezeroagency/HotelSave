@@ -55,6 +55,7 @@ against the user's deadline. Unknown never blocks a match on its own (§7 3b);
 """
 
 import logging
+import re
 from datetime import date, timedelta
 from decimal import Decimal
 from difflib import SequenceMatcher
@@ -70,13 +71,39 @@ HTTP_TIMEOUT = 25.0
 
 # Auto-resolve needs exactly one ≥0.9-confidence match (§6b contract shared by
 # ingestion, the jobs router and the scheduler retry). Google's search is
-# ranked full-text, so "one result" never happens naturally — instead the top
-# hit auto-resolves only when its name agrees with the booking's.
-_NAME_MATCH_THRESHOLD = 0.75
+# ranked full-text, so "one result" never happens naturally — instead a hit
+# auto-resolves only when its name agrees with the booking's.
+#
+# LIVE LESSON (first real run, 2026-11-24): character similarity is the wrong
+# tool. Google canonicalizes names — the booking said "Grand Poet Hotel and
+# SPA by Semarah", Google said "GRAND POET by Semarah hotels", ratio 0.67 —
+# and the RIGHT hotel, top-ranked, would have gone to ask-the-user. Hotels
+# differ in their distinctive words, not their generic ones, so agreement is
+# measured on tokens with the generics stripped; raw character similarity
+# stays only as the fallback for names that are all generics.
+_GENERIC_NAME_TOKENS = {
+    "hotel", "hotels", "the", "and", "by", "spa", "resort", "resorts", "inn",
+    "suites", "apartments", "aparthotel", "boutique", "guesthouse", "hostel",
+}
 
 
-def _similarity(a: str, b: str) -> float:
-    return SequenceMatcher(None, a.strip().lower(), b.strip().lower()).ratio()
+def _name_tokens(name: str) -> set[str]:
+    return {
+        t
+        for t in re.split(r"[^a-z0-9]+", name.strip().lower())
+        if t and t not in _GENERIC_NAME_TOKENS
+    }
+
+
+def _names_agree(booked: str, candidate: str) -> bool:
+    booked_t, candidate_t = _name_tokens(booked), _name_tokens(candidate)
+    if booked_t and candidate_t:
+        shared = booked_t & candidate_t
+        if len(shared) >= 2 and len(shared) / len(booked_t) >= 0.6:
+            return True
+        if len(booked_t) == 1 and booked_t <= candidate_t:
+            return True
+    return SequenceMatcher(None, booked.strip().lower(), candidate.strip().lower()).ratio() >= 0.75
 
 
 def _total_price(rate_block: dict | None) -> Decimal | None:
@@ -188,23 +215,23 @@ class GoogleHotelsPriceSource(PriceSource):
                 )
             )
 
-        # Ranked search ≠ filtered lookup: return ONLY the top hit, at auto-
-        # resolve confidence, when its name agrees with the booking's. A list
+        # Ranked search ≠ filtered lookup: return ONLY the first hit whose
+        # name agrees with the booking's, at auto-resolve confidence. A list
         # of nearby alternatives would otherwise push every job into the
         # ask-the-user flow (§6b treats >1 match as ambiguous).
-        if matches and _similarity(matches[0].name, name) >= _NAME_MATCH_THRESHOLD:
-            top = matches[0]
-            return [
-                HotelMatch(
-                    hotel_id=top.hotel_id,
-                    name=top.name,
-                    city=top.city,
-                    country=top.country,
-                    lat=top.lat,
-                    lng=top.lng,
-                    confidence=0.95,
-                )
-            ]
+        for hit in matches:
+            if _names_agree(name, hit.name):
+                return [
+                    HotelMatch(
+                        hotel_id=hit.hotel_id,
+                        name=hit.name,
+                        city=hit.city,
+                        country=hit.country,
+                        lat=hit.lat,
+                        lng=hit.lng,
+                        confidence=0.95,
+                    )
+                ]
         return matches
 
     # -- pricing (§7, §8) -----------------------------------------------------
@@ -223,6 +250,11 @@ class GoogleHotelsPriceSource(PriceSource):
             "check_out_date": check_out.isoformat(),
             "adults": adults or 2,
             "children": children or 0,
+            # §7 rule 3 discards non-refundable candidates anyway, so ask
+            # Google for free-cancellation rates only. LIVE LESSON
+            # (2026-11-24): unfiltered, the per-entry free_cancellation flag
+            # was absent on every price — the refundable rule matched nothing.
+            "free_cancellation": "true",
         }
         try:
             payload = self._get(params)
@@ -231,6 +263,14 @@ class GoogleHotelsPriceSource(PriceSource):
             return []
         if payload is None:
             return []
+
+        # Trust the filter ONLY when the response echoes it back: entries in a
+        # filter-applied response are refundable by construction, but if
+        # SerpApi ignored the unknown param (no echo), falling back to the
+        # per-entry flag is what keeps us from marking prepaid rates
+        # refundable. Verified live by the standalone validator's A/B run.
+        echoed = (payload.get("search_parameters") or {}).get("free_cancellation")
+        filter_applied = str(echoed).lower() == "true"
 
         candidates: list[RateCandidate] = []
 
@@ -253,7 +293,7 @@ class GoogleHotelsPriceSource(PriceSource):
                     board_type=None,  # unknown, never asserted
                     adults=entry.get("num_guests"),
                     children=None,
-                    refundable=entry.get("free_cancellation") is True,
+                    refundable=filter_applied or entry.get("free_cancellation") is True,
                     # Trigger-grade only — a link here would open the alert
                     # gate and quote a figure no room-level match backs up.
                     deep_link=None,
@@ -269,8 +309,10 @@ class GoogleHotelsPriceSource(PriceSource):
                 if total is None:
                     continue
                 rates = [r for r in (room.get("rates") or []) if isinstance(r, dict)]
-                refundable = room.get("free_cancellation") is True or any(
-                    r.get("free_cancellation") is True for r in rates
+                refundable = (
+                    filter_applied
+                    or room.get("free_cancellation") is True
+                    or any(r.get("free_cancellation") is True for r in rates)
                 )
                 candidates.append(
                     RateCandidate(
