@@ -1,27 +1,22 @@
 #!/usr/bin/env python3
-"""Standalone live validation for the Google Hotels (SerpApi) watch engine.
+"""Standalone live diagnostic for the Google Hotels (SerpApi) watch engine, v3.
 
-ZERO dependencies — macOS/Linux system python3 is enough. No repo install, no
-pip, no venv. It exists because the person running it may have nothing but
-this one file and a SerpApi key.
+ZERO dependencies — system python3 is enough. Spends ~7 searches (free tier:
+250/month) and NEVER prints the key.
 
     SERPAPI_KEY=$(cat ~/Desktop/serpapi_key.txt) python3 validate_google_hotels_standalone.py \
         "Grand Poet Hotel and SPA by Semarah" "Riga" LV 2026-12-10 2026-12-12
 
-It spends 2 searches (free tier: 250/month) and NEVER prints the key — all
-output is scrubbed before printing.
+v3 exists because run #2 found the free_cancellation filter is honored
+(echoed) but returned ZERO rates for the Riga hotel, whose unfiltered panel
+was already thin (1 OTA, no cancellation flags). This run distinguishes:
+  world 1 — thin panels are a small-market thing (the Rome control is rich,
+            flags present, filter returns rates there)
+  world 2 — the filter is broken on details requests everywhere (unfiltered
+            panels show flags, filtered come back empty for Rome too)
+  world 3 — cancellation data is sparse everywhere (no flags anywhere)
 
-What it checks (mirrors app/services/price_source/google_hotels.py — keep the
-two in sync):
-  1. search → does the top property match the hotel by name? (auto-resolve)
-  2. details → money fields: are tax-INCLUSIVE totals present
-     (extracted_after_taxes_fees / extracted_lowest)? Entries with only
-     pre-tax figures are skipped by the adapter, by design.
-  3. free_cancellation flags: present, and on which level?
-  4. room names / breakfast signals in featured_prices.
-
-Paste the whole output back into the Claude session; any mismatch against the
-adapter is a one-line fix there.
+Paste the whole output back into the Claude session.
 """
 
 import json
@@ -36,10 +31,12 @@ from difflib import SequenceMatcher
 BASE = os.environ.get("SERPAPI_BASE", "https://serpapi.com/search")
 KEY = os.environ.get("SERPAPI_KEY", "")
 
+GENERIC = {"hotel", "hotels", "the", "and", "by", "spa", "resort", "resorts",
+           "inn", "suites", "apartments", "aparthotel", "boutique",
+           "guesthouse", "hostel"}
+
 
 def out(*parts) -> None:
-    """Print with the key scrubbed, wherever it might appear (URLs in error
-    bodies included)."""
     text = " ".join(str(p) for p in parts)
     if KEY:
         text = text.replace(KEY, "***KEY***")
@@ -54,161 +51,127 @@ def get(params: dict) -> dict | None:
         with urllib.request.urlopen(f"{BASE}?{query}", timeout=30) as resp:
             payload = json.load(resp)
     except urllib.error.HTTPError as e:
-        out("HTTP", e.code, "from SerpApi:", e.read().decode("utf-8", "replace")[:500])
+        out("  HTTP", e.code, "from SerpApi:", e.read().decode("utf-8", "replace")[:300])
         return None
     except Exception as e:  # noqa: BLE001 - one-shot diagnostic script
-        out("Request failed:", repr(e))
+        out("  Request failed:", repr(e))
         return None
     if payload.get("error"):
-        out("SerpApi error:", payload["error"])
+        out("  SerpApi error:", payload["error"])
         return None
     return payload
 
 
-def total_from(block: dict | None) -> tuple[str, float] | None:
-    """(which_field, value) by the adapter's rule: after-tax, else lowest,
-    else None (pre-tax only → the adapter SKIPS, never under-prices)."""
+def tokens(n: str) -> set:
+    import re
+    return {t for t in re.split(r"[^a-z0-9]+", n.strip().lower()) if t and t not in GENERIC}
+
+
+def agrees(booked: str, cand: str) -> bool:  # sync: adapter _names_agree
+    bt, ct = tokens(booked), tokens(cand)
+    if bt and ct:
+        shared = bt & ct
+        if len(shared) >= 2 and len(shared) / len(bt) >= 0.6:
+            return True
+        if len(bt) == 1 and bt <= ct:
+            return True
+    return SequenceMatcher(None, booked.lower(), cand.lower()).ratio() >= 0.75
+
+
+def usable_total(block: dict | None):
     if not block:
         return None
     for key in ("extracted_after_taxes_fees", "extracted_lowest"):
         if block.get(key) is not None:
-            return key, block[key]
+            return block[key]
     return None
+
+
+def analyze(payload: dict, label: str) -> None:
+    prices = payload.get("prices") or []
+    rooms = [
+        (b.get("source"), r)
+        for b in (payload.get("featured_prices") or [])
+        for r in (b.get("rooms") or [])
+    ]
+    echo = (payload.get("search_parameters") or {}).get("free_cancellation")
+    fc_prices = sum(1 for e in prices if e.get("free_cancellation") is True)
+    fc_rooms = 0
+    for _, r in rooms:
+        rates = [x for x in (r.get("rates") or []) if isinstance(x, dict)]
+        if r.get("free_cancellation") is True or any(
+            x.get("free_cancellation") is True for x in rates
+        ):
+            fc_rooms += 1
+    totals = sum(1 for e in prices if usable_total(e.get("total_rate"))) + sum(
+        1 for _, r in rooms if usable_total(r.get("total_rate"))
+    )
+    srcs = ", ".join(sorted({str(e.get("source")) for e in prices})[:6]) or "-"
+    out(f"  [{label}] prices={len(prices)} rooms={len(rooms)} usable_totals={totals} "
+        f"fc_flags: prices={fc_prices} rooms={fc_rooms}  echo={echo!r}")
+    out(f"           OTA sources: {srcs}")
+    cheapest = None
+    for e in prices:
+        t = usable_total(e.get("total_rate"))
+        if t is not None and (cheapest is None or t < cheapest[0]):
+            cheapest = (t, e.get("source"))
+    if cheapest:
+        out(f"           cheapest usable OTA total: EUR {cheapest[0]} ({cheapest[1]})")
+
+
+def probe(name: str, city: str, gl: str, check_in: str, check_out: str, variants) -> None:
+    out(f"\n=== {name!r} / {city} / {check_in} → {check_out}")
+    payload = get({"q": f"{name} {city}", "gl": gl,
+                   "check_in_date": check_in, "check_out_date": check_out})
+    if payload is None:
+        return
+    props = payload.get("properties") or []
+    chosen = next(
+        (p for p in props[:5] if agrees(name, p.get("name") or "") and p.get("property_token")),
+        None,
+    )
+    for p in props[:4]:
+        out(f"  {'MATCH ' if agrees(name, p.get('name') or '') else '      '}{p.get('name')!r}")
+    if not chosen:
+        chosen = props[0] if props and props[0].get("property_token") else None
+        out("  (no name agreement — probing the top hit anyway)")
+    if not chosen:
+        out("  no property_token at all — cannot probe details")
+        return
+    base = {"property_token": chosen["property_token"], "check_in_date": check_in,
+            "check_out_date": check_out, "adults": 2, "children": 0}
+    for label, extra in variants:
+        detail = get({**base, **extra})
+        if detail is not None:
+            analyze(detail, label)
 
 
 def main() -> int:
     if not KEY:
-        out("Set SERPAPI_KEY first, e.g.:")
-        out('  SERPAPI_KEY=$(cat ~/Desktop/serpapi_key.txt) python3', sys.argv[0], "…")
+        out("Set SERPAPI_KEY first (see the command in the file header).")
         return 2
-
     name = sys.argv[1] if len(sys.argv) > 1 else "Grand Poet Hotel and SPA by Semarah"
     city = sys.argv[2] if len(sys.argv) > 2 else "Riga"
-    country = (sys.argv[3] if len(sys.argv) > 3 else "LV").lower()
+    gl = (sys.argv[3] if len(sys.argv) > 3 else "LV").lower()
     check_in = sys.argv[4] if len(sys.argv) > 4 else (date.today() + timedelta(days=30)).isoformat()
     check_out = sys.argv[5] if len(sys.argv) > 5 else (
         date.fromisoformat(check_in) + timedelta(days=2)
     ).isoformat()
 
-    out(f"\n=== 1. search: {name!r} / {city} / {country} / {check_in} → {check_out}")
-    payload = get({
-        "q": f"{name} {city}",
-        "gl": country,
-        "check_in_date": check_in,
-        "check_out_date": check_out,
-    })
-    if payload is None:
-        return 1
-    props = payload.get("properties") or []
-    if not props:
-        out("NO properties[] in the response. Top-level keys were:", sorted(payload)[:15])
-        return 1
-    GENERIC = {"hotel", "hotels", "the", "and", "by", "spa", "resort", "resorts",
-               "inn", "suites", "apartments", "aparthotel", "boutique",
-               "guesthouse", "hostel"}
+    out("YOUR HOTEL — three detail variants:")
+    probe(name, city, gl, check_in, check_out, [
+        ("unfiltered        ", {}),
+        ("unfiltered, gl=lv ", {"gl": "lv"}),
+        ("fc-filter         ", {"free_cancellation": "true"}),
+    ])
 
-    def tokens(n):
-        import re
-        return {t for t in re.split(r"[^a-z0-9]+", n.strip().lower())
-                if t and t not in GENERIC}
+    out("\nCONTROL (big market) — same request shapes:")
+    probe("Hotel Artemide", "Rome", "it", check_in, check_out, [
+        ("unfiltered        ", {}),
+        ("fc-filter         ", {"free_cancellation": "true"}),
+    ])
 
-    def agrees(booked, cand):  # keep in sync with the adapter's _names_agree
-        bt, ct = tokens(booked), tokens(cand)
-        if bt and ct:
-            shared = bt & ct
-            if len(shared) >= 2 and len(shared) / len(bt) >= 0.6:
-                return True
-            if len(bt) == 1 and bt <= ct:
-                return True
-        return SequenceMatcher(None, booked.lower(), cand.lower()).ratio() >= 0.75
-
-    chosen = None
-    for p in props[:5]:
-        ok = agrees(name, p.get("name") or "")
-        out(f"  {'MATCH ' if ok else '      '} {p.get('name')!r}  token={'yes' if p.get('property_token') else 'MISSING'}")
-        if ok and chosen is None and p.get("property_token"):
-            chosen = p
-    out(f"  → {'AUTO-RESOLVES to ' + chosen.get('name') if chosen else 'NO name agreement — would go to ask-the-user'}")
-    top = chosen or props[0]
-    token = top.get("property_token")
-    if not token:
-        out("  Top hit has no property_token — adapter cannot proceed; paste this output back.")
-        return 1
-
-    out(f"\n=== 2. details for {top.get('name')!r}, 2 adults — A: unfiltered")
-    base_params = {
-        "property_token": token,
-        "check_in_date": check_in,
-        "check_out_date": check_out,
-        "adults": 2,
-        "children": 0,
-    }
-    payload_a = get(base_params)
-    if payload_a is None:
-        return 1
-    out(f"  A: prices[]={len(payload_a.get('prices') or [])}  "
-        f"featured blocks={len(payload_a.get('featured_prices') or [])}")
-
-    out(f"\n=== 2b. same request — B: free_cancellation=true (the adapter's call)")
-    payload = get({**base_params, "free_cancellation": "true"})
-    if payload is None:
-        return 1
-    echoed = (payload.get("search_parameters") or {}).get("free_cancellation")
-    out(f"  B: prices[]={len(payload.get('prices') or [])}  "
-        f"featured blocks={len(payload.get('featured_prices') or [])}  "
-        f"filter echoed in search_parameters: {echoed!r}")
-    out("  → if B's counts/prices differ from A and the echo is 'true'/True, the")
-    out("    filter is honored and B's rates are refundable by construction.")
-
-    prices = payload.get("prices") or []
-    featured = payload.get("featured_prices") or []
-    out(f"  prices[]: {len(prices)} entries   featured_prices[]: {len(featured)} blocks")
-
-    kept = skipped = refundable = 0
-    out("\n  --- OTA-level entries (first 8, raw money fields) ---")
-    for e in prices[:8]:
-        t = total_from(e.get("total_rate"))
-        raw = {k: v for k, v in (e.get("total_rate") or {}).items() if "extracted" in k}
-        fc = {k: e[k] for k in ("free_cancellation", "free_cancellation_until_date") if k in e}
-        out(f"  {e.get('source','?'):<20.20} {raw}  {fc}  → "
-            + (f"USE {t[0]}={t[1]}" if t else "SKIP (pre-tax only)"))
-    for e in prices:
-        t = total_from(e.get("total_rate"))
-        kept += bool(t)
-        skipped += not t
-        refundable += e.get("free_cancellation") is True
-
-    named = boarded = 0
-    out("\n  --- room-level entries (first 6) ---")
-    shown = 0
-    for block in featured:
-        for room in block.get("rooms") or []:
-            rates = [r for r in (room.get("rates") or []) if isinstance(r, dict)]
-            breakfast = any(r.get("breakfast_included") for r in rates) or any(
-                "breakfast" in str(i).lower() for r in rates for i in (r.get("inclusions") or [])
-            ) or "breakfast" in (room.get("name") or "").lower()
-            t = total_from(room.get("total_rate"))
-            named += bool(room.get("name"))
-            boarded += breakfast
-            if shown < 6:
-                fc = {k: v for k, v in room.items() if "cancel" in k}
-                for r in rates:
-                    fc.update({k: v for k, v in r.items() if "cancel" in k})
-                out(f"  {block.get('source','?'):<14.14} {room.get('name')!r:<42.42} "
-                    f"board={'BB' if breakfast else '?'}  "
-                    + (f"{t[0]}={t[1]}" if t else "SKIP (pre-tax only)")
-                    + (f"  {fc}" if fc else ""))
-                shown += 1
-
-    out("\n=== 3. verdict inputs")
-    out(f"  usable totals:        {kept}/{len(prices)} OTA entries  ({skipped} would be skipped)")
-    out(f"  refundable-flagged:   {refundable}/{len(prices)}")
-    out(f"  named rooms seen:     {named}   breakfast-signalled: {boarded}")
-    if prices and not refundable:
-        out("  ⚠ no free_cancellation flags — §7's refundable rule would match nothing here")
-    if prices and not kept:
-        out("  ⚠ every entry pre-tax only — the money-field mapping needs a fix, not the data")
-    out("\nPaste ALL of the above back into the Claude session.")
+    out("\nDone — paste ALL of the above back into the Claude session.")
     return 0
 
 
