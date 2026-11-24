@@ -114,13 +114,24 @@ class Settings(BaseSettings):
     def sqlalchemy_url(self) -> str:
         """The URL to hand SQLAlchemy/Alembic.
 
-        Managed hosts (Render, the Heroku lineage) still issue `postgres://`
-        URLs, a scheme SQLAlchemy 2 refuses to load a dialect for. Everything
-        that builds an engine must go through this, not `database_url`.
+        Everything that builds an engine must go through this, not
+        `database_url`, and the Postgres driver is always named EXPLICITLY.
+        Two production incidents say why:
+
+        - Managed hosts (Render, the Heroku lineage) issue `postgres://`,
+          a scheme SQLAlchemy 2 refuses to load a dialect for (deploy
+          failure, Aug 2026).
+        - A bare `postgresql://` leaves the driver choice to SQLAlchemy's
+          default, which CHANGED under us: 2.0 picked psycopg2, 2.1 picks
+          psycopg v3 — not in our dependencies, so the first deploy after
+          2.1.9 landed died in pre-deploy with ModuleNotFoundError:
+          psycopg (Nov 2026). An explicit `+psycopg2` is immune to
+          whatever a future default prefers.
         """
         url = self.database_url
-        if url.startswith("postgres://"):
-            return url.replace("postgres://", "postgresql+psycopg2://", 1)
+        for prefix in ("postgres://", "postgresql://"):
+            if url.startswith(prefix):
+                return url.replace(prefix, "postgresql+psycopg2://", 1)
         return url
 
 
