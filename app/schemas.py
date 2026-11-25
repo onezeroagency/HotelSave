@@ -30,6 +30,17 @@ class Token(BaseModel):
     token_type: str = "bearer"
 
 
+class PasswordForgot(BaseModel):
+    email: EmailStr
+
+
+class PasswordReset(BaseModel):
+    token: str
+    # Same bounds as UserCreate.password — a reset must not accept a password
+    # that registration would refuse.
+    password: str = Field(min_length=8, max_length=128)
+
+
 # --- monitoring jobs ---
 
 

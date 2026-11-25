@@ -26,6 +26,10 @@ class Settings(BaseSettings):
     secret_key: str = "dev-insecure-change-me"
     access_token_expire_minutes: int = 60 * 24 * 7
     algorithm: str = "HS256"
+    reset_token_expire_minutes: int = 60
+    # Where password-reset links point (the marketing site, which serves
+    # reset.html). No trailing slash.
+    site_base_url: str = "https://www.myroomwatch.com"
 
     # Price source (§9)
     price_source: str = "mock"  # mock | google_hotels | liteapi | booking | hotellook(defunct)

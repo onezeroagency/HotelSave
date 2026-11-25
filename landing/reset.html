@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Reset your password — MyRoomWatch</title>
+<meta name="robots" content="noindex">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='9' fill='%230D2137'/%3E%3Ccircle cx='16' cy='16' r='7' fill='none' stroke='%2300A870' stroke-width='3.5'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<header class="site-header">
+  <div class="wrap">
+    <a class="logo" href="/"><span class="logo-mark"></span>MyRoomWatch</a>
+    <nav class="nav">
+      <a href="/#how">How it works</a>
+      <a class="btn btn-ghost" href="/dashboard.html">Sign in</a>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap dash">
+
+  <!-- Mode 1: no token in the URL — ask for the email -->
+  <section id="request-panel" class="signin-panel" hidden>
+    <h1>Reset your password</h1>
+    <p class="body">Tell us the email you signed up with and we'll send you a reset link.</p>
+    <form id="request-form" class="signin-form" novalidate>
+      <label class="sr-only" for="request-email">Email address</label>
+      <input type="email" id="request-email" required autocomplete="email"
+             placeholder="you@example.com">
+      <button class="btn btn-primary btn-block" type="submit" id="request-submit">Email me a reset link</button>
+    </form>
+    <p class="form-status dark" id="request-status" role="status" aria-live="polite" hidden></p>
+    <p class="form-fine dark">Remembered it after all? <a href="/dashboard.html">Sign in</a>.</p>
+  </section>
+
+  <!-- Mode 2: token in the URL — ask for the new password -->
+  <section id="reset-panel" class="signin-panel" hidden>
+    <h1>Choose a new password</h1>
+    <p class="body">Make it at least 8 characters. The link you clicked works once and expires after an hour.</p>
+    <form id="reset-form" class="signin-form" novalidate>
+      <label class="sr-only" for="reset-password">New password</label>
+      <input type="password" id="reset-password" required minlength="8"
+             autocomplete="new-password" placeholder="New password (8+ characters)">
+      <button class="btn btn-primary btn-block" type="submit" id="reset-submit">Set new password</button>
+    </form>
+    <p class="form-status dark" id="reset-status" role="status" aria-live="polite" hidden></p>
+    <p class="form-fine dark" id="reset-done" hidden>All set. <a href="/dashboard.html">Sign in with your new password</a>.</p>
+  </section>
+</main>
+
+<footer class="site-footer">
+  <div class="wrap">
+    <a class="logo" href="/"><span class="logo-mark"></span>MyRoomWatch</a>
+    <p>© 2026 MyRoomWatch · <a href="/privacy.html">Privacy</a> · <a href="/terms.html">Terms</a>
+       · <a href="mailto:hello@myroomwatch.com">hello@myroomwatch.com</a></p>
+  </div>
+</footer>
+
+<script>
+(function () {
+  var API = "https://api.myroomwatch.com";
+  var token = new URLSearchParams(location.search).get("token");
+
+  var requestPanel = document.getElementById("request-panel");
+  var resetPanel = document.getElementById("reset-panel");
+
+  function show(statusEl, msg) {
+    statusEl.textContent = msg;
+    statusEl.hidden = false;
+  }
+
+  if (token) { resetPanel.hidden = false; } else { requestPanel.hidden = false; }
+
+  document.getElementById("request-form").addEventListener("submit", function (e) {
+    e.preventDefault();
+    var btn = document.getElementById("request-submit");
+    var status = document.getElementById("request-status");
+    status.hidden = true;
+    btn.disabled = true; btn.textContent = "Sending…";
+    fetch(API + "/auth/forgot-password", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email: document.getElementById("request-email").value.trim() })
+    }).then(function (r) {
+      if (!r.ok) throw new Error();
+      show(status, "If that email has an account, the reset link is on its way. It expires in an hour — check spam if you don't see it.");
+    }).catch(function () {
+      show(status, "We couldn't send the link just now. Check your connection and try again.");
+    }).finally(function () {
+      btn.disabled = false; btn.textContent = "Email me a reset link";
+    });
+  });
+
+  document.getElementById("reset-form").addEventListener("submit", function (e) {
+    e.preventDefault();
+    var btn = document.getElementById("reset-submit");
+    var status = document.getElementById("reset-status");
+    status.hidden = true;
+    btn.disabled = true; btn.textContent = "Saving…";
+    fetch(API + "/auth/reset-password", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ token: token, password: document.getElementById("reset-password").value })
+    }).then(function (r) { return r.json().then(function (b) { return { ok: r.ok, status: r.status, body: b }; }); })
+      .then(function (r) {
+        if (!r.ok) {
+          // 400: bad/expired link. 422: password too short. Anything else: generic.
+          var msg = r.status === 400
+            ? "This reset link is invalid or has expired. Request a new one from the reset page."
+            : r.status === 422
+              ? "Passwords need at least 8 characters."
+              : "Something went wrong. Please try again.";
+          throw new Error(msg);
+        }
+        document.getElementById("reset-form").hidden = true;
+        document.getElementById("reset-done").hidden = false;
+        show(status, "Password updated.");
+      })
+      .catch(function (err) { show(status, err.message || "Something went wrong. Please try again."); })
+      .finally(function () { btn.disabled = false; btn.textContent = "Set new password"; });
+  });
+})();
+</script>
+</body>
+</html>
