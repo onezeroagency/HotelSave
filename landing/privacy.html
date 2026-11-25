@@ -5,9 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Privacy Policy — MyRoomWatch</title>
 <meta name="description" content="What MyRoomWatch collects, why, how long we keep it, and the rights you have under GDPR.">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Public+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='9' fill='%230D2137'/%3E%3Ccircle cx='16' cy='16' r='7' fill='none' stroke='%2300A870' stroke-width='3.5'/%3E%3C/svg%3E">
 <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -18,17 +16,18 @@
     <nav class="nav">
       <a href="/#how">How it works</a>
       <a class="btn btn-ghost" href="/dashboard.html">Sign in</a>
-      <a class="btn btn-dark" href="/#pricing">Start free</a>
+      <a class="btn btn-dark" href="/#start">Start watching, free</a>
     </nav>
   </div>
 </header>
 
 <main class="wrap legal">
   <h1>Privacy Policy</h1>
-  <p class="updated">Last updated: 29 August 2026</p>
+  <p class="updated">Last updated: 24 November 2026</p>
 
-  <p class="lede">MyRoomWatch watches a hotel booking you already made and tells you
-  when the same stay gets cheaper. To do that we need a small amount of information
+  <p class="lede">MyRoomWatch watches a hotel booking you already made and emails you
+  about 48 hours before your free-cancellation deadline, telling you if we've seen
+  lower rates for your dates. To do that we need a small amount of information
   about you and that booking. This page explains exactly what we hold, why, and how
   to get rid of it.</p>
 
@@ -74,10 +73,16 @@
   <h2>Who else processes your data</h2>
   <p>We use a small number of providers, each only for a specific job:</p>
   <ul>
-    <li><strong>Render</strong> — hosting of our application and database (EU region).</li>
+    <li><strong>Render</strong> — hosting of our application and database.</li>
+    <!-- [CONFIRM with Ilja]: render.yaml sets no region, so "EU region" was an
+         unverified claim and has been removed. Check the actual region in the
+         Render dashboard; if data should stay in the EU, migrate to Frankfurt
+         and the line can say so again. Transfers to US providers below
+         (Postmark, Anthropic, Klaviyo, SerpApi) also need a safeguards line
+         (SCCs / EU-US DPF) after checking each vendor's DPA. -->
     <li><strong>Postmark</strong> — receives the booking confirmations you forward to <code>save@myroomwatch.com</code>.</li>
     <li><strong>Anthropic (Claude)</strong> — reads a forwarded confirmation to extract the booking details. The email text is sent for processing and is not used to train models.</li>
-    <li><strong>LiteAPI</strong> — provides current hotel rates. We send the property and stay dates, never your identity.</li>
+    <li><strong>SerpApi</strong> — provides Google Hotels rate data. We send the hotel's name and city (or its Google property identifier), the stay dates and the guest count — never your identity.</li>
     <li><strong>Klaviyo</strong> — delivers your alert emails.</li>
     <li><strong>Vercel</strong> — serves this website.</li>
   </ul>
