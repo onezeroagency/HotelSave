@@ -55,6 +55,14 @@ h1,h2,h3{font-family:Manrope,sans-serif;margin:0}
   .nav{display:flex}
   .mnav{display:none}
 }
+/* Below 720px the full CTA label only fits with a compact header button */
+@media (max-width:719px){
+  .header-cta .btn{font-size:13px;padding:0 9px}
+  .mnav summary{font-size:13px;padding:12px 4px}
+  .logo{font-size:15px;gap:7px}
+  .site-header .wrap{gap:8px}
+  .header-cta{gap:5px}
+}
 
 /* Buttons. Primary uses --accent-ink on white text: 5.6:1, passes AA.
    Bright --accent is reserved for small accents, never text-on. */
@@ -167,7 +175,7 @@ h1,h2,h3{font-family:Manrope,sans-serif;margin:0}
 
 /* ≥720px */
 @media (min-width:720px){
-  .wrap{padding:0 32px}
+  .wrap{padding-left:32px;padding-right:32px}
   .hero{padding-top:56px;padding-bottom:64px}
   .hero-form .fields{flex-direction:row}
   .hero-form .fields input{flex:1}
@@ -185,7 +193,7 @@ h1,h2,h3{font-family:Manrope,sans-serif;margin:0}
 
 /* ≥1024px */
 @media (min-width:1024px){
-  .wrap{padding:0 48px}
+  .wrap{padding-left:48px;padding-right:48px}
   .hero-grid{grid-template-columns:1.05fr .95fr;gap:56px;align-items:start}
   .hero-form .fields{flex-direction:column}
   .hero-form{max-width:460px}
