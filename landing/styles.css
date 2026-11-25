@@ -93,7 +93,13 @@ h1,h2,h3{font-family:Manrope,sans-serif;margin:0}
 /* Buttons. Primary uses --accent-ink on white text: 5.6:1, passes AA.
    Bright --accent is reserved for small accents, never text-on. */
 .btn{display:inline-flex;align-items:center;justify-content:center;border:0;border-radius:12px;font:700 16px/1 Manrope,sans-serif;cursor:pointer;text-align:center;min-height:48px;padding:0 22px;white-space:nowrap;transition:background-color .2s ease,color .2s ease,border-color .2s ease,box-shadow .2s ease,opacity .2s ease,transform .15s ease}
-.btn-primary{background:linear-gradient(180deg,#0C8A5E,var(--accent-ink));color:var(--on-accent);box-shadow:inset 0 1px 0 rgba(255,255,255,.14),0 1px 2px rgba(13,33,55,.25)}
+.btn-primary{position:relative;overflow:hidden;background:linear-gradient(180deg,#0C8A5E,var(--accent-ink));color:var(--on-accent);box-shadow:inset 0 1px 0 rgba(255,255,255,.14),0 1px 2px rgba(13,33,55,.25)}
+/* Sheen sweep across the primary button on hover */
+.btn-primary::before{content:"";position:absolute;top:0;bottom:0;left:-60%;width:40%;background:linear-gradient(105deg,transparent,rgba(255,255,255,.22),transparent);transform:skewX(-18deg)}
+@media (prefers-reduced-motion:no-preference){
+  .btn-primary:hover::before{animation:sheen .7s var(--ease-out)}
+}
+@keyframes sheen{to{left:120%}}
 .btn-primary:hover{background:linear-gradient(180deg,var(--accent-ink),var(--accent-press));color:var(--on-accent);box-shadow:inset 0 1px 0 rgba(255,255,255,.1),0 8px 18px -8px rgba(10,122,82,.55)}
 .btn-dark{background:var(--ink);color:#fff;font-size:14px;min-height:44px;padding:0 18px;border-radius:11px}
 .btn-dark:hover{color:#fff;background:var(--ink-2)}
@@ -117,13 +123,19 @@ main{position:relative;z-index:0}
   radial-gradient(640px 420px at 10% -8%,rgba(0,168,112,.13),transparent 70%),
   radial-gradient(820px 560px at 92% -18%,rgba(13,33,55,.09),transparent 70%),
   linear-gradient(180deg,#ECF2F0 0%,var(--bg) 62%)}
+@keyframes bg-drift{from{transform:translateY(0)}to{transform:translateY(-26px)}}
+@media (prefers-reduced-motion:no-preference){.hero-bg{animation:bg-drift 18s ease-in-out infinite alternate}}
 .hero{padding-top:36px;padding-bottom:44px}
 .hero-grid{display:grid;grid-template-columns:1fr;gap:34px}
 /* Entrance choreography: one staggered rise that walks the reading order,
    then gets out of the way (LukeW: motion guides, it never takes the stage) */
 @keyframes rise{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+/* The H1 and subtitle are LCP candidates: they slide but never start
+   transparent, so the entrance cannot delay largest-contentful-paint */
+@keyframes rise-solid{from{transform:translateY(14px)}to{transform:none}}
 @media (prefers-reduced-motion:no-preference){
-  .hero .pill,.hero h1,.hero .sub,.hero-form,.hero .proof,.hero-aside{animation:rise .5s var(--ease-out) both}
+  .hero .pill,.hero-form,.hero .proof,.hero-aside{animation:rise .5s var(--ease-out) both}
+  .hero h1,.hero .sub{animation:rise-solid .5s var(--ease-out) both}
   .hero h1{animation-delay:.04s}
   .hero .sub{animation-delay:.1s}
   .hero-form{animation-delay:.16s}
@@ -160,12 +172,29 @@ main{position:relative;z-index:0}
 .hero-aside{position:relative}
 .hero-aside::before,.hero-aside::after{content:"";position:absolute;z-index:-1;border-radius:50%;pointer-events:none;display:none}
 .hero-aside::before{top:-46px;right:-64px;width:380px;height:380px;background:
+  conic-gradient(from 0deg,rgba(0,168,112,.1) 0deg,rgba(0,168,112,.02) 52deg,transparent 70deg),
   radial-gradient(circle,transparent 53.5%,rgba(0,168,112,.12) 54.5%,transparent 56%),
   radial-gradient(circle,transparent 68.5%,rgba(0,168,112,.1) 69.5%,transparent 71%),
   radial-gradient(circle,transparent 83.5%,rgba(0,168,112,.09) 84.5%,transparent 86%)}
 .hero-aside::after{top:44px;right:26px;width:200px;height:200px;border:1.5px solid rgba(0,168,112,.3)}
 @keyframes ping{0%{transform:scale(.45);opacity:.8}80%,100%{transform:scale(1.5);opacity:0}}
-@media (prefers-reduced-motion:no-preference){.hero-aside::after{animation:ping 5.5s var(--ease-out) 1.4s infinite}}
+/* The rings are rotation-invariant, so spinning ::before spins only the
+   conic beam: a slow radar sweep */
+@keyframes sweep{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:no-preference){
+  .hero-aside::before{animation:sweep 14s linear infinite}
+  .hero-aside::after{animation:ping 5.5s var(--ease-out) 1.4s infinite}
+}
+/* Floating fact chips around the card — phrases from the page itself */
+.fchip{display:none;position:absolute;z-index:1;background:var(--surface);border:1px solid var(--line);border-radius:99px;padding:9px 14px;font:600 12.5px/1 "Public Sans",sans-serif;color:var(--ink);box-shadow:var(--shadow-md);white-space:nowrap}
+.fchip::before{content:"";display:inline-block;width:11px;height:11px;margin-right:7px;vertical-align:-1px;background-color:var(--accent-ink);-webkit-mask:var(--i-check) center/contain no-repeat;mask:var(--i-check) center/contain no-repeat}
+.fchip-1{top:-14px;left:-26px}
+.fchip-2{bottom:34px;right:-18px}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-7px)}}
+@media (prefers-reduced-motion:no-preference){
+  .fchip-1{animation:bob 6s ease-in-out 1s infinite}
+  .fchip-2{animation:bob 7s ease-in-out 2.2s infinite}
+}
 
 /* Example email card (dark) — styled like the email it is */
 .xcard{position:relative;background:linear-gradient(160deg,var(--ink-2) 0%,var(--ink) 58%);border:1px solid rgba(255,255,255,.08);border-radius:20px;padding:22px 24px 26px;color:#fff;box-shadow:var(--shadow-lg)}
@@ -180,6 +209,8 @@ main{position:relative;z-index:0}
 .xcard .row{display:flex;justify-content:space-between;gap:16px;padding:11px 0;border-bottom:1px solid rgba(255,255,255,.10);font:400 14px/1.5 "Public Sans",sans-serif;color:rgba(255,255,255,.65)}
 .xcard .row b{color:#fff;font-weight:600;text-align:right}
 .xcard .deadline-line{margin:18px 0 0;font:800 clamp(1.5rem,4.5vw,1.9rem)/1.25 Manrope,sans-serif;letter-spacing:-.02em;color:var(--amber-on-dark)}
+@keyframes deadline-breathe{0%,100%{text-shadow:0 0 0 rgba(240,192,105,0)}50%{text-shadow:0 0 22px rgba(240,192,105,.4)}}
+@media (prefers-reduced-motion:no-preference){.xcard .deadline-line{animation:deadline-breathe 4.5s ease-in-out 2s infinite}}
 .xcard .note{margin:18px 0 0;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.14);border-radius:13px;padding:14px 15px;font:400 13px/1.6 "Public Sans",sans-serif;color:rgba(255,255,255,.75)}
 .xcard .note strong{color:#fff}
 .xcaption{font:400 12.5px/1.5 "Public Sans",sans-serif;color:var(--muted);margin:12px 0 0;text-align:center}
@@ -188,6 +219,9 @@ main{position:relative;z-index:0}
 .section{padding-top:52px;padding-bottom:52px}
 .section.alt{background:var(--surface);border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
 .section h2{font-size:clamp(1.55rem,4.5vw,2.2rem);line-height:1.12;font-weight:800;letter-spacing:-.03em;text-wrap:balance}
+/* Accented key phrase inside headings (FarePigeon-style emphasis, our colors) */
+.em{color:var(--accent-ink)}
+.em-amber{color:var(--amber-on-dark)}
 .section .lead{font:400 16px/1.65 "Public Sans",sans-serif;color:var(--muted);margin:12px 0 0;max-width:620px}
 
 /* How it works */
@@ -297,6 +331,10 @@ main{position:relative;z-index:0}
   .hero-form{max-width:480px}
   .xcard{margin-top:12px}
   .hero-aside::before,.hero-aside::after{display:block}
+  .fchip{display:inline-block}
+  @media (prefers-reduced-motion:no-preference){
+    .xcard{animation:bob 9s ease-in-out 3s infinite}
+  }
 }
 
 /* ---- Legal pages ---- */
