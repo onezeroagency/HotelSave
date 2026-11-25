@@ -22,6 +22,9 @@ EVENT_PRICE_DROP_FOUND = "Price Drop Found"
 EVENT_DEADLINE_APPROACHING = "Deadline Approaching"
 EVENT_MONITORING_ENDED = "Monitoring Ended"
 
+# Account events — transactional, must reach the user regardless of consent.
+EVENT_PASSWORD_RESET = "Password Reset Requested"  # carries reset_url + expiry
+
 # Ingestion/onboarding events (§5, §6) — transactional prompts back to the user.
 EVENT_SIGNUP_INVITE = "Forwarded Without Account"  # unknown sender → invite to sign up
 EVENT_NEEDS_REFUNDABLE = "Refundable Confirmation Needed"  # non-refundable booking (§6a)

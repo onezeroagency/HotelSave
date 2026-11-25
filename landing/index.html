@@ -47,12 +47,13 @@
 </header>
 
 <main>
+  <div class="hero-bg" aria-hidden="true"></div>
   <!-- 1 · Hero -->
   <section class="wrap hero" id="start">
     <div class="hero-grid">
       <div>
         <span class="pill">Free during beta · No card</span>
-        <h1>You paid extra for free cancellation. We make sure you use it.</h1>
+        <h1>You paid extra for <span class="hl">free cancellation</span>. We make sure you use it.</h1>
         <p class="sub">Forward your refundable hotel confirmation. We keep checking rates for your dates and email you about 48 hours before your free-cancellation deadline, telling you if we've seen lower rates for your dates. You decide what to do. Your booking stays exactly as you made it.</p>
 
         <form class="hero-form" id="signup-form" novalidate>
@@ -77,8 +78,9 @@
         </ul>
       </div>
 
-      <div>
+      <div class="hero-aside">
         <aside class="xcard" aria-label="Example alert email">
+          <div class="xbar" aria-hidden="true"><span></span><span></span><span></span></div>
           <p class="eyebrow">Example email</p>
           <p class="title">Hotel Artemide, Rome · 12–15 Sep · Superior Double, breakfast</p>
           <div class="rows">
@@ -126,19 +128,23 @@
       <h2>Your booking stays yours.</h2>
       <div class="safe-grid">
         <div class="scard">
+          <span class="sicon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/></svg></span>
           <h3>We don't touch your reservation</h3>
           <p>We read the email you forward and send you email back. We can't change or cancel your booking, and we never book anything in your name.</p>
         </div>
         <div class="scard">
+          <span class="sicon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg></span>
           <h3>No card during beta</h3>
           <p>Watching is free while we're in beta. When paid plans start, the subscription will be charged through a payment provider's checkout, and we'll email you well before then.</p>
           <!-- [CONFIRM before adding]: "Stripe-hosted checkout, card never touches our servers" -->
         </div>
         <div class="scard">
+          <span class="sicon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><path d="m9 10 2 2 4-4"/></svg></span>
           <h3>We'd rather under-promise</h3>
           <p>Every number on this page is a labelled example. If we can't stand behind a price, we say "worth a look", not "you save €94".</p>
         </div>
         <div class="scard">
+          <span class="sicon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="22" x2="21" y2="22"/><line x1="6" y1="18" x2="6" y2="11"/><line x1="10" y1="18" x2="10" y2="11"/><line x1="14" y1="18" x2="14" y2="11"/><line x1="18" y1="18" x2="18" y2="11"/><polygon points="12 2 20 7 4 7"/></svg></span>
           <h3>A real EU company</h3>
           <p>MyRoomWatch is run by SIA ONEZERO, registered in Latvia (EU). Under the GDPR you can ask for a copy of your data, correct it or delete it — email hello@myroomwatch.com. We don't sell your data, and this site sets no tracking or advertising cookies. <a href="/privacy.html">Privacy policy</a></p>
         </div>
