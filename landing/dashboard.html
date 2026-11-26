@@ -83,7 +83,7 @@
 
     <div class="kpis">
       <div class="kpi" id="kpi-saved">
-        <span class="kpi-ic" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 3v18M17 7H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></span>
+        <span class="kpi-ic" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg></span>
         <b class="num" id="total-saved">—</b><span class="kpi-l">worth a look</span>
       </div>
       <div class="kpi">
@@ -277,13 +277,13 @@
     if (j.board_type) pills.push(esc(j.board_type));
     if (j.adults) pills.push(j.adults + " guest" + (j.adults > 1 ? "s" : ""));
     var ratesCell = opts.sample
-      ? '<div><span>Rates for your dates</span><b class="num">Watching daily</b></div>'
+      ? '<div><span>Today\'s rate</span><b class="num">Watching daily</b></div>'
       : (showWin
         ? '<div><span>Same room, now</span><b class="num green">' + money(j.current_best_price, j.currency) + "</b></div>"
         // Only ever print a second price when it's one the user can actually
         // book. An unreachable figure next to "You paid" reads as a saving
         // on offer — the exact false promise the rest of this page avoids.
-        : '<div><span>Rates for your dates</span><b class="num">' + (unreachable ? "lower rates seen" : "no change yet") + "</b></div>");
+        : '<div><span>Today\'s rate</span><b class="num">' + (unreachable ? "Lower rates seen" : "No change yet") + "</b></div>");
     return '' +
       '<article class="job job--' + accent + '">' +
         (opts.sample ? '<p class="example-badge">Example preview</p>' : "") +
@@ -361,6 +361,11 @@
         '<div class="preview-card">' +
           jobCard(sampleJob(), { sample: true }) +
           '<p class="preview-cap">Sample layout — forward a confirmation to replace this with your real stay.</p>' +
+          '<div class="know-card"><p class="know-t">Good to know</p><ul class="know">' +
+            "<li>Works with any currency.</li>" +
+            "<li>Forward from the email you signed up with.</li>" +
+            "<li>Free during beta — no card needed.</li>" +
+          "</ul></div>" +
         "</div>" +
       "</div>";
   }
@@ -406,6 +411,10 @@
 
   function render(jobs) {
     allJobs = jobs;
+    // The empty state's forwarding card already carries the copy action; the
+    // header pill only earns its place once there are bookings above it.
+    var headPill = document.getElementById("copy-head");
+    if (headPill) headPill.hidden = !jobs.length;
     if (!jobs.length) {
       jobsEl.innerHTML = emptyState();
       filtersEl.hidden = true; filtersEl.innerHTML = "";
