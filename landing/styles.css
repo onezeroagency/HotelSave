@@ -138,7 +138,10 @@ main{position:relative;z-index:0}
    transparent, so the entrance cannot delay largest-contentful-paint */
 @keyframes rise-solid{from{transform:translateY(14px)}to{transform:none}}
 @media (prefers-reduced-motion:no-preference){
-  .hero .pill,.hero-form,.hero .proof,.hero-aside{animation:rise .5s var(--ease-out) both}
+  /* Everything above the fold stays visible from the first paint: the
+     entrance is a translate-only slide (rise-solid), never opacity 0, so
+     the form and the example card can't greet a visitor with blank space. */
+  .hero .pill,.hero-form,.hero .proof,.hero-aside{animation:rise-solid .5s var(--ease-out) both}
   .hero h1,.hero .sub{animation:rise-solid .5s var(--ease-out) both}
   .hero h1{animation-delay:.04s}
   .hero .sub{animation-delay:.1s}
@@ -581,3 +584,151 @@ main{position:relative;z-index:0}
    under the content (h2/p/.btn are position:relative) and inherits the band's
    radius; without JS or WebGL it simply never paints and the gradient shows. */
 .final-fx{position:absolute;inset:0;width:100%;height:100%;border-radius:inherit;opacity:.85}
+
+/* ===== HorizonX micro-interaction kit (ported to vanilla) =====
+   Shared motion tokens from the HorizonX library: enter 220ms on an
+   ease-out curve, exit 160ms on an ease-in curve. Every component below
+   reads these, so retuning the motion is a two-line change. */
+:root{
+  --dur-enter:220ms;--dur-exit:160ms;
+  --ease-hx-out:cubic-bezier(.2,.8,.2,1);--ease-hx-in:cubic-bezier(.4,0,1,1);
+  --err:#B42318;--err-soft:#FCEBE8;--err-line:#F2C6BE;
+  --info:#2C5375;--info-soft:#EDF4F9;--info-line:#CFE0EC;
+}
+
+/* --- Layout: the whole block under the schedule card shares its 780px
+   column, so the section reads as one centred composition --- */
+#how .chips{max-width:780px;margin-left:auto;margin-right:auto;justify-content:center}
+#how .fineprint,#how .callout,#how .tip{max-width:780px;margin-left:auto;margin-right:auto}
+#how .tip{text-align:center}
+
+/* The amber callout gets the inline-banner (warning) treatment */
+#how .callout{display:flex;gap:12px;align-items:flex-start;border-left:3px solid var(--amber);border-radius:12px}
+#how .callout::before{content:"!";flex:none;width:24px;height:24px;border-radius:50%;background:var(--amber);color:#fff;font:800 14px/24px Manrope,sans-serif;text-align:center;margin-top:1px}
+@supports (animation-timeline: view()){
+  @media (prefers-reduced-motion:no-preference){
+    #how .callout{animation:rise linear both;animation-timeline:view();animation-range:entry 0% entry 45%}
+  }
+}
+
+/* --- Success check: circle draws (100ms), check follows (120ms, +100ms),
+   the mark pops from .98 scale over the enter duration --- */
+.hx-check{display:inline-grid;place-items:center;color:var(--accent-ink)}
+.hx-check svg{display:block}
+.hx-check circle{stroke-dasharray:126;stroke-dashoffset:0}
+.hx-check path{stroke-dasharray:30;stroke-dashoffset:0}
+@media (prefers-reduced-motion:no-preference){
+  .hx-check.play svg{animation:hx-check-pop var(--dur-enter) var(--ease-hx-out)}
+  .hx-check.play circle{animation:hx-draw-circle .1s var(--ease-hx-out) both}
+  .hx-check.play path{animation:hx-draw-check .12s var(--ease-hx-out) .1s both}
+}
+@keyframes hx-check-pop{from{transform:scale(.98)}to{transform:scale(1)}}
+@keyframes hx-draw-circle{from{stroke-dashoffset:126}to{stroke-dashoffset:0}}
+@keyframes hx-draw-check{from{stroke-dashoffset:30}to{stroke-dashoffset:0}}
+#signup-done .done-title::before{display:none}
+#signup-done .hx-check{margin:4px 0 10px}
+[data-copy] .hx-check{color:currentColor;vertical-align:-3px;margin-right:2px}
+
+/* --- Toast: corner stack, enter rise 220ms / exit 160ms, self-dismissing
+   progress line that pauses on hover, focus, or a blurred window --- */
+.toasts{position:fixed;z-index:120;bottom:max(16px,env(safe-area-inset-bottom));right:max(16px,env(safe-area-inset-right));width:min(360px,calc(100vw - 32px));display:flex;flex-direction:column;gap:12px;pointer-events:none}
+.toast{pointer-events:auto;background:var(--surface);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow-lg);color:var(--ink);overflow:hidden;overflow-wrap:anywhere}
+.toast-row{display:flex;align-items:flex-start;gap:11px;padding:13px 13px 11px}
+.toast-ic{flex:none;width:34px;height:34px;border-radius:10px;display:grid;place-items:center;background:var(--bg);color:var(--ink)}
+.toast-ic svg{width:18px;height:18px}
+.toast.success .toast-ic{background:var(--accent-soft);color:var(--accent-ink)}
+.toast.warning .toast-ic{background:var(--amber-soft);color:var(--amber-ink)}
+.toast.error .toast-ic{background:var(--err-soft);color:var(--err)}
+.toast-tx{flex:1;min-width:0}
+.toast-tx b{display:block;font:700 14px/1.35 Manrope,sans-serif;letter-spacing:-.01em}
+.toast-tx span{display:block;font:400 13px/1.5 "Public Sans",sans-serif;color:var(--muted);margin-top:2px}
+.toast-x{flex:none;border:0;background:none;color:var(--muted);width:30px;height:30px;border-radius:9px;cursor:pointer;display:grid;place-items:center;margin:-4px -4px 0 0}
+.toast-x:hover{background:var(--bg);color:var(--ink)}
+.toast-x svg{width:15px;height:15px}
+.toast-bar{height:3px;background:var(--line)}
+.toast-bar i{display:block;height:100%;background:var(--accent);transform-origin:left}
+.toast.error .toast-bar i{background:var(--err)}
+.toast.warning .toast-bar i{background:var(--amber)}
+@media (prefers-reduced-motion:no-preference){
+  .toast{opacity:0;transform:translateY(12px);transition:opacity var(--dur-enter) var(--ease-hx-out),transform var(--dur-enter) var(--ease-hx-out)}
+  .toast.in{opacity:1;transform:none}
+  .toast.out{opacity:0;transform:translateY(12px);transition-duration:var(--dur-exit);transition-timing-function:var(--ease-hx-in)}
+  .toast-bar i{animation:toast-count var(--t,5000ms) linear forwards}
+  .toast:hover .toast-bar i,.toast:focus-within .toast-bar i,
+  .toasts[data-paused] .toast-bar i{animation-play-state:paused}
+}
+@keyframes toast-count{from{transform:scaleX(1)}to{transform:scaleX(0)}}
+
+/* --- Inline banner: info / success / warning / error, slides open by
+   animating the grid row from 0fr to 1fr, collapses on exit --- */
+.banner-wrap{display:grid;grid-template-rows:0fr;opacity:0}
+.banner-wrap>div{overflow:hidden;min-height:0}
+.banner-wrap.open{grid-template-rows:1fr;opacity:1}
+@media (prefers-reduced-motion:no-preference){
+  .banner-wrap{transition:grid-template-rows var(--dur-enter) var(--ease-hx-out),opacity var(--dur-enter) var(--ease-hx-out)}
+  .banner-wrap.closing{transition-duration:var(--dur-exit);transition-timing-function:var(--ease-hx-in)}
+}
+.banner{display:flex;gap:11px;align-items:flex-start;border:1px solid;border-left-width:3px;border-radius:12px;padding:12px 14px;margin-top:16px;font:400 13.5px/1.6 "Public Sans",sans-serif}
+.banner::before{flex:none;width:22px;height:22px;border-radius:50%;color:#fff;font:800 13px/22px Manrope,sans-serif;text-align:center;margin-top:1px}
+.banner.info{background:var(--info-soft);border-color:var(--info-line);border-left-color:var(--info);color:var(--info)}
+.banner.info::before{content:"i";background:var(--info)}
+.banner.success{background:var(--accent-soft);border-color:rgba(0,168,112,.3);border-left-color:var(--accent-ink);color:var(--accent-ink)}
+.banner.success::before{content:"\2713";background:var(--accent-ink)}
+.banner.warning{background:var(--amber-soft);border-color:var(--amber-line);border-left-color:var(--amber);color:var(--amber-ink)}
+.banner.warning::before{content:"!";background:var(--amber)}
+.banner.error{background:var(--err-soft);border-color:var(--err-line);border-left-color:var(--err);color:var(--err)}
+.banner.error::before{content:"\00d7";background:var(--err)}
+.banner strong{color:var(--ink)}
+
+/* --- Skeleton: shimmer stays as-is; the swap to real content is now a
+   crossfade (exit 160ms, enter 220ms) instead of a cut --- */
+@media (prefers-reduced-motion:no-preference){
+  #dash-loading{transition:opacity var(--dur-exit) var(--ease-hx-in)}
+  #dash-loading.off{opacity:0}
+  #dash-panel.enter{animation:panel-in var(--dur-enter) var(--ease-hx-out)}
+}
+@keyframes panel-in{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+/* --- Date picker: custom popover calendar on fine pointers, the native
+   input stays for touch and no-JS. Popover enters 220ms from its anchor
+   corner; months slide in; the picked day pops. --- */
+.sched-pick label{cursor:pointer}
+.sched-pick.dp-on input[type=date]{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
+.dp{position:relative;display:none}
+.sched-pick.dp-on .dp{display:inline-block}
+.dp-btn{display:inline-flex;align-items:center;gap:9px;border:1px solid var(--line-strong);border-radius:10px;padding:8px 12px;background:var(--surface);color:var(--ink);font:600 13.5px/1.2 "Public Sans",sans-serif;cursor:pointer;transition:border-color .2s ease,box-shadow .2s ease}
+.dp-btn:hover{border-color:var(--ink)}
+.dp-btn:focus-visible{outline:2px solid var(--accent-ink);outline-offset:1px}
+.dp-btn::after{content:"";width:14px;height:14px;background-color:var(--muted);-webkit-mask:var(--i-chevron) center/contain no-repeat;mask:var(--i-chevron) center/contain no-repeat;transition:transform var(--dur-enter) var(--ease-hx-out)}
+.dp-btn[aria-expanded="true"]::after{transform:rotate(180deg)}
+.dp-pop{position:absolute;z-index:60;top:calc(100% + 8px);right:0;width:294px;background:var(--surface);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow-lg);padding:12px;transform-origin:top right}
+@media (prefers-reduced-motion:no-preference){
+  .dp-pop{animation:dp-in var(--dur-enter) var(--ease-hx-out)}
+  .dp-pop.closing{animation:dp-out var(--dur-exit) var(--ease-hx-in) forwards}
+  .dp-month{animation:dp-month var(--dur-enter) var(--ease-hx-out)}
+  .dp-day.pop{animation:dp-pop-day var(--dur-enter) var(--ease-hx-out)}
+}
+@keyframes dp-in{from{opacity:0;transform:scale(.97)}to{opacity:1;transform:none}}
+@keyframes dp-out{to{opacity:0}}
+@keyframes dp-month{from{opacity:0;transform:translateX(12px)}to{opacity:1;transform:none}}
+@keyframes dp-pop-day{from{transform:scale(.9)}to{transform:scale(1)}}
+.dp-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px}
+.dp-head b{font:700 14.5px/1.2 Manrope,sans-serif}
+.dp-nav{border:1px solid var(--line-strong);background:var(--surface);color:var(--ink);width:34px;height:34px;border-radius:10px;cursor:pointer;font:600 16px/1 "Public Sans",sans-serif;display:grid;place-items:center}
+.dp-nav:hover{border-color:var(--ink)}
+.dp-nav:focus-visible{outline:2px solid var(--accent-ink);outline-offset:1px}
+.dp-nav[disabled]{opacity:.35;cursor:default}
+.dp-dows,.dp-grid{display:grid;grid-template-columns:repeat(7,1fr)}
+.dp-dows span{font:500 12px/1 "Public Sans",sans-serif;color:var(--muted);text-align:center;padding:6px 0}
+.dp-cell{min-height:38px;display:grid;place-items:center;border:0;background:none;padding:0;cursor:pointer;border-radius:10px}
+.dp-cell:focus-visible{outline:2px solid var(--accent-ink);outline-offset:-2px}
+.dp-day{display:grid;place-items:center;width:32px;height:32px;border-radius:99px;font:500 13.5px/1 "Public Sans",sans-serif;color:var(--ink)}
+.dp-cell:hover:not([disabled]) .dp-day{background:var(--bg)}
+.dp-cell[aria-selected="true"] .dp-day{background:var(--accent-ink);color:#fff;font-weight:700}
+.dp-cell.today .dp-day{box-shadow:inset 0 0 0 1.5px var(--line-strong)}
+.dp-cell[disabled]{cursor:default}
+.dp-cell[disabled] .dp-day{color:#B6BEC6;text-decoration:line-through}
+.dp-cell.blank{visibility:hidden}
+@media (pointer:coarse){.dp-cell{min-height:44px}}
+.dp-row{display:contents}
+.banner>span{flex:1;min-width:0;display:block}

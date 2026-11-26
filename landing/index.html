@@ -197,6 +197,7 @@
         </form>
 
         <div class="hero-form hero-done" id="signup-done" hidden role="status" aria-live="polite">
+          <div class="hx-check" id="signup-check" aria-hidden="true"><svg width="44" height="44" viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="24" cy="24" r="20"/><path d="m14 24 7 7 13-14"/></svg></div>
           <p class="done-title">You're in.</p>
           <p class="done-body">Forward any refundable hotel confirmation to</p>
           <p class="done-addr"><code id="fwd-addr">save@myroomwatch.com</code>
@@ -258,9 +259,10 @@
       <div class="sched" id="sched" hidden>
         <div class="sched-top">
           <h3>See the schedule for <span class="em">your</span> trip</h3>
-          <label class="sched-pick">Free cancellation ends
+          <div class="sched-pick"><label for="sched-date">Free cancellation ends</label>
             <input type="date" id="sched-date">
-          </label>
+            <span class="dp" id="dp"></span>
+          </div>
         </div>
         <div class="sched-bar" id="sched-bar" aria-hidden="true"></div>
         <div class="sched-scale" aria-hidden="true"><span>Today</span><span id="sched-end"></span></div>
@@ -420,6 +422,7 @@
   </div>
 </footer>
 
+<script src="ui.js"></script>
 <script>
 (function () {
   // Passwordless signup: one email field. The API creates the account if it
@@ -464,6 +467,13 @@
       if (!r.ok) throw new Error(firstError(r.body, "Something went wrong. Please try again."));
       form.hidden = true;
       done.hidden = false;
+      if (window.MRW) {
+        MRW.playCheck(document.getElementById("signup-check"));
+        MRW.toast("Sign-in link sent", {
+          desc: "Check your inbox — the link works once and expires in 15 minutes.",
+          variant: "success"
+        });
+      }
     }).catch(function (err) {
       show(err.message || "Something went wrong. Please try again.", false);
     }).finally(function () {
@@ -597,6 +607,170 @@
   window.addEventListener("resize", function () { clearTimeout(rsz); rsz = setTimeout(render, 150); });
   sched.hidden = false;
   render();
+
+  // --- Custom date picker (HorizonX "Animated Date Picker" port) ---
+  // Fine pointers get the popover calendar; touch and no-JS keep the native
+  // input. Both paths write to the same <input> and dispatch "change", so
+  // the tick-bar recalculation above stays wired identically.
+  (function () {
+    var dpHost = document.getElementById("dp");
+    var pickWrap = input.closest(".sched-pick");
+    if (!dpHost || !pickWrap) return;
+    if (!window.matchMedia("(hover: hover) and (pointer: fine)").matches) return;
+
+    function parseISO(s) { var q = (s || "").split("-"); return new Date(+q[0], q[1] - 1, +q[2]); }
+    function addDays(d, n) { var x = new Date(d); x.setDate(x.getDate() + n); return x; }
+    function addMonths(d, n) { var x = new Date(d.getFullYear(), d.getMonth() + n, 1); return x; }
+    function fmtBtn(d) { return d.toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" }); }
+    function fmtFull(d) { return d.toLocaleDateString(undefined, { weekday: "long", day: "numeric", month: "long", year: "numeric" }); }
+    var minD = parseISO(input.min), maxD = parseISO(input.max);
+    function inRange(d) { return d >= minD && d <= maxD; }
+    function clampDay(d) { return d < minD ? new Date(minD) : (d > maxD ? new Date(maxD) : d); }
+
+    var btn = document.createElement("button");
+    btn.type = "button"; btn.className = "dp-btn";
+    btn.setAttribute("aria-haspopup", "dialog");
+    btn.setAttribute("aria-expanded", "false");
+    dpHost.appendChild(btn);
+    function syncBtn() {
+      var d = parseISO(input.value);
+      btn.textContent = fmtBtn(d);
+      btn.setAttribute("aria-label", "Free cancellation ends " + fmtFull(d) + ". Change date");
+    }
+    syncBtn();
+    input.addEventListener("change", syncBtn);
+    // The native input keeps the state but leaves the keyboard path to the
+    // fully accessible custom picker on this pointer type.
+    input.tabIndex = -1; input.setAttribute("aria-hidden", "true");
+    pickWrap.classList.add("dp-on");
+
+    var pop = null, view = null, outside = null;
+    var DOW = (function () {
+      var out = [];
+      for (var i = 0; i < 7; i++) out.push(new Date(2024, 0, 1 + i) // a Monday
+        .toLocaleDateString(undefined, { weekday: "narrow" }));
+      return out;
+    })();
+
+    function buildMonth(focusDate) {
+      var today = new Date(); today.setHours(0, 0, 0, 0);
+      var y = view.getFullYear(), m = view.getMonth();
+      var offset = (new Date(y, m, 1).getDay() + 6) % 7; // Monday start
+      var days = new Date(y, m + 1, 0).getDate();
+      var cells = [];
+      for (var i = 0; i < offset; i++) cells.push('<span class="dp-cell blank" role="presentation"></span>');
+      for (var day = 1; day <= days; day++) {
+        var d = new Date(y, m, day);
+        var isSel = isoLocal(d) === input.value;
+        var isFoc = focusDate && isoLocal(d) === isoLocal(focusDate);
+        cells.push('<button type="button" class="dp-cell' + (+d === +today ? " today" : "") +
+          '" role="gridcell" data-d="' + isoLocal(d) + '"' + (inRange(d) ? "" : " disabled") +
+          ' aria-selected="' + isSel + '" aria-label="' + fmtFull(d) + '"' +
+          ' tabindex="' + (isFoc ? "0" : "-1") + '"><span class="dp-day">' + day + "</span></button>");
+      }
+      var rows = [];
+      for (var r = 0; r < cells.length; r += 7) rows.push('<div class="dp-row" role="row">' + cells.slice(r, r + 7).join("") + "</div>");
+      return '<div class="dp-month"><div class="dp-dows" aria-hidden="true">' +
+        DOW.map(function (w) { return "<span>" + w + "</span>"; }).join("") + "</div>" +
+        '<div class="dp-grid" role="grid" aria-label="Calendar">' + rows.join("") + "</div></div>";
+    }
+    function renderPop(focusDate, focusNow) {
+      pop.querySelector(".dp-title").textContent = view.toLocaleDateString(undefined, { month: "long", year: "numeric" });
+      var body = pop.querySelector(".dp-body");
+      body.innerHTML = buildMonth(focusDate);
+      pop.querySelector(".dp-prev").disabled = new Date(view.getFullYear(), view.getMonth(), 0) < minD;
+      pop.querySelector(".dp-next").disabled = new Date(view.getFullYear(), view.getMonth() + 1, 1) > maxD;
+      if (focusNow) {
+        var t = body.querySelector('[tabindex="0"]') || body.querySelector(".dp-cell:not([disabled]):not(.blank)");
+        if (t) { t.tabIndex = 0; t.focus(); }
+      }
+    }
+    function setRoving(el) {
+      pop.querySelectorAll('.dp-cell[tabindex="0"]').forEach(function (c) { c.tabIndex = -1; });
+      el.tabIndex = 0;
+    }
+    function select(d, cellEl) {
+      if (!inRange(d)) return;
+      input.value = isoLocal(d);
+      input.dispatchEvent(new Event("change"));
+      pop.querySelectorAll('.dp-cell[aria-selected="true"]').forEach(function (c) { c.setAttribute("aria-selected", "false"); });
+      if (cellEl) {
+        cellEl.setAttribute("aria-selected", "true");
+        cellEl.querySelector(".dp-day").classList.add("pop");
+      }
+      setTimeout(function () { close(true); }, 240);
+    }
+    function onKey(e) {
+      if (e.key === "Escape") { e.preventDefault(); close(true); return; }
+      var cur = document.activeElement;
+      if (!cur || !cur.hasAttribute || !cur.hasAttribute("data-d")) return;
+      var d = parseISO(cur.getAttribute("data-d"));
+      var target = null;
+      switch (e.key) {
+        case "ArrowLeft": target = addDays(d, -1); break;
+        case "ArrowRight": target = addDays(d, 1); break;
+        case "ArrowUp": target = addDays(d, -7); break;
+        case "ArrowDown": target = addDays(d, 7); break;
+        case "Home": target = addDays(d, -((d.getDay() + 6) % 7)); break;
+        case "End": target = addDays(d, 6 - ((d.getDay() + 6) % 7)); break;
+        case "PageUp": target = addDays(d, -28); break;
+        case "PageDown": target = addDays(d, 28); break;
+        case "Enter": case " ": e.preventDefault(); select(d, cur); return;
+        default: return;
+      }
+      e.preventDefault();
+      target = clampDay(target);
+      if (target.getMonth() !== view.getMonth() || target.getFullYear() !== view.getFullYear()) {
+        view = addMonths(target, 0);
+        renderPop(target, true);
+      } else {
+        var el = pop.querySelector('[data-d="' + isoLocal(target) + '"]');
+        if (el && !el.disabled) { setRoving(el); el.focus(); }
+      }
+    }
+    function open() {
+      if (pop) return;
+      var sel = parseISO(input.value);
+      view = addMonths(sel, 0);
+      pop = document.createElement("div");
+      pop.className = "dp-pop";
+      pop.setAttribute("role", "dialog");
+      pop.setAttribute("aria-label", "Choose the date your free cancellation ends");
+      pop.innerHTML = '<div class="dp-head">' +
+        '<button type="button" class="dp-nav dp-prev" aria-label="Previous month">‹</button>' +
+        '<b class="dp-title"></b>' +
+        '<button type="button" class="dp-nav dp-next" aria-label="Next month">›</button></div>' +
+        '<div class="dp-body"></div>';
+      dpHost.appendChild(pop);
+      btn.setAttribute("aria-expanded", "true");
+      pop.querySelector(".dp-prev").addEventListener("click", function () { view = addMonths(view, -1); renderPop(null, false); });
+      pop.querySelector(".dp-next").addEventListener("click", function () { view = addMonths(view, 1); renderPop(null, false); });
+      pop.addEventListener("keydown", onKey);
+      pop.querySelector(".dp-body").addEventListener("click", function (e) {
+        var c = e.target.closest ? e.target.closest(".dp-cell[data-d]") : null;
+        if (c && !c.disabled) select(parseISO(c.getAttribute("data-d")), c);
+      });
+      renderPop(sel, true);
+      outside = function (e) {
+        if (pop && !pop.contains(e.target) && !btn.contains(e.target)) close(false);
+      };
+      setTimeout(function () { document.addEventListener("pointerdown", outside); }, 0);
+    }
+    function close(refocus) {
+      if (!pop) return;
+      document.removeEventListener("pointerdown", outside);
+      btn.setAttribute("aria-expanded", "false");
+      var el = pop; pop = null;
+      if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) el.remove();
+      else {
+        el.classList.add("closing");
+        el.addEventListener("animationend", function () { el.remove(); }, { once: true });
+        setTimeout(function () { if (el.parentNode) el.remove(); }, 220);
+      }
+      if (refocus) btn.focus();
+    }
+    btn.addEventListener("click", function () { pop ? close(true) : open(); });
+  })();
 })();
 </script>
 

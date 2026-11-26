@@ -60,11 +60,12 @@
   </div>
 
   <!-- Loading: skeleton so sign-in never flashes a blank page -->
-  <section id="dash-loading" hidden aria-label="Loading your bookings">
+  <section id="dash-loading" hidden aria-label="Loading your bookings" aria-busy="true">
     <div class="skel skel-head"></div>
     <div class="skel-row">
       <div class="skel skel-kpi"></div><div class="skel skel-kpi"></div><div class="skel skel-kpi"></div>
     </div>
+    <div class="skel skel-card"></div>
     <div class="skel skel-card"></div>
   </section>
 
@@ -118,6 +119,7 @@
   </div>
 </footer>
 
+<script src="ui.js"></script>
 <script>
 (function () {
   var API = "https://api.myroomwatch.com";
@@ -183,8 +185,24 @@
     signinWrap.hidden = true; dashPanel.hidden = true; loadingEl.hidden = false;
   }
   function showDash() {
-    signinWrap.hidden = true; dashPanel.hidden = false; loadingEl.hidden = true;
+    signinWrap.hidden = true;
     setChrome(true);
+    // Skeleton -> content is a crossfade (exit 160ms, enter 220ms), not a
+    // cut. Under reduced motion, or when the panel is already up, it's instant.
+    var wasLoading = !loadingEl.hidden;
+    var reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (wasLoading && dashPanel.hidden && !reduce) {
+      loadingEl.classList.add("off");
+      setTimeout(function () {
+        loadingEl.hidden = true; loadingEl.classList.remove("off");
+        dashPanel.hidden = false;
+        dashPanel.classList.add("enter");
+        setTimeout(function () { dashPanel.classList.remove("enter"); }, 260);
+      }, 170);
+    } else {
+      loadingEl.hidden = true;
+      dashPanel.hidden = false;
+    }
   }
 
   function money(amount, currency) {
@@ -234,6 +252,12 @@
     return '<button class="btn btn-primary btn-copy-lg" type="button" id="' + id + '" data-copy="' + FWD + '">' + label + "</button>";
   }
 
+  // Inline banner (HorizonX port): the wrap animates open after insertion
+  // (MRW.openBanners), collapsing-grid style. Variants: info/success/warning/error.
+  function banner(variant, html) {
+    return '<div class="banner-wrap"><div><div class="banner ' + variant + '"><span>' + html + "</span></div></div></div>";
+  }
+
   function wireCopy(root) {
     (root || document).querySelectorAll("[data-copy]").forEach(function (btn) {
       if (btn._wired) return; btn._wired = true;
@@ -242,7 +266,12 @@
         function flash(html) { btn.innerHTML = html; setTimeout(function () { btn.innerHTML = original; }, 2000); }
         if (navigator.clipboard && navigator.clipboard.writeText) {
           navigator.clipboard.writeText(btn.getAttribute("data-copy")).then(
-            function () { flash("Copied ✓"); }, function () { flash(FWD); });
+            function () {
+              if (window.MRW) {
+                flash('<span class="hx-check play">' + MRW.checkSVG(16) + "</span>Copied");
+                MRW.toast("Email address copied", { desc: FWD, variant: "success", timeout: 3500 });
+              } else { flash("Copied ✓"); }
+            }, function () { flash(FWD); });
         } else { flash(FWD); }
       });
     });
@@ -302,21 +331,24 @@
           '<div><span>Checks run</span><b class="num">' + (j.check_count || 0) + "</b></div>" +
         "</div>" +
         (j.status === "pending_hotel"
-          ? '<p class="job-note warn-note">We couldn\'t pin down which hotel this is. Reply to our email and we\'ll set it straight.</p>'
+          ? banner("warning", "<strong>We couldn't pin down which hotel this is.</strong> Reply to our email and we'll set it straight.")
           : "") +
         (j.status === "pending_info"
-          ? '<p class="job-note warn-note">We still need your free-cancellation date before we can watch this one.</p>'
+          ? banner("warning", "<strong>We still need your free-cancellation date</strong> before we can watch this one.")
+          : "") +
+        (j.status === "deadline_soon" && !opts.sample
+          ? banner("warning", "<strong>Your free-cancellation deadline is close.</strong> Keeping the booking? You're all set. If not, decide while you can still cancel free.")
           : "") +
         (showWin
-          ? '<p class="job-note win-note"><strong>' + money(diff, j.currency) + " cheaper</strong> right now. " +
-            "Book the new rate first, confirm it, then cancel the original — never the other way round.</p>" +
+          ? banner("success", "<strong>" + money(diff, j.currency) + " cheaper</strong> right now. " +
+            "Book the new rate first, confirm it, then cancel the original — never the other way round.") +
             '<a class="btn btn-primary btn-block job-cta" href="' + esc(bestUrl) +
             '" target="_blank" rel="noopener">Rebook at the lower rate →</a>'
           : "") +
         (unreachable
-          ? '<p class="job-note">We\'ve seen <strong>lower rates for your dates</strong> than the one you booked. ' +
+          ? banner("info", "We've seen <strong>lower rates for your dates</strong> than the one you booked. " +
             "Prices differ between booking sites, so we won't quote you a figure we can't " +
-            "guarantee — but while you can still cancel free, it's worth a look.</p>" +
+            "guarantee — but while you can still cancel free, it's worth a look.") +
             (checkUrl
               ? '<a class="btn btn-primary btn-block job-cta" href="' + esc(checkUrl) +
                 '" target="_blank" rel="noopener">Check today\'s price →</a>'
@@ -407,6 +439,7 @@
       '<div class="add-banner"><p><b>Watching another trip?</b> Forward its confirmation to <code>' + FWD + "</code></p>" +
       copyButton("copy-banner", "Copy email") + "</div>";
     wireCopy(jobsEl);
+    if (window.MRW) MRW.openBanners(jobsEl);
   }
 
   function render(jobs) {
@@ -446,7 +479,7 @@
   }
 
   var loading = false;
-  function load() {
+  function load(fromRefresh) {
     if (loading) return; loading = true;
     dashStatus.hidden = true;
     if (dashPanel.hidden) showLoading();
@@ -459,17 +492,24 @@
         if (!r.ok) throw new Error("Could not load your bookings.");
         return r.json();
       })
-      .then(function (jobs) { if (jobs) { showDash(); render(jobs); } })
+      .then(function (jobs) {
+        if (jobs) {
+          showDash(); render(jobs);
+          if (fromRefresh && window.MRW) MRW.toast("Bookings refreshed", { variant: "success", timeout: 3000 });
+        }
+      })
       .catch(function (err) {
         // The error line lives inside the dash panel, so it has to be on screen
         // or a failed load leaves the page completely blank.
         showDash();
         // A network-level failure rejects with "Failed to fetch", which tells
         // the user nothing — say what actually happened.
-        dashStatus.textContent = err instanceof TypeError
+        var msg = err instanceof TypeError
           ? "We couldn't reach MyRoomWatch. Check your connection and refresh."
           : (err.message || "Something went wrong.");
+        dashStatus.textContent = msg;
         dashStatus.hidden = false;
+        if (window.MRW) MRW.toast("Couldn't load your bookings", { desc: msg, variant: "error", timeout: 6000 });
       })
       .finally(function () {
         loading = false;
@@ -480,7 +520,7 @@
   }
 
   ["refresh", "refresh-m"].forEach(function (id) {
-    var b = document.getElementById(id); if (b) b.addEventListener("click", function () { load(); });
+    var b = document.getElementById(id); if (b) b.addEventListener("click", function () { load(true); });
   });
 
   // Passwordless sign-in: email in, link out.
