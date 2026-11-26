@@ -147,9 +147,10 @@
     })(t0);
   }
   if (cc && ccToggle) {
+    var ccManual = false;
     ccToggle.addEventListener("click", function (e) {
       var b = e.target.closest(".cc-btn");
-      if (b) ccSet(+b.getAttribute("data-v"));
+      if (b) { ccManual = true; ccSet(+b.getAttribute("data-v")); }
     });
     if (reduce) { ccSet(1); }
     else {
@@ -158,7 +159,8 @@
         var ccIo = new IntersectionObserver(function (e) {
           if (e[0].isIntersecting) {
             ccIo.disconnect();
-            setTimeout(function () { ccSet(1); }, 900);
+            // The auto-morph never overrides a choice the visitor just made.
+            setTimeout(function () { if (!ccManual) ccSet(1); }, 900);
           }
         }, { threshold: 0.5 });
         ccIo.observe(cc);

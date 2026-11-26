@@ -117,6 +117,8 @@ img,svg{display:block}
 .rb-v{font:800 22px/1.1 var(--display);letter-spacing:-.02em}
 .example-tag{position:absolute;top:12px;right:12px;font:700 10px/1 var(--text);letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.55);border:1px solid rgba(255,255,255,.2);padding:4px 6px;border-radius:6px}
 
+[hidden]{display:none !important}
+
 /* sections */
 .sec{padding:var(--sec-y) 0;background:var(--paper)}
 .sec-alt{background:var(--mist);box-shadow:inset 0 1px 0 var(--line),inset 0 -1px 0 var(--line)}
@@ -257,7 +259,6 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
   .watch{left:-90px;bottom:40px;width:360px}
   .steps{grid-template-columns:repeat(4,1fr)}
   .band-in{grid-template-columns:.8fr 1.2fr;gap:64px}
-  .swap{height:300px}
   .calc-in{grid-template-columns:.85fr 1.15fr;gap:64px}
   .faq-grid{grid-template-columns:.6fr 1.4fr;gap:64px;align-items:start}
   .final-in{grid-template-columns:1.1fr .9fr;gap:64px}
