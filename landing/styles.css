@@ -537,3 +537,47 @@ main{position:relative;z-index:0}
 @media (min-width:1024px){
   .empty-grid{grid-template-columns:1.05fr .95fr;gap:20px}
 }
+
+/* ===== Standout UX: example-email toggle + watch-schedule widget ===== */
+.xhead{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.xhead .eyebrow{margin:0}
+.xtoggle{display:flex;gap:3px;background:#EEF2F6;border-radius:999px;padding:3px}
+.xt-btn{border:0;background:transparent;font:600 12px/1 "Public Sans",system-ui,sans-serif;padding:7px 11px;border-radius:999px;color:var(--muted);cursor:pointer;transition:background .18s var(--ease-out),color .18s var(--ease-out)}
+.xt-btn.on{background:var(--surface);color:var(--ink);box-shadow:0 1px 3px rgba(13,33,55,.16)}
+.xt-btn:focus-visible{outline:2px solid var(--accent-ink);outline-offset:1px}
+
+.sched{margin:36px auto 0;max-width:780px;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:22px 24px 18px;box-shadow:var(--shadow-sm)}
+.sched-top{display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap}
+.sched-top h3{font-size:18px}
+.sched-pick{display:flex;align-items:center;gap:10px;font-size:13.5px;font-weight:600;color:var(--muted)}
+.sched-pick input{border:1px solid var(--line-strong);border-radius:10px;padding:8px 10px;font:inherit;color:var(--ink);background:var(--surface)}
+.sched-pick input:focus-visible{outline:2px solid var(--accent-ink);outline-offset:1px}
+.sched-bar{position:relative;display:flex;height:34px;margin:40px 0 6px}
+.sb{height:100%}
+.sb:first-child{border-radius:9px 0 0 9px}
+.sb:last-child{border-radius:0 9px 9px 0}
+.sb.k1{background:#EAEFF4 repeating-linear-gradient(90deg,#AFBfCC 0 2px,transparent 2px 24px)}
+.sb.k2{background:#DFF3EA repeating-linear-gradient(90deg,#86CBAE 0 2px,transparent 2px 12px)}
+.sb.k3{background:#CBEDDE repeating-linear-gradient(90deg,var(--accent) 0 2px,transparent 2px 6px)}
+.sb-mail{position:absolute;top:-7px;bottom:-7px;width:3px;background:var(--ink);border-radius:2px;transform:translateX(-50%)}
+.sb-mail::after{content:"Your email";position:absolute;top:-27px;left:50%;transform:translateX(-50%);white-space:nowrap;background:var(--ink);color:#fff;font:700 11px/1 "Public Sans",system-ui,sans-serif;padding:5px 9px;border-radius:999px}
+.sb-mail.edge::after{left:auto;right:-6px;transform:none}
+.sched-scale{display:flex;justify-content:space-between;font-size:12px;font-weight:600;color:var(--muted)}
+.sched-key{display:flex;flex-wrap:wrap;gap:8px 18px;list-style:none;padding:0;margin:14px 0 0;font-size:12.5px;color:var(--muted)}
+.sched-key li{display:flex;align-items:center;gap:7px}
+.sched-key li::before{content:"";width:10px;height:10px;border-radius:3px;flex:none}
+.sched-key .k1::before{background:#AFBFCC}
+.sched-key .k2::before{background:#86CBAE}
+.sched-key .k3::before{background:var(--accent)}
+.sched-key .k4::before{background:var(--ink)}
+.sched-sum{margin:14px 0 0;font-size:14.5px;font-weight:600;color:var(--ink)}
+.sched-cap{margin:6px 0 0;font-size:12.5px;color:var(--muted)}
+@media (max-width:719px){
+  .sched{padding:18px 16px 14px}
+  .sched-top h3{font-size:16px}
+}
+
+/* Final CTA living backdrop (WebGL, progressive enhancement). The canvas sits
+   under the content (h2/p/.btn are position:relative) and inherits the band's
+   radius; without JS or WebGL it simply never paints and the gradient shows. */
+.final-fx{position:absolute;inset:0;width:100%;height:100%;border-radius:inherit;opacity:.85}
