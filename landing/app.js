@@ -119,3 +119,77 @@
     if (start) new IntersectionObserver(function (e) { formIn = e[0].isIntersecting; upd(); }).observe(start);
   }
 })();
+
+/* Why-prices-drop: trigger cards cycle through the example rate timeline. */
+(function () {
+  var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var chart = document.getElementById("why-chart");
+  var line = document.getElementById("wc-line");
+  var dot = document.getElementById("wc-dot");
+  var pill = document.getElementById("wc-pill");
+  var triggers = document.getElementById("why-triggers");
+  if (!chart || !line || !triggers) return;
+
+  // Stage ends by x in the 320x170 viewBox; prices are labelled examples.
+  var STAGES = [{ x: 104, p: "\u20ac185" }, { x: 188, p: "\u20ac162" }, { x: 258, p: "\u20ac138" }];
+  var total = line.getTotalLength();
+
+  function lengthAtX(x) {
+    var lo = 0, hi = total;
+    for (var i = 0; i < 24; i++) {
+      var mid = (lo + hi) / 2;
+      if (line.getPointAtLength(mid).x < x) lo = mid; else hi = mid;
+    }
+    return hi;
+  }
+  var ENDS = STAGES.map(function (s) { return lengthAtX(s.x); });
+  line.style.strokeDasharray = total;
+
+  var stage = -1;
+  function setStage(i) {
+    if (i === stage) return;
+    stage = i;
+    var L = ENDS[i];
+    line.style.strokeDashoffset = total - L;
+    var pt = line.getPointAtLength(L);
+    dot.style.transform = "translate(" + pt.x + "px," + pt.y + "px)";
+    pill.textContent = STAGES[i].p;
+    if (!reduce) { pill.classList.remove("pop"); void pill.offsetWidth; pill.classList.add("pop"); }
+    chart.classList.toggle("done", i === 2);
+    triggers.querySelectorAll(".wt").forEach(function (b, k) {
+      b.classList.toggle("on", k === i);
+      b.setAttribute("aria-pressed", k === i ? "true" : "false");
+    });
+  }
+
+  var timer = null, manual = false, hovered = false;
+  function tick() { if (!hovered) setStage((stage + 1) % 3); }
+  function startAuto() {
+    if (manual || reduce || timer) return;
+    timer = setInterval(tick, 3200);
+  }
+  triggers.addEventListener("click", function (e) {
+    var b = e.target.closest(".wt");
+    if (!b) return;
+    manual = true;
+    if (timer) { clearInterval(timer); timer = null; }
+    setStage(+b.getAttribute("data-s"));
+  });
+  [triggers, chart].forEach(function (el) {
+    el.addEventListener("mouseenter", function () { hovered = true; });
+    el.addEventListener("mouseleave", function () { hovered = false; });
+  });
+
+  if (reduce) {
+    // Static: the full stepped curve, final price, badge on. No cycling.
+    setStage(2);
+  } else {
+    setStage(0);
+    if ("IntersectionObserver" in window) {
+      var io = new IntersectionObserver(function (e) {
+        if (e[0].isIntersecting) { startAuto(); } else if (timer) { clearInterval(timer); timer = null; }
+      }, { threshold: 0.3 });
+      io.observe(chart);
+    } else { startAuto(); }
+  }
+})();

@@ -50,7 +50,6 @@
       <p class="eyebrow-pill"><span class="pulse" aria-hidden="true"></span>Free during beta</p>
       <h1 id="hero-h">Your hotel got cheaper. <span class="h1-accent">Keep the difference.</span></h1>
       <p class="hero-sub">We watch your refundable booking and rebook the same room for less, before free cancellation ends.</p>
-      <p class="why-line">Hotels reprice unsold rooms dynamically as check-in nears — when demand softens or groups cancel, the exact same room often drops before your free-cancellation deadline.</p>
       <div class="hero-actions">
         <a class="btn btn-accent btn-lg" href="#start">Watch my booking, free</a>
         <a class="btn-text" href="#how">See how it works <span aria-hidden="true">↓</span></a>
@@ -118,6 +117,39 @@
       </li>
     </ol>
     <p class="note reveal">New booking confirmed first. Then you cancel the original.</p>
+  </div>
+</section>
+
+<!-- ============ WHY PRICES DROP ============ -->
+<section class="sec sec-alt" id="why" aria-labelledby="why-h">
+  <div class="wrap">
+    <p class="kicker reveal">Why prices drop</p>
+    <h2 id="why-h" class="reveal">Hotels reprice empty rooms daily.</h2>
+    <div class="why-grid">
+      <div class="why-triggers reveal" id="why-triggers" aria-label="What makes a rate drop">
+        <button type="button" class="wt on" data-s="0" aria-pressed="true"><b>Group block cancels</b><span>Cancelled conference or tour rooms flood back into inventory.</span></button>
+        <button type="button" class="wt" data-s="1" aria-pressed="false"><b>Unsold rooms near check-in</b><span>An empty room earns zero, so rates drop as dates approach.</span></button>
+        <button type="button" class="wt" data-s="2" aria-pressed="false"><b>Nearby hotel undercuts</b><span>Dynamic pricing software automatically matches competing drops.</span></button>
+      </div>
+      <figure class="why-chart reveal" id="why-chart" aria-label="Example: the same room's nightly rate stepping down from €185 to €138 before the free-cancellation deadline">
+        <div class="wc-head">
+          <p class="wc-t">Same room · nightly rate</p>
+          <p class="wc-pill num" id="wc-pill">€185</p>
+        </div>
+        <svg viewBox="0 0 320 170" aria-hidden="true">
+          <line x1="16" y1="46" x2="288" y2="46" class="wc-gridline"/>
+          <line x1="16" y1="84" x2="288" y2="84" class="wc-gridline"/>
+          <line x1="16" y1="122" x2="288" y2="122" class="wc-gridline"/>
+          <line x1="258" y1="12" x2="258" y2="146" class="wc-deadline"/>
+          <path d="M16 46 H104 L116 84 H188 L200 122 H258" class="wc-ghost"/>
+          <path d="M16 46 H104 L116 84 H188 L200 122 H258" class="wc-path" id="wc-line"/>
+          <circle r="5" class="wc-dot" id="wc-dot"/>
+        </svg>
+        <div class="wc-axis" aria-hidden="true"><span>Booked</span><span>Free cancellation ends</span></div>
+        <p class="wc-badge" id="wc-badge"><span class="pulse" aria-hidden="true"></span>Drop caught before deadline</p>
+        <p class="example-tag">Example</p>
+      </figure>
+    </div>
   </div>
 </section>
 
