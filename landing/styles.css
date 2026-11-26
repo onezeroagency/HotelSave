@@ -789,3 +789,55 @@ main{position:relative;z-index:0}
 @media (min-width:720px){.reserve-form{flex-direction:row}.reserve-form input{flex:1}.reserve-form .btn{flex:none}}
 .reserve-card .form-status{font:600 14px/1.5 "Public Sans",sans-serif;color:var(--amber-ink);margin:12px 0 0}
 .reserve-card .form-status.ok{color:var(--accent-ink)}
+
+/* ===== Buy box v2: Founding Member ===== */
+.plans-2{max-width:940px;gap:16px}
+@media (min-width:720px){
+  /* beats the 3-col .plans rule at this width */
+  .plans.plans-2{grid-template-columns:1fr 1fr;align-items:stretch;gap:24px}
+}
+.plans-2 .plan{padding:36px;border-radius:20px;box-shadow:0 1px 2px rgba(13,33,55,.05),0 24px 48px -24px rgba(13,33,55,.18)}
+.plans-2 .plan-free{background:var(--surface);border:1px solid var(--line)}
+.plans-2 .plan.featured{order:-1;position:relative;overflow:visible;padding:36px;background:
+  radial-gradient(ellipse 80% 50% at 50% -10%,rgba(0,168,112,.18),transparent 60%),
+  linear-gradient(165deg,var(--ink-2),var(--ink) 62%);
+  border:1.5px solid rgba(0,168,112,.55);
+  box-shadow:0 2px 4px rgba(7,19,31,.3),0 30px 60px -24px rgba(13,33,55,.5),0 0 40px -12px rgba(0,168,112,.35)}
+@media (min-width:720px){.plans-2 .plan.featured{order:0}}
+.plan-k{font:700 12px/1 "Public Sans",sans-serif;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin:0}
+.plan-badge{display:inline-flex;align-self:flex-start;margin:0;font:800 11px/1 "Public Sans",sans-serif;letter-spacing:.09em;text-transform:uppercase;color:#04291A;background:var(--accent);border-radius:99px;padding:8px 13px;box-shadow:0 6px 16px -6px rgba(0,168,112,.7)}
+.amount-xl{font:800 clamp(3.4rem,7vw,4rem)/1 Manrope,sans-serif;letter-spacing:-.045em;margin-top:18px}
+.amount-xl span{font-size:17px;font-weight:700;color:var(--muted);letter-spacing:0}
+.plan.featured .amount-xl span{color:rgba(255,255,255,.65)}
+.plan-reg{margin:10px 0 0;font:600 13.5px/1.5 "Public Sans",sans-serif;color:rgba(255,255,255,.78)}
+.plan-mo{margin:3px 0 0;font:400 13px/1.5 "Public Sans",sans-serif;color:rgba(255,255,255,.6)}
+.plan-hr{border:0;height:1px;background:rgba(255,255,255,.12);margin:20px 0 4px}
+.plan-list{list-style:none;margin:18px 0 0;padding:0;display:grid;gap:11px;flex:1}
+.plans-2 .plan li{padding:0;color:var(--muted);font:400 14px/1.5 "Public Sans",sans-serif;display:flex;gap:10px;align-items:flex-start}
+.plans-2 .plan li::before{display:none}
+.plans-2 .plan.featured li{color:rgba(255,255,255,.85)}
+.ck{width:18px;height:18px;flex:none;margin-top:1px}
+.ck circle{fill:rgba(0,168,112,.14)}
+.ck path{fill:none;stroke:var(--accent-ink);stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.plan.featured .ck circle{fill:rgba(0,168,112,.22)}
+.plan.featured .ck path{stroke:var(--accent)}
+.plan-foot{margin-top:auto;padding-top:24px}
+.btn-founding{background:var(--accent);color:#04291A;font-weight:800;box-shadow:0 2px 4px rgba(7,19,31,.25),0 14px 28px -12px rgba(0,168,112,.75)}
+.btn-founding:hover{background:#0CBF82;color:#04291A;box-shadow:0 2px 4px rgba(7,19,31,.25),0 18px 34px -12px rgba(0,168,112,.85)}
+.btn-founding:focus-visible{outline:3px solid #fff;outline-offset:2px}
+
+/* 5-trip illustrative dark-glass bar */
+.value-bar{max-width:940px;margin:24px 0 0;background:linear-gradient(165deg,#13293E,var(--ink) 70%);border:1px solid rgba(0,168,112,.28);border-radius:18px;padding:18px 22px;box-shadow:0 20px 44px -24px rgba(13,33,55,.5),0 0 32px -14px rgba(0,168,112,.3)}
+.vb-k{margin:0;font:800 11px/1 "Public Sans",sans-serif;letter-spacing:.14em;text-transform:uppercase;color:var(--accent)}
+.vb-t{margin:8px 0 0;font:400 14px/1.65 "Public Sans",sans-serif;color:rgba(255,255,255,.82)}
+
+/* /pricing page polish */
+.pricing-hero{text-align:center;padding-top:64px;padding-bottom:10px}
+.pricing-hero .pill{margin-bottom:16px}
+.pricing-hero .sub{margin-left:auto;margin-right:auto}
+#plans .plans-2,#plans .value-bar,#plans .trust-strip{margin-left:auto;margin-right:auto}
+.trust-strip{list-style:none;display:flex;flex-wrap:wrap;justify-content:center;gap:10px 26px;max-width:940px;margin:22px 0 0;padding:0}
+.trust-strip li{font:600 13.5px/1.4 "Public Sans",sans-serif;color:var(--muted);display:flex;align-items:center;gap:8px}
+.trust-strip li::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--accent);flex:none}
+#plans .pricing-fine{text-align:center;max-width:720px;margin-left:auto;margin-right:auto}
+.reserve-card{max-width:580px;margin:0 auto;border-radius:20px;padding:32px;box-shadow:var(--shadow-md)}

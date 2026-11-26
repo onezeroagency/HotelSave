@@ -24,7 +24,7 @@ What we check: same hotel, same dates, same guests and board, before your deadli
 
 ## Pricing
 
-Free while in beta — every booking you forward, deadline heads-up, lower-rate emails, no card. After the beta: Pro at a regular price of €99/year covers every booking, and a free tier watches 1 booking. Founding Members who join in beta keep €29/year (or €3.99/month) while their subscription stays active — not charged today. Final terms are published in the Terms before any payment is taken.
+Free while in beta — every booking you forward, deadline heads-up, lower-rate emails, no card. After the beta: Pro at a regular price of €149/year covers every booking, and a free tier watches 1 booking. Founding Members who join in beta keep €49/year (or €6.99/month) while their subscription stays active — not charged today. Final terms are published in the Terms before any payment is taken.
 
 ## FAQ
 
@@ -42,7 +42,7 @@ Free while in beta — every booking you forward, deadline heads-up, lower-rate 
 
 **What do you do with my data?** We use it only to watch your booking and email you. Our providers handle hosting, email and reading your confirmation. The full list is in the Privacy policy. Delete your account any time by emailing hello@myroomwatch.com.
 
-**What happens after the beta?** We email you before billing starts. Founding Members who join in beta keep €29/year while their subscription stays active; the regular price after beta is €99/year, and a free tier still watches 1 booking. You can stop at any time.
+**What happens after the beta?** We email you before billing starts. Founding Members who join in beta keep €49/year while their subscription stays active; the regular price after beta is €149/year, and a free tier still watches 1 booking. You can stop at any time.
 
 ## More
 
