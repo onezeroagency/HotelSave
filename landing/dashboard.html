@@ -26,16 +26,27 @@
   <section id="signin-panel" class="signin-panel" hidden>
     <h1>Sign in</h1>
     <p class="body">Your monitored bookings and everything we've saved you.</p>
-    <form id="signin-form" class="signin-form" novalidate>
+
+    <!-- Default: passwordless. We email a single-use sign-in link. -->
+    <form id="magic-form" class="signin-form" novalidate>
+      <input type="email" id="magic-email" required autocomplete="email"
+             placeholder="you@example.com" aria-label="Email address">
+      <button class="btn btn-primary btn-block" type="submit" id="magic-submit">Send sign-in link</button>
+    </form>
+
+    <!-- Password path for accounts that have one -->
+    <form id="signin-form" class="signin-form" novalidate hidden>
       <input type="email" id="signin-email" required autocomplete="email"
              placeholder="you@example.com" aria-label="Email address">
       <input type="password" id="signin-password" required autocomplete="current-password"
              placeholder="Password" aria-label="Password">
       <button class="btn btn-primary btn-block" type="submit" id="signin-submit">Sign in</button>
     </form>
+
     <p class="form-status dark" id="signin-status" role="status" aria-live="polite" hidden></p>
-    <p class="form-fine dark">No account yet? <a href="/#start">Create one</a>.
-       Forgot your password? <a href="/reset.html">Reset it</a>.</p>
+    <p class="form-fine dark"><a href="#" id="auth-toggle">Sign in with password instead</a></p>
+    <p class="form-fine dark" id="pw-extras" hidden>Forgot your password? <a href="/reset.html">Reset it</a>.</p>
+    <p class="form-fine dark">No account yet? <a href="/#start">Create one</a>.</p>
   </section>
 
   <!-- Signed in: the bookings -->
@@ -74,6 +85,7 @@
   var signinPanel = document.getElementById("signin-panel");
   var dashPanel = document.getElementById("dash-panel");
   var signinForm = document.getElementById("signin-form");
+  var magicForm = document.getElementById("magic-form");
   var signinStatus = document.getElementById("signin-status");
   var dashStatus = document.getElementById("dash-status");
   var signoutBtn = document.getElementById("signout");
@@ -82,9 +94,25 @@
   function token() { try { return localStorage.getItem(KEY); } catch (e) { return null; } }
   function setToken(v) { try { v ? localStorage.setItem(KEY, v) : localStorage.removeItem(KEY); } catch (e) {} }
 
+  // A magic-link verify lands here with the session token in the fragment
+  // (never the query string, so it stays out of logs). Store it and scrub
+  // the URL before anything else runs.
+  var magicNote = null;
+  (function () {
+    var m = (location.hash || "").match(/token=([^&]+)/);
+    if (m) {
+      setToken(decodeURIComponent(m[1]));
+      history.replaceState(null, "", location.pathname + location.search);
+    }
+    if (new URLSearchParams(location.search).get("magic") === "invalid") {
+      magicNote = "That sign-in link is invalid or has expired — request a fresh one below.";
+      history.replaceState(null, "", location.pathname);
+    }
+  })();
+
   function showSignin(msg) {
     signinPanel.hidden = false; dashPanel.hidden = true; signoutBtn.hidden = true;
-    if (msg) { signinStatus.textContent = msg; signinStatus.hidden = false; }
+    if (msg) { signinStatus.classList.remove("ok"); signinStatus.textContent = msg; signinStatus.hidden = false; }
   }
   function showDash() {
     signinPanel.hidden = true; dashPanel.hidden = false; signoutBtn.hidden = false;
@@ -235,6 +263,48 @@
       });
   }
 
+  // Passwordless sign-in: email in, link out.
+  magicForm.addEventListener("submit", function (e) {
+    e.preventDefault();
+    var mail = document.getElementById("magic-email").value.trim();
+    var btn = document.getElementById("magic-submit");
+    signinStatus.hidden = true;
+    btn.disabled = true; btn.textContent = "Sending…";
+    fetch(API + "/auth/magic-link", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email: mail })
+    }).then(function (r) { return r.json().then(function (b) { return { ok: r.ok, body: b }; }); })
+      .then(function (r) {
+        if (!r.ok) {
+          var d = r.body && r.body.detail;
+          throw new Error(typeof d === "string" ? d : "Could not send the link. Please try again.");
+        }
+        signinStatus.classList.add("ok");
+        signinStatus.textContent = "Check your email — your sign-in link is on its way. It works once and expires in 15 minutes.";
+        signinStatus.hidden = false;
+      })
+      .catch(function (err) {
+        signinStatus.classList.remove("ok");
+        signinStatus.textContent = err.message || "Could not send the link.";
+        signinStatus.hidden = false;
+      })
+      .finally(function () { btn.disabled = false; btn.textContent = "Send sign-in link"; });
+  });
+
+  // Toggle between the magic-link default and the password form.
+  var toggle = document.getElementById("auth-toggle");
+  var pwExtras = document.getElementById("pw-extras");
+  toggle.addEventListener("click", function (e) {
+    e.preventDefault();
+    var pw = magicForm.hidden === false; // switching TO password?
+    magicForm.hidden = pw;
+    signinForm.hidden = !pw;
+    pwExtras.hidden = !pw;
+    signinStatus.hidden = true;
+    toggle.textContent = pw ? "Email me a sign-in link instead" : "Sign in with password instead";
+  });
+
   signinForm.addEventListener("submit", function (e) {
     e.preventDefault();
     var mail = document.getElementById("signin-email").value.trim();
@@ -263,7 +333,7 @@
     e.preventDefault(); setToken(null); showSignin("Signed out.");
   });
 
-  if (token()) { load(); } else { showSignin(); }
+  if (token()) { load(); } else { showSignin(magicNote); }
 })();
 </script>
 </body>

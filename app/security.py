@@ -69,6 +69,48 @@ def create_reset_token(user_id: int, hashed_password: str) -> str:
     return jwt.encode(payload, settings.secret_key, algorithm=settings.algorithm)
 
 
+# --- magic login links ---
+#
+# Same stateless-JWT shape as reset tokens, but single use comes from a
+# rotating per-user nonce instead of the password hash (a magic login changes
+# nothing about the account, so it needs its own thing to rotate).
+
+_MAGIC_PURPOSE = "magic-login"
+
+
+def create_magic_token(user_id: int, nonce: str) -> str:
+    expire = datetime.now(timezone.utc) + timedelta(
+        minutes=settings.magic_link_expire_minutes
+    )
+    payload = {
+        "sub": str(user_id),
+        "exp": expire,
+        "purpose": _MAGIC_PURPOSE,
+        "nonce": nonce,
+    }
+    return jwt.encode(payload, settings.secret_key, algorithm=settings.algorithm)
+
+
+def verify_magic_token(token: str, nonce_lookup) -> str | None:
+    """Return the user id, or None. `nonce_lookup` maps a user id (str) to
+    that user's CURRENT magic nonce (None when the user doesn't exist or no
+    link is outstanding)."""
+    try:
+        payload = jwt.decode(token, settings.secret_key, algorithms=[settings.algorithm])
+    except JWTError:
+        return None
+    if payload.get("purpose") != _MAGIC_PURPOSE:
+        return None
+    user_id = payload.get("sub")
+    token_nonce = payload.get("nonce")
+    if not user_id or not token_nonce:
+        return None
+    current = nonce_lookup(user_id)
+    if current is None or token_nonce != current:
+        return None
+    return user_id
+
+
 def verify_reset_token(token: str, hashed_password_lookup) -> str | None:
     """Return the user id the token belongs to, or None.
 

@@ -30,6 +30,21 @@ class Settings(BaseSettings):
     # Where password-reset links point (the marketing site, which serves
     # reset.html). No trailing slash.
     site_base_url: str = "https://www.myroomwatch.com"
+    # Where the API itself is reachable (magic links in emails point here).
+    api_base_url: str = "https://api.myroomwatch.com"
+
+    # Passwordless sign-in (magic links)
+    magic_link_expire_minutes: int = 15
+    # Rate limits for POST /auth/magic-link: N requests per window.
+    magic_link_email_limit: int = 3
+    magic_link_ip_limit: int = 10
+    magic_link_window_seconds: int = 900
+
+    # Postmark outbound (magic-link emails). Without a token the mailer
+    # dry-runs to the log, same contract as the Klaviyo client.
+    postmark_server_token: str | None = None
+    postmark_from_email: str = "hello@myroomwatch.com"
+    postmark_message_stream: str = "outbound"
 
     # Price source (§9)
     price_source: str = "mock"  # mock | google_hotels | liteapi | booking | hotellook(defunct)

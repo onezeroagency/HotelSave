@@ -33,7 +33,19 @@ class User(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     email: Mapped[str] = mapped_column(String(320), unique=True, index=True, nullable=False)
-    hashed_password: Mapped[str] = mapped_column(String(255), nullable=False)
+    # NULL for passwordless (magic-link) accounts. Password login is kept for
+    # accounts that have one; both paths issue the same JWT.
+    hashed_password: Mapped[str | None] = mapped_column(String(255), nullable=True)
+
+    # GDPR consent record: the flag AND when it was given. Only ever set from
+    # an explicit, unchecked-by-default checkbox; never inferred.
+    marketing_opt_in: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    marketing_opt_in_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
+    # Rotating nonce that makes magic-link tokens single-use: a token is only
+    # valid while it carries the CURRENT nonce, and consuming or reissuing a
+    # link rotates it.
+    magic_nonce: Mapped[str | None] = mapped_column(String(64))
 
     stripe_customer_id: Mapped[str | None] = mapped_column(String(255), index=True)
     plan_status: Mapped[str] = mapped_column(
