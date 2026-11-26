@@ -289,3 +289,6 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
   .js .reveal{opacity:1;transform:none}
   .rebooked{transition:none}
 }
+
+/* Why-prices-drop lead-in under the hero subheadline */
+.why-line{margin-top:16px;max-width:480px;padding-left:14px;border-left:2px solid var(--accent);font:400 14px/1.6 var(--text);color:rgba(255,255,255,.6)}
