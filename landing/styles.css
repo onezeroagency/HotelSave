@@ -280,7 +280,8 @@ main{position:relative;z-index:0}
 
 /* Pricing */
 .plans{display:grid;grid-template-columns:1fr;gap:14px;margin:28px 0 0}
-.plan{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:24px;box-shadow:var(--shadow-sm);transition:border-color .2s ease,box-shadow .2s ease,transform .2s ease}
+.plan{display:flex;flex-direction:column;background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:24px;box-shadow:var(--shadow-sm);transition:border-color .2s ease,box-shadow .2s ease,transform .2s ease}
+.plan ul{flex:1}
 .plan:hover{border-color:var(--line-strong);box-shadow:var(--shadow-md)}
 .plan h3{font-size:14.5px;font-weight:700}
 .plan .amount{font:800 36px/1 Manrope,sans-serif;letter-spacing:-.035em;margin-top:10px}
@@ -297,8 +298,17 @@ main{position:relative;z-index:0}
 .pricing-fine{font:400 13px/1.6 "Public Sans",sans-serif;color:var(--muted);margin:18px 0 0}
 .pricing-cta{margin:22px 0 0}
 
-/* FAQ */
-.faq{margin:24px 0 0;max-width:720px}
+/* FAQ — full-container two-column layout on desktop: heading + contact on
+   the left, the accordion on the right; stacks cleanly below 1024px */
+.faq-grid{display:grid;grid-template-columns:1fr;gap:0}
+.faq-sub{font:400 15px/1.65 "Public Sans",sans-serif;color:var(--muted);margin:12px 0 0;max-width:420px}
+.faq{margin:24px 0 0}
+.faq details:first-of-type{margin-top:0}
+@media (min-width:1024px){
+  .faq-grid{grid-template-columns:34fr 66fr;gap:48px;align-items:start}
+  .faq-intro{position:sticky;top:96px}
+  .faq{margin-top:0}
+}
 .faq details{background:var(--surface);border:1px solid var(--line);border-radius:14px;margin-top:10px;transition:border-color .2s ease,box-shadow .2s ease}
 .section.alt .faq details{background:var(--bg)}
 .faq details:hover{border-color:var(--line-strong)}
@@ -549,7 +559,7 @@ main{position:relative;z-index:0}
 .xt-btn.on{background:var(--surface);color:var(--ink);box-shadow:0 1px 3px rgba(13,33,55,.16)}
 .xt-btn:focus-visible{outline:2px solid var(--accent-ink);outline-offset:1px}
 
-.sched{margin:36px auto 0;max-width:780px;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:22px 24px 18px;box-shadow:var(--shadow-sm)}
+.sched{margin:36px 0 0;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:22px 24px 18px;box-shadow:var(--shadow-sm)}
 .sched-top{display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap}
 .sched-top h3{font-size:18px}
 .sched-pick{display:flex;align-items:center;gap:10px;font-size:13.5px;font-weight:600;color:var(--muted)}
@@ -596,18 +606,32 @@ main{position:relative;z-index:0}
   --info:#2C5375;--info-soft:#EDF4F9;--info-line:#CFE0EC;
 }
 
-/* --- Layout: the whole block under the schedule card shares its 780px
-   column, so the section reads as one centred composition --- */
-#how .chips{max-width:780px;margin-left:auto;margin-right:auto;justify-content:center}
-#how .fineprint,#how .callout,#how .tip{max-width:780px;margin-left:auto;margin-right:auto}
-#how .tip{text-align:center}
+/* --- Layout: every block in #how shares the full .wrap container edges,
+   same as the step cards and the schedule card above them --- */
+#how .chips,#how .fineprint,#how .tip{max-width:none;margin-left:0;margin-right:0}
 
-/* The amber callout gets the inline-banner (warning) treatment */
-#how .callout{display:flex;gap:12px;align-items:flex-start;border-left:3px solid var(--amber);border-radius:12px}
-#how .callout::before{content:"!";flex:none;width:24px;height:24px;border-radius:50%;background:var(--amber);color:#fff;font:800 14px/24px Manrope,sans-serif;text-align:center;margin-top:1px}
+/* Safe Rebooking Order — the one rule, as a quiet editorial strip in the
+   page's bank-statement voice (no alert-box styling; .banner.warning stays
+   reserved for the dashboard's real warnings) */
+.order-strip{margin:20px 0 0;background:var(--surface);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow-sm);padding:20px 22px}
+.order-eyebrow{font:700 11px/1 "Public Sans",sans-serif;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin:0}
+.order-steps{list-style:none;display:grid;grid-template-columns:1fr;margin:8px 0 0;padding:0}
+.order-steps li{display:flex;align-items:center;gap:13px;padding:13px 0;border-top:1px solid var(--line)}
+.order-steps li:first-child{border-top:0}
+.order-n{flex:none;width:30px;height:30px;border-radius:9px;background:linear-gradient(160deg,var(--ink-2),var(--ink));color:#fff;display:grid;place-items:center;font:800 12px/1 Manrope,sans-serif;letter-spacing:.03em;box-shadow:0 4px 10px -4px rgba(13,33,55,.5)}
+.order-steps b{font:700 15px/1.35 Manrope,sans-serif;letter-spacing:-.01em;color:var(--ink)}
+.order-note{margin:12px 0 0;padding-top:12px;border-top:1px solid var(--line);font:400 13px/1.6 "Public Sans",sans-serif;color:var(--muted)}
+.order-note strong{color:var(--ink)}
+@media (min-width:720px){
+  .order-strip{padding:22px 26px}
+  .order-steps{grid-template-columns:repeat(3,1fr);margin-top:18px;gap:0 18px}
+  .order-steps li{border-top:0;border-left:1px solid var(--line);padding:4px 0 4px 18px}
+  .order-steps li:first-child{border-left:0;padding-left:0}
+  .order-note{margin-top:18px;padding-top:14px}
+}
 @supports (animation-timeline: view()){
   @media (prefers-reduced-motion:no-preference){
-    #how .callout{animation:rise linear both;animation-timeline:view();animation-range:entry 0% entry 45%}
+    .order-strip{animation:rise linear both;animation-timeline:view();animation-range:entry 0% entry 45%}
   }
 }
 
