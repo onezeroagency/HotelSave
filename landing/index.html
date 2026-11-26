@@ -98,22 +98,28 @@
 <section class="sec" id="how" aria-labelledby="how-h">
   <div class="wrap">
     <h2 id="how-h" class="reveal">Four steps. One tap from you.</h2>
-    <ol class="steps">
-      <li class="step reveal">
+    <p class="caption reveal">Forward the confirmation. We watch the same refundable room. You confirm the cheaper booking, then cancel the original.</p>
+    <div class="steps-rail reveal" aria-hidden="true"><i id="rail-fill"></i></div>
+    <ol class="steps" id="steps">
+      <li class="step reveal" data-step="0" tabindex="0">
         <div class="step-viz viz-mail" aria-hidden="true"><span class="chip"><span class="to">To: </span>save@myroomwatch.com</span><span class="env"></span></div>
         <span class="step-n">1</span><h3>Forward your booking</h3>
+        <p class="step-p">Send the confirmation to save@myroomwatch.com. We read the hotel, room, and dates.</p>
       </li>
-      <li class="step reveal">
-        <div class="step-viz viz-bars" aria-hidden="true"><span style="--h:30%"></span><span style="--h:30%"></span><span style="--h:55%"></span><span style="--h:55%"></span><span style="--h:100%" class="hot"></span></div>
+      <li class="step reveal" data-step="1" tabindex="0">
+        <div class="step-viz viz-bars" aria-hidden="true"><span style="--h:92%;--h2:84%"></span><span style="--h:84%;--h2:70%"></span><span style="--h:76%;--h2:58%"></span><span style="--h:64%;--h2:46%"></span><span style="--h:52%;--h2:32%" class="hot"></span></div>
         <span class="step-n">2</span><h3>We watch the price</h3>
+        <p class="step-p">We keep checking that exact refundable room until your free-cancellation deadline.</p>
       </li>
-      <li class="step reveal">
-        <div class="step-viz viz-tap" aria-hidden="true"><span class="tap-btn">Rebook for less</span><span class="finger"></span></div>
+      <li class="step reveal" data-step="2" tabindex="0">
+        <div class="step-viz viz-tap" aria-hidden="true"><span class="tap-btn">Rebook for less</span><span class="finger"></span><span class="viz-check"><svg viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg></span></div>
         <span class="step-n">3</span><h3>Tap to rebook cheaper</h3>
+        <p class="step-p">If a lower all-in rate appears, you confirm with one tap. The new stay is booked first.</p>
       </li>
-      <li class="step reveal">
-        <div class="step-viz viz-cancel" aria-hidden="true"><span class="old">Original booking</span><span class="x">Cancel</span></div>
+      <li class="step reveal" data-step="3" tabindex="0">
+        <div class="step-viz viz-cancel" aria-hidden="true"><span class="new-ok"><svg viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg>New booking confirmed</span><span class="old">Original booking<i class="strike"></i></span><span class="x">Cancel</span></div>
         <span class="step-n">4</span><h3>Cancel the old one</h3>
+        <p class="step-p">Only after the new booking is confirmed do you cancel the original on the site you booked it.</p>
       </li>
     </ol>
     <p class="note reveal">New booking confirmed first. Then you cancel the original.</p>
@@ -155,43 +161,30 @@
 
 <!-- ============ BEFORE / AFTER SWAP ============ -->
 <section class="band" aria-labelledby="swap-h">
+  <div class="band-wash" aria-hidden="true"></div>
   <div class="wrap band-in">
     <div class="band-copy reveal">
       <h2 id="swap-h">Same room. <span class="h-accent">Smaller bill.</span></h2>
-      <p class="caption">Drag to swap. Example booking.</p>
+      <p class="caption">One booking, before and after. Example booking.</p>
     </div>
-    <div class="swap reveal" id="swap" style="--pos:50%">
-      <div class="bk bk-before">
-        <p class="bk-tag">Before</p>
-        <p class="bk-h">Superior Double · 3 nights</p>
-        <p class="bk-p num">€486</p>
-        <p class="bk-s">Refundable · booked 3 weeks ago</p>
+    <article class="confirm-card reveal" id="confirm-card" aria-label="Example booking before and after rebooking">
+      <div class="cc-toggle" role="group" aria-label="Show the booking before or after rebooking" id="cc-toggle">
+        <button type="button" class="cc-btn on" data-v="0" aria-pressed="true">Original</button>
+        <button type="button" class="cc-btn" data-v="1" aria-pressed="false">Rebooked</button>
       </div>
-      <div class="bk bk-after" aria-hidden="true">
-        <p class="bk-tag">After</p>
-        <p class="bk-h">Superior Double · 3 nights</p>
-        <p class="bk-p num">€429</p>
-        <p class="bk-s">Refundable · same hotel, same dates</p>
+      <p class="cc-hotel">Hotel Artemide, Rome</p>
+      <ul class="cc-locked">
+        <li>Superior Double · 3 nights</li>
+        <li>Refundable</li>
+        <li>Same hotel &amp; dates</li>
+      </ul>
+      <div class="cc-total">
+        <span class="cc-k" id="cc-k">Booked 3 weeks ago</span>
+        <span class="cc-v num" id="cc-total">€486</span>
       </div>
-      <div class="swap-handle" aria-hidden="true"><span>‹ ›</span></div>
-      <label class="sr-only" for="swap-range">Compare the booking before and after rebooking</label>
-      <input type="range" id="swap-range" min="0" max="100" value="50">
-    </div>
-  </div>
-</section>
-
-<!-- ============ PHOTO MOMENT ============ -->
-<section class="moment" aria-label="A moment from a trip">
-  <div class="wrap moment-in">
-    <figure class="photo photo-moment reveal">
-      <picture>
-        <source media="(max-width:719px)" type="image/webp" srcset="img/moment-coffee-phone-1080x1080.webp">
-        <source media="(max-width:719px)" srcset="img/moment-coffee-phone-1080x1080.jpg">
-        <source type="image/webp" srcset="img/moment-coffee-phone-1920x1080.webp">
-        <img src="img/moment-coffee-phone-1920x1080.jpg" width="1920" height="1080" alt="Hands holding a phone next to a cup of coffee on a hotel balcony table" loading="lazy" decoding="async">
-      </picture>
-      <figcaption class="moment-cap">Found while you were busy.</figcaption>
-    </figure>
+      <p class="cc-keep" id="cc-keep" hidden><span class="pulse" aria-hidden="true"></span>You keep <b class="num">€57</b></p>
+      <p class="example-tag">Example</p>
+    </article>
   </div>
 </section>
 
@@ -199,17 +192,24 @@
 <section class="sec sec-alt" id="calc" aria-labelledby="calc-h">
   <div class="wrap calc-in">
     <div class="reveal">
-      <h2 id="calc-h">What could a drop be worth?</h2>
+      <h2 id="calc-h">See what a price drop could save you</h2>
       <p class="caption">Illustrative maths, not a promise.</p>
     </div>
     <form class="calc reveal" onsubmit="return false" aria-describedby="calc-note">
+      <div class="calc-presets" id="calc-presets" role="group" aria-label="Quick examples">
+        <button type="button" class="cp-btn" data-p="180" data-n="2">Weekend <b class="num">€360</b></button>
+        <button type="button" class="cp-btn" data-p="130" data-n="5">City break <b class="num">€650</b></button>
+        <button type="button" class="cp-btn" data-p="200" data-n="7">Week trip <b class="num">€1,400</b></button>
+      </div>
       <div class="calc-row">
         <label for="c-price">Price per night</label><output id="o-price" class="num">€150</output>
-        <input type="range" id="c-price" min="50" max="500" step="10" value="150">
+        <div class="range-wrap"><span class="range-tip num" id="tip-price" aria-hidden="true">€150</span>
+        <input type="range" id="c-price" min="50" max="500" step="10" value="150"></div>
       </div>
       <div class="calc-row">
         <label for="c-nights">Nights</label><output id="o-nights" class="num">3</output>
-        <input type="range" id="c-nights" min="1" max="14" step="1" value="3">
+        <div class="range-wrap"><span class="range-tip num" id="tip-nights" aria-hidden="true">3 nights</span>
+        <input type="range" id="c-nights" min="1" max="14" step="1" value="3"></div>
       </div>
       <div class="calc-out">
         <p class="k">If the same room drops 10%</p>
@@ -272,12 +272,18 @@
     <form class="signup" id="signup-form" novalidate>
       <label class="sr-only" for="signup-email">Email address</label>
       <input type="email" name="email" id="signup-email" required autocomplete="email" placeholder="you@example.com">
-      <label class="sr-only" for="signup-password">Password (8+ characters)</label>
-      <input type="password" name="password" id="signup-password" required autocomplete="new-password" minlength="8" placeholder="Password (8+ characters)">
       <button class="btn btn-ink btn-lg" type="submit" id="signup-submit">Start watching, free</button>
+      <p class="signup-micro">No password needed — we email you a sign-in link.</p>
       <p class="form-status" id="signup-status" role="status" aria-live="polite" hidden></p>
       <p class="signup-next">Have an account? <a href="/dashboard.html">Sign in</a></p>
     </form>
+    <div class="signup signup-done" id="signup-done" hidden role="status" aria-live="polite">
+      <div class="hx-check" id="signup-check" aria-hidden="true"><svg width="44" height="44" viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="24" cy="24" r="20"/><path d="m14 24 7 7 13-14"/></svg></div>
+      <p class="done-t">You're in.</p>
+      <p class="done-b">We emailed you a sign-in link. It works once and expires in 15 minutes.</p>
+      <p class="done-b">Forward any refundable hotel confirmation to</p>
+      <p class="done-addr"><code id="fwd-addr">save@myroomwatch.com</code><button class="copy-btn" type="button" id="copy-addr">Copy</button></p>
+    </div>
   </div>
 </section>
 </main>
@@ -295,14 +301,14 @@
 <script src="app.js" defer></script>
 <script>
 (function () {
-  // Signup posts to the MyRoomWatch API. On success we store the token and go
-  // straight to the dashboard, which shows the forwarding address.
+  // Passwordless signup: one email field. The API creates the account if it
+  // doesn't exist and emails a single-use sign-in link either way.
   var API = "https://api.myroomwatch.com";
   var form = document.getElementById("signup-form");
   var email = document.getElementById("signup-email");
-  var password = document.getElementById("signup-password");
   var button = document.getElementById("signup-submit");
   var status = document.getElementById("signup-status");
+  var done = document.getElementById("signup-done");
   if (!form) return;
 
   function show(msg, ok) {
@@ -310,9 +316,7 @@
     status.hidden = false;
     status.classList.toggle("ok", !!ok);
   }
-
   function firstError(payload, fallback) {
-    // FastAPI returns {detail: "..."} or {detail: [{msg, loc}, ...]}.
     var d = payload && payload.detail;
     if (typeof d === "string") return d;
     if (Array.isArray(d) && d.length && d[0].msg) return d[0].msg;
@@ -322,45 +326,36 @@
   form.addEventListener("submit", function (e) {
     e.preventDefault();
     var mail = (email.value || "").trim();
-    var pass = password.value || "";
     if (!mail || email.validity.typeMismatch) { show("Please enter a valid email address.", false); email.focus(); return; }
-    if (pass.length < 8) { show("Password must be at least 8 characters.", false); password.focus(); return; }
-
     button.disabled = true;
-    button.textContent = "Creating…";
-    fetch(API + "/auth/register", {
+    button.textContent = "Sending…";
+    fetch(API + "/auth/magic-link", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email: mail, password: pass })
+      body: JSON.stringify({ email: mail })
     }).then(function (resp) {
-      return resp.json().then(function (body) { return { ok: resp.ok, status: resp.status, body: body }; });
+      return resp.json().then(function (body) { return { ok: resp.ok, body: body }; });
     }).then(function (r) {
-      if (!r.ok) {
-        if (r.status === 400 || r.status === 409) {
-          throw new Error("That email is already registered — sign in instead.");
-        }
-        throw new Error(firstError(r.body, "Could not create your account. Please try again."));
-      }
-      // Registered — log in to get a token, then hand off to the dashboard.
-      var creds = new URLSearchParams({ username: mail, password: pass });
-      return fetch(API + "/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/x-www-form-urlencoded" },
-        body: creds.toString()
-      }).then(function (lr) { return lr.json(); }).then(function (tok) {
-        if (tok && tok.access_token) {
-          try { localStorage.setItem("mrw_token", tok.access_token); } catch (err) { /* private mode */ }
-          window.location.href = "/dashboard.html";
-        } else {
-          show("Account created — please sign in.", true);
-        }
-      });
+      if (!r.ok) throw new Error(firstError(r.body, "Something went wrong. Please try again."));
+      form.hidden = true;
+      done.hidden = false;
+      if (window.mrwPlayCheck) window.mrwPlayCheck(document.getElementById("signup-check"));
+      if (window.mrwToast) window.mrwToast("Sign-in link sent", "Check your inbox — the link works once and expires in 15 minutes.");
     }).catch(function (err) {
       show(err.message || "Something went wrong. Please try again.", false);
     }).finally(function () {
       button.disabled = false;
       button.textContent = "Start watching, free";
     });
+  });
+
+  var copyBtn = document.getElementById("copy-addr");
+  if (copyBtn) copyBtn.addEventListener("click", function () {
+    var addr = document.getElementById("fwd-addr").textContent;
+    function flash(t) { copyBtn.textContent = t; setTimeout(function () { copyBtn.textContent = "Copy"; }, 2000); }
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(addr).then(function () { flash("Copied ✓"); }, function () { flash(addr); });
+    } else { flash(addr); }
   });
 })();
 </script>
