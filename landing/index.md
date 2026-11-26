@@ -28,6 +28,8 @@ Free while in beta — every booking you forward, deadline heads-up, lower-rate 
 
 ## FAQ
 
+**Why do hotel prices drop after I book?** Hotels adjust rates constantly using dynamic pricing software. When occupancy is slower than expected, a group block cancels, or a nearby hotel cuts its rate, the exact same room can drop significantly before your free-cancellation deadline. Most travellers never check again after booking — we keep watching your reservation and tell you before your deadline if we've seen a cheaper rate.
+
 **Which bookings can I forward?** Any hotel booking with free cancellation, from any booking site or the hotel directly, anywhere in the world. Coverage is best where the hotel appears on Google Hotels. Non-refundable bookings can't be rebooked, so we'll tell you if we get one.
 
 **Do you change or cancel my booking?** No. We only read the confirmation you forward. Any rebooking or cancelling is yours to do, on the booking site.

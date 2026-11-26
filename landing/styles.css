@@ -759,3 +759,7 @@ main{position:relative;z-index:0}
 @media (pointer:coarse){.dp-cell{min-height:44px}}
 .dp-row{display:contents}
 .banner>span{flex:1;min-width:0;display:block}
+
+/* Why-prices-drop lead-in under the hero subheadline: the market mechanism
+   in one quiet line, set apart by a thin accent rule */
+.why-line{font:400 14px/1.6 "Public Sans",sans-serif;color:var(--muted);margin:12px 0 0;max-width:540px;padding-left:13px;border-left:2px solid var(--accent)}
