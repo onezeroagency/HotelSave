@@ -763,3 +763,29 @@ main{position:relative;z-index:0}
 /* Why-prices-drop lead-in under the hero subheadline: the market mechanism
    in one quiet line, set apart by a thin accent rule */
 .why-line{font:400 14px/1.6 "Public Sans",sans-serif;color:var(--muted);margin:12px 0 0;max-width:540px;padding-left:13px;border-left:2px solid var(--accent)}
+
+/* ===== Founding pricing (2-card buy box + illustrative value strip) ===== */
+.plans-2{max-width:880px}
+@media (min-width:720px){.plans-2{grid-template-columns:1fr 1fr}}
+.plan-sub{margin-top:8px;font:600 13.5px/1.5 "Public Sans",sans-serif;color:var(--muted)}
+.plan.featured .plan-sub{color:rgba(255,255,255,.75)}
+.plan-cta{margin-top:18px}
+.plan-fine{margin:10px 0 0;font:400 12.5px/1.5 "Public Sans",sans-serif;color:var(--muted);text-align:center}
+.plan.featured .plan-fine{color:rgba(255,255,255,.65)}
+.value-strip{margin:18px 0 0;max-width:880px;background:var(--bg);border:1px solid var(--line);border-left:3px solid var(--accent);border-radius:12px;padding:14px 16px;font:400 13.5px/1.6 "Public Sans",sans-serif;color:var(--muted)}
+.section.alt .value-strip{background:var(--bg)}
+
+/* /pricing page */
+.pricing-hero{padding-top:44px;padding-bottom:8px}
+.pricing-hero h1{font-size:clamp(2rem,5.5vw + .5rem,3rem);line-height:1.08;font-weight:800;letter-spacing:-.035em;text-wrap:balance}
+.pricing-hero .sub{font:400 16px/1.6 "Public Sans",sans-serif;color:var(--muted);margin:14px 0 0;max-width:560px}
+.reserve-card{max-width:560px;background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:22px;box-shadow:var(--shadow-md)}
+.reserve-card h3{font-size:19px;font-weight:800;letter-spacing:-.02em}
+.reserve-card .body{font:400 14px/1.6 "Public Sans",sans-serif;color:var(--muted);margin:8px 0 0}
+.reserve-form{display:flex;flex-direction:column;gap:10px;margin-top:14px}
+.reserve-form input{width:100%;min-height:48px;padding:0 15px;border-radius:12px;border:1px solid var(--line-strong);background:var(--bg);color:var(--ink);font:400 16px/1.2 "Public Sans",sans-serif}
+.reserve-form input:focus{outline:2px solid var(--accent-ink);outline-offset:1px;border-color:var(--accent-ink);background:var(--surface)}
+.success-note{max-width:880px;margin:0 0 22px}
+@media (min-width:720px){.reserve-form{flex-direction:row}.reserve-form input{flex:1}.reserve-form .btn{flex:none}}
+.reserve-card .form-status{font:600 14px/1.5 "Public Sans",sans-serif;color:var(--amber-ink);margin:12px 0 0}
+.reserve-card .form-status.ok{color:var(--accent-ink)}

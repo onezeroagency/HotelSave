@@ -1,6 +1,6 @@
 # MyRoomWatch — Terms of Service
 
-Last updated: 29 August 2026 · Canonical: https://www.myroomwatch.com/terms
+Last updated: 26 November 2026 · Canonical: https://www.myroomwatch.com/terms
 
 These terms cover your use of MyRoomWatch, operated by **SIA ONEZERO** (Latvia, EU). By creating an account you agree to them.
 
@@ -32,7 +32,7 @@ MyRoomWatch is currently in beta and free to use. Features may change or break, 
 
 ## 6. Pricing and cancellation (when billing begins)
 
-The intended model is a first booking monitored free, then a subscription of €29 per year (or €3.99 per month) covering every booking you forward. Members who join during the beta keep the €29/year price for as long as their subscription remains active. Subscriptions will be cancellable at any time, effective at the end of the paid period, with no notice required, and we will email you clearly before any billing starts. Exact terms will be published before any payment is taken.
+MyRoomWatch is free during the beta. When billing begins, the regular price will be €99 per year for Pro, covering every booking you forward, and a free tier will continue to monitor one refundable booking at a time. Members who join during the beta are Founding Members and keep €29 per year (or €3.99 per month) for as long as their subscription remains active. Subscriptions will be cancellable at any time, effective at the end of the paid period, with no notice required, and we will email you clearly before any billing starts. Exact terms will be published before any payment is taken.
 
 ## 7. Affiliate links
 
