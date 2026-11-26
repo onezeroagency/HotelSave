@@ -216,16 +216,22 @@
         <span class="fchip fchip-2" aria-hidden="true">About 48h before your deadline</span>
         <aside class="xcard" aria-label="Example alert email">
           <div class="xbar" aria-hidden="true"><span></span><span></span><span></span></div>
-          <p class="eyebrow">Example email</p>
+          <div class="xhead">
+            <p class="eyebrow">Example email</p>
+            <div class="xtoggle" id="xtoggle" hidden role="group" aria-label="Choose which example email to preview">
+              <button type="button" class="xt-btn on" data-x="drop" aria-pressed="true">Rates dropped</button>
+              <button type="button" class="xt-btn" data-x="calm" aria-pressed="false">Nothing moved</button>
+            </div>
+          </div>
           <p class="title">Hotel Artemide, Rome · 12–15 Sep · Superior Double, breakfast</p>
           <div class="rows">
             <p class="row"><span>Checks run so far</span><b class="num">31</b></p>
-            <p class="row"><span>What we saw</span><b>Lower rates for your dates</b></p>
+            <p class="row"><span>What we saw</span><b id="x-saw">Lower rates for your dates</b></p>
           </div>
           <p class="deadline-line num">Cancel free until 14 Sep</p>
-          <p class="note"><strong>Worth two minutes.</strong> Check today's price for the same stay. If it's better, book the new rate first, then cancel the old one. Never the other way round.</p>
+          <p class="note" id="x-note"><strong>Worth two minutes.</strong> Check today's price for the same stay. If it's better, book the new rate first, then cancel the old one. Never the other way round.</p>
         </aside>
-        <p class="xcaption">Illustration. Not a real customer, not a promised saving.</p>
+        <p class="xcaption">Illustration — we email you either way. Not a real customer, not a promised saving.</p>
       </div>
     </div>
   </section>
@@ -248,6 +254,26 @@
           <p>Before your deadline closes we email you what we saw. If we've seen lower rates for your dates, we say so and link you to check today's price. If nothing moved, we tell you that too, so you can relax and keep your booking.</p>
         </li>
       </ol>
+
+      <div class="sched" id="sched" hidden>
+        <div class="sched-top">
+          <h3>See the schedule for <span class="em">your</span> trip</h3>
+          <label class="sched-pick">Free cancellation ends
+            <input type="date" id="sched-date">
+          </label>
+        </div>
+        <div class="sched-bar" id="sched-bar" aria-hidden="true"></div>
+        <div class="sched-scale" aria-hidden="true"><span>Today</span><span id="sched-end"></span></div>
+        <ul class="sched-key" aria-hidden="true">
+          <li class="k1">Daily</li>
+          <li class="k2">Twice a day · last 14 days</li>
+          <li class="k3">Every 6 hours · final 3 days</li>
+          <li class="k4">Your email · about 48 h before</li>
+        </ul>
+        <p class="sched-sum" id="sched-sum" role="status" aria-live="polite"></p>
+        <p class="sched-cap">An illustration of our schedule — exact check times vary a little, and we email you either way.</p>
+      </div>
+
       <div class="chips" aria-label="What we check">
         <span>Same hotel</span><span>Same dates</span><span>Same guests and board</span><span>Before your deadline</span>
       </div>
@@ -369,6 +395,7 @@
   <!-- 6 · Final CTA -->
   <section class="wrap section">
     <div class="final">
+      <canvas class="final-fx" id="final-fx" aria-hidden="true"></canvas>
       <h2>Your free-cancellation window is already <span class="em-amber">counting down</span>.</h2>
       <p>Forward one refundable booking and see it work: the checks, the deadline heads-up and what we find. Free, no card.</p>
       <a class="btn btn-primary" href="#start">Start watching, free</a>
@@ -467,6 +494,282 @@
       }
     });
   }
+})();
+
+(function () {
+  // Example-email outcome toggle. Both states are labelled illustrations;
+  // the copy mirrors what the real 48h email says in each case.
+  var tog = document.getElementById("xtoggle");
+  if (tog) {
+    var saw = document.getElementById("x-saw");
+    var note = document.getElementById("x-note");
+    var COPY = {
+      drop: {
+        saw: "Lower rates for your dates",
+        note: "<strong>Worth two minutes.</strong> Check today’s price for the same stay. If it’s better, book the new rate first, then cancel the old one. Never the other way round."
+      },
+      calm: {
+        saw: "No lower rate so far",
+        note: "<strong>Relax.</strong> We haven’t seen the same stay cheaper, so your booking is fine as it is. We keep checking until your deadline."
+      }
+    };
+    tog.hidden = false;
+    tog.addEventListener("click", function (e) {
+      var btn = e.target.closest(".xt-btn");
+      if (!btn || btn.classList.contains("on")) return;
+      var mode = btn.getAttribute("data-x");
+      tog.querySelectorAll(".xt-btn").forEach(function (b) {
+        var on = b === btn;
+        b.classList.toggle("on", on);
+        b.setAttribute("aria-pressed", on ? "true" : "false");
+      });
+      saw.textContent = COPY[mode].saw;
+      note.innerHTML = COPY[mode].note;
+    });
+  }
+
+  // Watch-schedule widget: pick a deadline, see the real check cadence.
+  // Bands follow the scheduler's table: daily until 14 days out, twice a
+  // day until 3 days out, every 6 hours in the final 72h; email ~48h before.
+  var sched = document.getElementById("sched");
+  if (!sched) return;
+  var input = document.getElementById("sched-date");
+  var bar = document.getElementById("sched-bar");
+  var sum = document.getElementById("sched-sum");
+  var endLbl = document.getElementById("sched-end");
+
+  function pad(n) { return (n < 10 ? "0" : "") + n; }
+  function isoLocal(d) { return d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate()); }
+  function fmt(d) { return d.toLocaleDateString(undefined, { day: "numeric", month: "short" }); }
+  function plus(days) { var d = new Date(); d.setDate(d.getDate() + days); return d; }
+
+  input.min = isoLocal(plus(1));
+  input.max = isoLocal(plus(540));
+  input.value = isoLocal(plus(21));
+
+  function render() {
+    var p = (input.value || "").split("-");
+    if (p.length !== 3) return;
+    var dl = new Date(+p[0], p[1] - 1, +p[2], 12, 0, 0);
+    var hours = (dl - Date.now()) / 36e5;
+    if (!(hours > 0)) {
+      bar.innerHTML = ""; endLbl.textContent = "";
+      sum.textContent = "Pick a date after today — we watch bookings whose cancellation window is still open.";
+      return;
+    }
+    var h3 = Math.min(hours, 72);
+    var h2 = Math.max(0, Math.min(hours, 336) - 72);
+    var h1 = Math.max(0, hours - 336);
+    var checks = Math.ceil(h1 / 24) + Math.ceil(h2 / 12) + Math.ceil(h3 / 6);
+    var html = "";
+    if (h1) html += '<span class="sb k1" style="width:' + (h1 / hours * 100).toFixed(2) + '%"></span>';
+    if (h2) html += '<span class="sb k2" style="width:' + (h2 / hours * 100).toFixed(2) + '%"></span>';
+    html += '<span class="sb k3" style="width:' + (h3 / hours * 100).toFixed(2) + '%"></span>';
+    var mailPct = hours > 48 ? (hours - 48) / hours * 100 : 2;
+    html += '<span class="sb-mail' + (mailPct > 80 ? " edge" : "") + '" style="left:' + mailPct.toFixed(2) + '%"></span>';
+    bar.innerHTML = html;
+    // One tick per check: spacing derived from the band's real check count,
+    // so the visual density matches the number in the summary.
+    var meta = { k1: { h: h1, cad: 24, tick: "#AFBFCC" }, k2: { h: h2, cad: 12, tick: "#86CBAE" }, k3: { h: h3, cad: 6, tick: "#00A870" } };
+    bar.querySelectorAll(".sb").forEach(function (el) {
+      var m = meta[el.classList[1]];
+      var n = Math.max(1, Math.ceil(m.h / m.cad));
+      var step = Math.max(5, el.offsetWidth / n);
+      el.style.backgroundImage = "repeating-linear-gradient(90deg," + m.tick + " 0 2px,transparent 2px " + step.toFixed(1) + "px)";
+    });
+    endLbl.textContent = fmt(dl);
+    if (hours <= 72) {
+      sum.textContent = "You’re already in the final stretch — between now and " + fmt(dl) +
+        " we’d check around " + checks + " times, every 6 hours, " +
+        (hours > 48 ? "and email you about 48 hours before your deadline." : "and email you right after the first checks.");
+    } else {
+      var cadence = hours > 336
+        ? "daily at first, twice a day inside two weeks, then every 6 hours in the final 3 days"
+        : "twice a day, then every 6 hours in the final 3 days";
+      sum.textContent = "Between today and " + fmt(dl) + " we’d check around " + checks +
+        " times — " + cadence + " — and email you about 48 hours before it closes.";
+    }
+  }
+
+  input.addEventListener("change", render);
+  input.addEventListener("input", render);
+  var rsz;
+  window.addEventListener("resize", function () { clearTimeout(rsz); rsz = setTimeout(render, 150); });
+  sched.hidden = false;
+  render();
+})();
+</script>
+
+<script type="module">
+// Living backdrop for the final CTA band — adapted from a HorizonX
+// "Stripe Gradient" export (self-contained WebGL, no external requests).
+// Mounts only when the band nears the viewport; pauses offscreen, on hidden
+// tabs, and renders a single static frame under prefers-reduced-motion.
+(() => {
+  const target = document.getElementById('final-fx');
+  if (!target || !('IntersectionObserver' in window)) return;
+
+  const PALETTE = { light: '#16426B', dark: '#081627', silver: '#0E2E4C', graphite: '#0A1B30',
+    scale: 1.2, amplitude: 0.5, softness: 0.6, grain: 0.12, speed: 0.3, angle: -12, animate: true };
+
+  const defaults = { light: '#ffffff', dark: '#171717', silver: '#d9d9d9', graphite: '#2a2a2a',
+    scale: 1, amplitude: 0.7, softness: 0.45, grain: 0.18, speed: 0.65, angle: 0, animate: true };
+  const controls = [
+    { key: 'scale', min: 0.5, max: 2 }, { key: 'amplitude', min: 0, max: 1.5 },
+    { key: 'softness', min: 0, max: 1 }, { key: 'grain', min: 0, max: 1 },
+    { key: 'speed', min: 0, max: 2 }, { key: 'angle', min: -90, max: 90 }
+  ];
+  const colourKeys = ['light', 'dark', 'silver', 'graphite'];
+  function resolveState(input = {}) {
+    const state = { ...defaults };
+    for (const c of controls) {
+      const v = Number(input[c.key] ?? defaults[c.key]);
+      state[c.key] = Number.isFinite(v) ? Math.min(c.max, Math.max(c.min, v)) : defaults[c.key];
+    }
+    for (const key of colourKeys) {
+      state[key] = /^#[0-9a-f]{6}$/i.test(input[key] ?? '') ? input[key] : defaults[key];
+    }
+    state.animate = typeof input.animate === 'boolean' ? input.animate : defaults.animate;
+    return state;
+  }
+  const rgb = (hex) => [1, 3, 5].map((o) => parseInt(hex.slice(o, o + 2), 16) / 255);
+  const vertexSource = `
+attribute vec2 position;
+void main() { gl_Position = vec4(position, 0.0, 1.00001); }
+`;
+  const fragmentSource = `
+precision highp float;
+uniform vec2 resolution;
+uniform float time, scale, amplitude, softness, grain, angle;
+uniform vec3 light, dark, silver, graphite;
+float random(vec2 p) { return fract(sin(dot(p, vec2(127.101, 311.699))) * 43758.5453); }
+void main() {
+  vec2 p = gl_FragCoord.xy / resolution;
+  p.y = 1.00001 - p.y;
+  p -= 0.499999;
+  p.x *= resolution.x / resolution.y;
+  float a = radians(angle);
+  p = mat2(cos(a), -sin(a), sin(a), cos(a)) * p / scale;
+  p.x /= resolution.x / resolution.y;
+  p += 0.499999;
+  float t = time * 0.549999;
+  float x = p.x;
+  float y = p.y;
+  float center = 0.60 + 0.0900001 * sin(t);
+  float d = (x - center) / 0.190001;
+  float bend = amplitude * (0.340001 * exp(-d * d) + 0.200001 * smoothstep(0.650001, 0.99999, x)
+    + 0.0249999 * sin(x * 9.9999 + t));
+  float lip = 0.539999 + bend;
+  float width = 0.27 + 0.0599999 * sin(x * 4.0 + t * 0.600001);
+  float feather = 0.0349999 + softness * 0.189999;
+  float body = smoothstep(lip - width - feather, lip - width + feather, y);
+  body *= 1.0 - smoothstep(lip - 0.00200001, lip + 0.002 + softness * (0.008 + 0.0500001 * smoothstep(0.649999, 1.0, x)), y);
+  vec3 base = mix(dark, graphite, smoothstep(0.05, 0.99999, y));
+  vec3 sheet = mix(graphite, silver, 0.249999 + 0.750001 * smoothstep(lip - width - 0.0799999, lip + 0.0500001, y));
+  vec3 color = mix(base, sheet, body);
+  float channel = 0.160001 + 0.270001 * y + amplitude * 0.0649999 * sin(y * 5.99999 + t);
+  float leftLight = 0.99999 - smoothstep(channel - 0.0699999, channel + 0.24, x);
+  color = mix(color, light, leftLight);
+  float lobeTop = 0.440001 - 0.160001 * sin(t * 0.7) + 0.30 * smoothstep(0.099999, 0.28, x);
+  float lobeLip = lobeTop + 0.249999;
+  float lobe = (1.0 - smoothstep(0.0899999, 0.260001, x))
+    * smoothstep(lobeTop - 0.0250001, lobeTop + 0.015, y)
+    * (0.99999 - smoothstep(lobeLip - 0.0300001, lobeLip + 0.10, y));
+  color = mix(color, mix(silver, graphite, 0.449999), lobe);
+  color += (random(gl_FragCoord.xy) - 0.499999) * grain * 0.0900001;
+  gl_FragColor = vec4(clamp(color, 0.0, 1.0), 1.0);
+}
+`;
+
+  function mountStripeGradient(canvas, initial) {
+    let state = resolveState(initial);
+    let gl, program, buffer, shaders = [], uniforms = {};
+    let frame = 0, last = 0, time = 0, visible = true, lost = false;
+    const motion = window.matchMedia('(prefers-reduced-motion: reduce)');
+
+    function release() {
+      if (gl) {
+        shaders.forEach((s) => gl.deleteShader(s));
+        if (buffer) gl.deleteBuffer(buffer);
+        if (program) gl.deleteProgram(program);
+      }
+      shaders = []; program = null; buffer = null;
+    }
+    function initialize() {
+      gl = canvas.getContext('webgl', { alpha: false, antialias: false, powerPreference: 'low-power' });
+      if (!gl) throw new Error('no webgl');
+      const compile = (type, source) => {
+        const shader = gl.createShader(type);
+        shaders.push(shader);
+        gl.shaderSource(shader, source); gl.compileShader(shader);
+        if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) throw new Error('compile');
+        return shader;
+      };
+      program = gl.createProgram();
+      gl.attachShader(program, compile(gl.VERTEX_SHADER, vertexSource));
+      gl.attachShader(program, compile(gl.FRAGMENT_SHADER, fragmentSource));
+      gl.linkProgram(program);
+      if (!gl.getProgramParameter(program, gl.LINK_STATUS)) throw new Error('link');
+      gl.useProgram(program);
+      buffer = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+      gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1, 1,-1, -1,1, -1,1, 1,-1, 1,1]), gl.STATIC_DRAW);
+      const position = gl.getAttribLocation(program, 'position');
+      gl.enableVertexAttribArray(position); gl.vertexAttribPointer(position, 2, gl.FLOAT, false, 0, 0);
+      for (const key of ['resolution', 'time', 'scale', 'amplitude', 'softness', 'grain', 'angle', ...colourKeys]) {
+        uniforms[key] = gl.getUniformLocation(program, key);
+      }
+    }
+    function draw() {
+      if (lost || !program) return;
+      const box = canvas.getBoundingClientRect();
+      const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
+      const width = Math.max(1, Math.round(box.width * dpr));
+      const height = Math.max(1, Math.round(box.height * dpr));
+      if (canvas.width !== width || canvas.height !== height) { canvas.width = width; canvas.height = height; }
+      gl.viewport(0, 0, width, height); gl.useProgram(program);
+      gl.uniform2f(uniforms.resolution, width, height);
+      gl.uniform1f(uniforms.time, time);
+      for (const key of ['scale', 'amplitude', 'softness', 'grain', 'angle']) gl.uniform1f(uniforms[key], state[key]);
+      for (const key of colourKeys) gl.uniform3fv(uniforms[key], rgb(state[key]));
+      gl.drawArrays(gl.TRIANGLES, 0, 6);
+    }
+    function tick(now) {
+      frame = 0;
+      if (last) time += Math.min((now - last) / 1000, 0.05) * state.speed;
+      last = now; draw(); schedule();
+    }
+    function schedule() {
+      if (!frame && !lost && program && visible && !document.hidden && state.animate && state.speed > 0 && !motion.matches) {
+        frame = requestAnimationFrame(tick);
+      }
+    }
+    function refresh() {
+      cancelAnimationFrame(frame); frame = 0; last = 0; draw(); schedule();
+    }
+    function contextLost(event) {
+      event.preventDefault(); lost = true; cancelAnimationFrame(frame); frame = 0;
+    }
+    function contextRestored() {
+      lost = false; shaders = []; program = null; buffer = null;
+      try { initialize(); refresh(); } catch (e) { release(); }
+    }
+    try { initialize(); } catch (e) { release(); canvas.remove(); return; }
+    new ResizeObserver(refresh).observe(canvas);
+    new IntersectionObserver(([entry]) => { visible = entry.isIntersecting; refresh(); }).observe(canvas);
+    motion.addEventListener('change', refresh);
+    document.addEventListener('visibilitychange', refresh);
+    canvas.addEventListener('webglcontextlost', contextLost);
+    canvas.addEventListener('webglcontextrestored', contextRestored);
+    refresh();
+  }
+
+  const io = new IntersectionObserver((entries) => {
+    if (entries.some((e) => e.isIntersecting)) {
+      io.disconnect();
+      try { mountStripeGradient(target, PALETTE); } catch (e) { target.remove(); }
+    }
+  }, { rootMargin: '400px' });
+  io.observe(target);
 })();
 </script>
 
