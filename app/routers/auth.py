@@ -52,8 +52,14 @@ def register(payload: schemas.UserCreate, db: Session = Depends(get_db)) -> mode
         klaviyo.emit_event(
             klaviyo.EVENT_ACCOUNT_CREATED,
             user.email,
-            {"signup_source": "web", "forward_to": "save@myroomwatch.com"},
+            {
+                "signup_source": "web",
+                "forward_to": "save@myroomwatch.com",
+                "marketing_opt_in": user.marketing_opt_in,
+                "marketing_opt_in_at": None,
+            },
         )
+        klaviyo.register_signup(user.email, user.marketing_opt_in, user.marketing_opt_in_at)
     except Exception:  # pragma: no cover - defensive; emit_event handles HTTP errors itself
         logger.exception("Account Created event failed for %s — signup still succeeded", user.email)
     return user
@@ -99,11 +105,13 @@ def request_magic_link(
             else None,
         )
         db.add(user)
-    elif payload.marketing_opt_in and not user.marketing_opt_in:
+    newly_opted_in = False
+    if not created and payload.marketing_opt_in and not user.marketing_opt_in:
         # Consent can be granted here; it is only ever withdrawn explicitly
         # (an unticked box on a later sign-in is not a withdrawal).
         user.marketing_opt_in = True
         user.marketing_opt_in_at = datetime.now(timezone.utc)
+        newly_opted_in = True
 
     user.magic_nonce = secrets.token_urlsafe(24)
     db.commit()
@@ -117,15 +125,34 @@ def request_magic_link(
         # a silent dead end, so make it loud in the logs.
         logger.error("Magic link email NOT delivered for %s", user.email)
 
-    if created:
-        try:
+    try:
+        if created:
             klaviyo.emit_event(
                 klaviyo.EVENT_ACCOUNT_CREATED,
                 user.email,
-                {"signup_source": "web-magic-link", "forward_to": "save@myroomwatch.com"},
+                {
+                    "signup_source": "web-magic-link",
+                    "forward_to": "save@myroomwatch.com",
+                    "marketing_opt_in": user.marketing_opt_in,
+                    "marketing_opt_in_at": user.marketing_opt_in_at.isoformat()
+                    if user.marketing_opt_in_at
+                    else None,
+                },
             )
-        except Exception:  # pragma: no cover - emit_event handles HTTP errors itself
-            logger.exception("Account Created event failed for %s", user.email)
+            klaviyo.register_signup(user.email, user.marketing_opt_in, user.marketing_opt_in_at)
+        elif newly_opted_in:
+            # Consent arrived after the account existed: record it on the
+            # profile and subscribe, exactly as a fresh opt-in would have.
+            klaviyo.upsert_profile(
+                user.email,
+                {
+                    "marketing_opt_in": True,
+                    "marketing_opt_in_at": user.marketing_opt_in_at.isoformat(),
+                },
+            )
+            klaviyo.subscribe_email_marketing(user.email)
+    except Exception:  # pragma: no cover - the klaviyo client handles HTTP errors itself
+        logger.exception("Klaviyo signup sync failed for %s — signup still succeeded", user.email)
 
     return {"detail": "Check your email for a sign-in link."}
 

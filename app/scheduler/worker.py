@@ -105,6 +105,10 @@ def process_job(job: MonitoringJob, source: PriceSource, db: Session, now: datet
             job.user.email,
             {
                 "hotel": job.hotel_name_raw,
+                # Which stay (a user can watch several at once):
+                "city": job.city,
+                "check_in": job.check_in.isoformat(),
+                "check_out": job.check_out.isoformat(),
                 "best_savings_seen": float(job.original_price - job.lowest_seen_price)
                 if job.lowest_seen_price is not None
                 else 0.0,
@@ -114,6 +118,13 @@ def process_job(job: MonitoringJob, source: PriceSource, db: Session, now: datet
         if delivered:
             job.status = JobStatus.expired.value
             job.next_check_at = None
+            db.flush()  # the sync below must see this job as ended already
+            klaviyo.sync_watch_profile(
+                job.user.email,
+                db.scalars(
+                    select(MonitoringJob).where(MonitoringJob.user_id == job.user_id)
+                ).all(),
+            )
         else:
             # Keep the job alive so the wrap-up is retried; expiring it here
             # would clear next_check_at and strand the undelivered event.

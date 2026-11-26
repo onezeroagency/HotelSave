@@ -42,7 +42,12 @@ def test_register_emits_account_created(client, monkeypatch):
         (
             klaviyo.EVENT_ACCOUNT_CREATED,
             "new@x.com",
-            {"signup_source": "web", "forward_to": "save@myroomwatch.com"},
+            {
+                "signup_source": "web",
+                "forward_to": "save@myroomwatch.com",
+                "marketing_opt_in": False,
+                "marketing_opt_in_at": None,
+            },
         )
     ]
 
