@@ -12,7 +12,7 @@ How it works today (watch-only):
 - If you rebook, always book the new rate first, confirm it, then cancel the original. Never cancel first. Always confirm the live price and cancellation terms on the booking site.
 - MyRoomWatch does not send instant price-drop alerts, does not quote a guaranteed saving, and does not rebook for you.
 
-Pricing: free during beta; nothing is charged today. Regular price after beta: €99/year for Pro (every booking you forward), with a free tier watching 1 booking. Founding Members who join in beta keep €29/year (or €3.99/month) while their subscription stays active. You will be emailed before any charge.
+Pricing: free during beta; nothing is charged today. Regular price after beta: €149/year for Pro (every booking you forward), with a free tier watching 1 booking. Founding Members who join in beta keep €49/year (or €6.99/month) while their subscription stays active. You will be emailed before any charge.
 
 ## Pages
 
