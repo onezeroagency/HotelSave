@@ -5,6 +5,7 @@ the same way, wherever the update came from."""
 
 from datetime import datetime, timezone
 
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from ..enums import JobStatus
@@ -27,6 +28,10 @@ def activate(db: Session, job: MonitoringJob, email: str) -> None:
     db.refresh(job)
     klaviyo.emit_event(
         klaviyo.EVENT_BOOKING_MONITORED, email, klaviyo.booking_monitored_properties(job)
+    )
+    klaviyo.sync_watch_profile(
+        email,
+        db.scalars(select(MonitoringJob).where(MonitoringJob.user_id == job.user_id)).all(),
     )
 
 

@@ -16,7 +16,7 @@ from sqlalchemy.orm import Session
 
 from .. import models
 from ..enums import JobStatus
-from . import klaviyo, lifecycle
+from . import klaviyo
 from .email_inbound import InboundEmail
 from .parser import ParsedBooking, get_parser
 from .price_source import get_price_source
@@ -43,6 +43,11 @@ def process_inbound_email(db: Session, inbound: InboundEmail) -> IngestionResult
     parsed = get_parser().parse(inbound.body)
     if parsed is None:
         logger.info("Could not parse email from %s", inbound.from_email)
+        # Tell the user, not just the log — a silently dropped forward looks
+        # like the product doing nothing (flow: "Parse Failed / Unreadable").
+        klaviyo.emit_event(
+            klaviyo.EVENT_PARSE_FAILED, user.email, {"subject": inbound.subject}
+        )
         return IngestionResult(status="parse_failed")
 
     # Guard: only monitor refundable bookings (§6a, §7 rule 3).
@@ -86,6 +91,12 @@ def process_inbound_email(db: Session, inbound: InboundEmail) -> IngestionResult
     db.refresh(job)
     klaviyo.emit_event(
         klaviyo.EVENT_BOOKING_MONITORED, user.email, klaviyo.booking_monitored_properties(job)
+    )
+    klaviyo.sync_watch_profile(
+        user.email,
+        db.scalars(
+            select(models.MonitoringJob).where(models.MonitoringJob.user_id == user.id)
+        ).all(),
     )
     return IngestionResult(status="monitoring", job_id=job.id)
 
