@@ -198,7 +198,11 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
 .photo-accent img{object-position:60% 50%}
 .photo-keycard{display:none}
 .trust{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:1fr 1fr;gap:12px}
-.trust li{display:flex;flex-direction:column;justify-content:space-between;gap:14px;min-height:132px;padding:20px;border-radius:20px;background:var(--mist);border:1px solid var(--line);font:700 16px/1.25 var(--display);letter-spacing:-.01em}
+.trust li{display:flex;flex-direction:column;justify-content:space-between;gap:16px;min-height:132px;padding:24px;border-radius:20px;background:var(--mist);border:1px solid var(--line)}
+.trust li b{display:block;font:700 16px/1.25 var(--display);letter-spacing:-.01em;color:var(--ink)}
+.trust li p{margin:6px 0 0;font:400 14px/1.5 var(--text);color:#475569}
+/* With descriptions, two-up cards get too narrow on small phones */
+@media (max-width:479px){.trust{grid-template-columns:1fr}}
 .trust .ic{width:44px;height:44px;border-radius:13px;background:var(--night);display:grid;place-items:center}
 .trust svg{width:21px;height:21px;fill:none;stroke:var(--accent);stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 
@@ -244,12 +248,17 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
   .btn-text{display:inline-block}
   .viz-mail .to{display:inline}
   .step-viz{height:120px}
-  .trust{grid-template-columns:1fr 1fr}
+  /* Beside the photo the half-width column only fits one card across;
+     the 2x2 bento returns at 1024px where each card gets real width */
+  .trust{grid-template-columns:1fr}
   .photo-moment{aspect-ratio:16/9}
   .photo-moment::after{background:linear-gradient(to top right,rgba(5,12,20,.85) 0%,rgba(5,12,20,.4) 38%,rgba(5,12,20,0) 62%)}
   .moment-cap{left:44px;bottom:40px}
   .trust-grid{grid-template-columns:1fr 1fr;align-items:stretch}
   .trust-grid .trust{margin:0}
+  /* Beside the cards the photo fills the stretched cell and crops, instead
+     of letting aspect-ratio push its width past the column */
+  .trust-grid .photo-accent{aspect-ratio:auto;height:100%;min-height:320px}
   .sec,.band,.final{padding:110px 0}
   .moment{padding-bottom:110px}
   .ftr-in{grid-template-columns:auto 1fr;align-items:center}
@@ -259,6 +268,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
   .sticky-cta{display:none}
 }
 @media (min-width:1024px){
+  .trust{grid-template-columns:1fr 1fr}
   .wrap{padding-left:48px;padding-right:48px}
   .nav{display:flex}
   .hero{padding:72px 0 96px}
