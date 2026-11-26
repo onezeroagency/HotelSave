@@ -1,0 +1,52 @@
+# MyRoomWatch: use your free cancellation before it runs out
+
+> You paid extra for free cancellation. MyRoomWatch makes sure you use it: forward your refundable hotel confirmation, and we keep checking rates for your dates and email you about 48 hours before your free-cancellation deadline, telling you if we've seen lower rates for your dates. You decide what to do. Your booking stays exactly as you made it.
+
+Canonical: https://www.myroomwatch.com/ · Signup is email-only (a sign-in link is emailed to you; no password for new accounts, no card during beta). Machine-readable overview: https://www.myroomwatch.com/llms.txt
+
+## Three steps
+
+1. **Forward your confirmation.** Send your booking email to save@myroomwatch.com from the address you signed up with. We read the hotel, dates, room, board, guests, price and your free-cancellation deadline.
+2. **We keep checking.** We look at rates for your hotel and dates on a schedule tied to your deadline: daily at first, then more often in the last two weeks, and every 6 hours in the final 3 days.
+3. **You hear from us in time.** Before your deadline closes we email you what we saw. If we've seen lower rates for your dates, we say so and link you to check today's price. If nothing moved, we tell you that too.
+
+What we check: same hotel, same dates, same guests and board, before your deadline. Rates change between checks and differ between booking sites, so always confirm the price and cancellation terms on the site before you book. Coverage depends on the hotel appearing on Google Hotels.
+
+**Book the new rate first, confirm it, then cancel the original. Never cancel first.**
+
+## Your booking stays yours
+
+- We read the email you forward and send you email back. We can't change or cancel your booking, and we never book anything in your name.
+- No card during beta. When paid plans start, the subscription will be charged through a payment provider's checkout, and we'll email you well before then.
+- Every number on the site is a labelled example. If we can't stand behind a price, we say "worth a look", not "you save €94".
+- MyRoomWatch is run by SIA ONEZERO, registered in Latvia (EU), reg. no. 41503079902, Kolkasraga iela 3-15, Riga, LV-1002. Under the GDPR you can ask for a copy of your data, correct it or delete it — email hello@myroomwatch.com. We don't sell your data, and the site sets no tracking or advertising cookies.
+- No reviews yet, and no fake ones. MyRoomWatch is in beta and won't invent testimonials.
+
+## Pricing
+
+Free while in beta — every booking you forward, deadline heads-up, lower-rate emails, no card. Planned post-beta prices (not charged today): €29/year or €3.99/month. Founding members who join in beta keep €29/year while their subscription stays active. Final terms are published in the Terms before any payment is taken.
+
+## FAQ
+
+**Which bookings can I forward?** Any hotel booking with free cancellation, from any booking site or the hotel directly, anywhere in the world. Coverage is best where the hotel appears on Google Hotels. Non-refundable bookings can't be rebooked, so we'll tell you if we get one.
+
+**Do you change or cancel my booking?** No. We only read the confirmation you forward. Any rebooking or cancelling is yours to do, on the booking site.
+
+**How will you tell me about a lower rate?** By email: "We've seen lower rates for your dates", with a link to check today's price. We don't quote a saving we can't stand behind, because prices and cancellation terms differ between sites.
+
+**What if nothing changes?** You'll still get a heads-up about 48 hours before your free-cancellation window closes, so you never find out about a deadline too late.
+
+**Is rebooking allowed?** Usually, yes. A free-cancellation rate lets you cancel before the deadline, and making a new booking is a normal booking. Always check your booking's own cancellation terms first.
+
+**What do you do with my data?** We use it only to watch your booking and email you. Our providers handle hosting, email and reading your confirmation. The full list is in the Privacy policy. Delete your account any time by emailing hello@myroomwatch.com.
+
+**What happens after the beta?** We email you before billing starts. Founding members keep €29/year. You can stop at any time.
+
+## More
+
+- [Hotel price drop tracker](https://www.myroomwatch.com/hotel-price-drop-tracker.md)
+- [Booking.com price dropped after I booked](https://www.myroomwatch.com/booking-com-price-drop.md)
+- [Expedia price dropped after I booked](https://www.myroomwatch.com/expedia-price-drop.md)
+- [How to rebook a free-cancellation hotel](https://www.myroomwatch.com/free-cancellation-hotel-rebooking.md)
+- [Privacy policy](https://www.myroomwatch.com/privacy.md) · [Terms of service](https://www.myroomwatch.com/terms.md)
+- Full agent brief: https://www.myroomwatch.com/llms-full.txt
