@@ -61,15 +61,22 @@
             <label class="sr-only" for="signup-email">Email address</label>
             <input type="email" name="email" id="signup-email" required
                    autocomplete="email" placeholder="you@example.com">
-            <label class="sr-only" for="signup-password">Password (8+ characters)</label>
-            <input type="password" name="password" id="signup-password" required
-                   autocomplete="new-password" minlength="8" placeholder="Password (8+ characters)">
             <button class="btn btn-primary" type="submit" id="signup-submit">Start watching, free</button>
           </div>
+          <label class="optin"><input type="checkbox" id="signup-optin">
+            <span>Send me travel deals and destination tips (optional).</span></label>
           <p class="form-status" id="signup-status" role="status" aria-live="polite" hidden></p>
-          <p class="micro">Next step: forward one confirmation to <code>save@myroomwatch.com</code> from this email address.</p>
+          <p class="micro">No password needed — we email you a sign-in link.</p>
           <p class="micro">Already have an account? <a href="/dashboard.html">Sign in</a></p>
         </form>
+
+        <div class="hero-form hero-done" id="signup-done" hidden role="status" aria-live="polite">
+          <p class="done-title">You're in.</p>
+          <p class="done-body">Forward any refundable hotel confirmation to</p>
+          <p class="done-addr"><code id="fwd-addr">save@myroomwatch.com</code>
+            <button class="btn btn-ghost btn-copy" type="button" id="copy-addr">Copy</button></p>
+          <p class="done-body">We also emailed you a link to open your dashboard.</p>
+        </div>
 
         <ul class="proof">
           <li>Checks get more frequent as your deadline nears</li>
@@ -253,14 +260,15 @@
 
 <script>
 (function () {
-  // Signup posts to the MyRoomWatch API. On success we store the token and go
-  // straight to the dashboard, which shows the forwarding address.
+  // Passwordless signup: one email field. The API creates the account if it
+  // doesn't exist and emails a single-use sign-in link either way.
   var API = "https://api.myroomwatch.com";
   var form = document.getElementById("signup-form");
   var email = document.getElementById("signup-email");
-  var password = document.getElementById("signup-password");
+  var optin = document.getElementById("signup-optin");
   var button = document.getElementById("signup-submit");
   var status = document.getElementById("signup-status");
+  var done = document.getElementById("signup-done");
   if (!form) return;
 
   function show(msg, ok) {
@@ -280,39 +288,20 @@
   form.addEventListener("submit", function (e) {
     e.preventDefault();
     var mail = (email.value || "").trim();
-    var pass = password.value || "";
     if (!mail || email.validity.typeMismatch) { show("Please enter a valid email address.", false); email.focus(); return; }
-    if (pass.length < 8) { show("Password must be at least 8 characters.", false); password.focus(); return; }
 
     button.disabled = true;
-    button.textContent = "Creating…";
-    fetch(API + "/auth/register", {
+    button.textContent = "Sending…";
+    fetch(API + "/auth/magic-link", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email: mail, password: pass })
+      body: JSON.stringify({ email: mail, marketing_opt_in: !!(optin && optin.checked) })
     }).then(function (resp) {
-      return resp.json().then(function (body) { return { ok: resp.ok, status: resp.status, body: body }; });
+      return resp.json().then(function (body) { return { ok: resp.ok, body: body }; });
     }).then(function (r) {
-      if (!r.ok) {
-        if (r.status === 400 || r.status === 409) {
-          throw new Error("That email is already registered — sign in instead.");
-        }
-        throw new Error(firstError(r.body, "Could not create your account. Please try again."));
-      }
-      // Registered — log in to get a token, then hand off to the dashboard.
-      var creds = new URLSearchParams({ username: mail, password: pass });
-      return fetch(API + "/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/x-www-form-urlencoded" },
-        body: creds.toString()
-      }).then(function (lr) { return lr.json(); }).then(function (tok) {
-        if (tok && tok.access_token) {
-          try { localStorage.setItem("mrw_token", tok.access_token); } catch (err) { /* private mode */ }
-          window.location.href = "/dashboard.html";
-        } else {
-          show("Account created — please sign in.", true);
-        }
-      });
+      if (!r.ok) throw new Error(firstError(r.body, "Something went wrong. Please try again."));
+      form.hidden = true;
+      done.hidden = false;
     }).catch(function (err) {
       show(err.message || "Something went wrong. Please try again.", false);
     }).finally(function () {
@@ -320,6 +309,29 @@
       button.textContent = "Start watching, free";
     });
   });
+
+  // One-click copy of the forwarding address in the confirmation state.
+  var copyBtn = document.getElementById("copy-addr");
+  if (copyBtn) {
+    copyBtn.addEventListener("click", function () {
+      var addr = document.getElementById("fwd-addr").textContent;
+      function flash(label) {
+        copyBtn.textContent = label;
+        setTimeout(function () { copyBtn.textContent = "Copy"; }, 2000);
+      }
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(addr).then(function () { flash("Copied ✓"); },
+          function () { flash("Select it above"); });
+      } else {
+        // Old browsers: select the address so one keystroke copies it.
+        var range = document.createRange();
+        range.selectNodeContents(document.getElementById("fwd-addr"));
+        var sel = window.getSelection();
+        sel.removeAllRanges(); sel.addRange(range);
+        flash("Press Ctrl+C");
+      }
+    });
+  }
 })();
 </script>
 

@@ -1,8 +1,11 @@
-"""Email/password auth: register, login (OAuth2 password flow), and /me."""
+"""Auth: passwordless magic links, email/password login, register, and /me."""
 
 import logging
+import secrets
+from datetime import datetime, timezone
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
+from fastapi.responses import RedirectResponse
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -13,12 +16,15 @@ from ..database import get_db
 from ..deps import get_current_user
 from ..security import (
     create_access_token,
+    create_magic_token,
     create_reset_token,
     hash_password,
+    verify_magic_token,
     verify_password,
     verify_reset_token,
 )
-from ..services import klaviyo
+from ..services import klaviyo, mailer
+from ..services.ratelimit import magic_link_limiter
 
 logger = logging.getLogger("hotelsave.auth")
 
@@ -53,14 +59,113 @@ def register(payload: schemas.UserCreate, db: Session = Depends(get_db)) -> mode
     return user
 
 
+def _client_ip(request: Request) -> str:
+    # Render terminates TLS in front of us; the client is the first hop in
+    # X-Forwarded-For. Fall back to the socket peer for local dev/tests.
+    fwd = request.headers.get("x-forwarded-for")
+    if fwd:
+        return fwd.split(",")[0].strip()
+    return request.client.host if request.client else "unknown"
+
+
+@router.post("/magic-link", status_code=status.HTTP_202_ACCEPTED)
+def request_magic_link(
+    payload: schemas.MagicLinkRequest, request: Request, db: Session = Depends(get_db)
+) -> dict:
+    """Passwordless signup AND sign-in: one endpoint, one email.
+
+    Unknown address -> the account is created on the spot (no password).
+    Known address -> a fresh link; issuing it invalidates any earlier one."""
+    window = settings.magic_link_window_seconds
+    if not magic_link_limiter.allow(
+        f"ip:{_client_ip(request)}", settings.magic_link_ip_limit, window
+    ) or not magic_link_limiter.allow(
+        f"email:{payload.email.lower()}", settings.magic_link_email_limit, window
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail="Too many sign-in links requested. Please try again in a few minutes.",
+        )
+
+    user = db.scalar(select(models.User).where(models.User.email == payload.email))
+    created = user is None
+    if created:
+        user = models.User(
+            email=payload.email,
+            hashed_password=None,
+            marketing_opt_in=payload.marketing_opt_in,
+            marketing_opt_in_at=datetime.now(timezone.utc)
+            if payload.marketing_opt_in
+            else None,
+        )
+        db.add(user)
+    elif payload.marketing_opt_in and not user.marketing_opt_in:
+        # Consent can be granted here; it is only ever withdrawn explicitly
+        # (an unticked box on a later sign-in is not a withdrawal).
+        user.marketing_opt_in = True
+        user.marketing_opt_in_at = datetime.now(timezone.utc)
+
+    user.magic_nonce = secrets.token_urlsafe(24)
+    db.commit()
+    db.refresh(user)
+
+    token = create_magic_token(user.id, user.magic_nonce)
+    link = f"{settings.api_base_url}/auth/magic-link/verify?token={token}"
+    subject, html, text = mailer.magic_link_email(link, settings.magic_link_expire_minutes)
+    if not mailer.send_email(user.email, subject, html, text):
+        # The user is told to check their inbox either way; a dropped send is
+        # a silent dead end, so make it loud in the logs.
+        logger.error("Magic link email NOT delivered for %s", user.email)
+
+    if created:
+        try:
+            klaviyo.emit_event(
+                klaviyo.EVENT_ACCOUNT_CREATED,
+                user.email,
+                {"signup_source": "web-magic-link", "forward_to": "save@myroomwatch.com"},
+            )
+        except Exception:  # pragma: no cover - emit_event handles HTTP errors itself
+            logger.exception("Account Created event failed for %s", user.email)
+
+    return {"detail": "Check your email for a sign-in link."}
+
+
+@router.get("/magic-link/verify")
+def verify_magic_link(token: str, db: Session = Depends(get_db)) -> RedirectResponse:
+    """Consume a magic link: rotate the nonce (single use), mint the normal
+    session JWT, and land the user in the dashboard. The JWT travels in the
+    URL fragment so it never reaches server logs or Referer headers."""
+
+    def lookup(user_id: str) -> str | None:
+        u = db.get(models.User, int(user_id))
+        return u.magic_nonce if u else None
+
+    user_id = verify_magic_token(token, lookup)
+    if user_id is None:
+        return RedirectResponse(
+            f"{settings.site_base_url}/dashboard.html?magic=invalid",
+            status_code=status.HTTP_303_SEE_OTHER,
+        )
+    user = db.get(models.User, int(user_id))
+    user.magic_nonce = None  # consumed — the same token can never verify again
+    db.commit()
+    session_token = create_access_token(user.id)
+    return RedirectResponse(
+        f"{settings.site_base_url}/dashboard.html#token={session_token}",
+        status_code=status.HTTP_303_SEE_OTHER,
+    )
+
+
 @router.post("/login", response_model=schemas.Token)
 def login(
     form: OAuth2PasswordRequestForm = Depends(),
     db: Session = Depends(get_db),
 ) -> schemas.Token:
-    # OAuth2 form uses `username`; we treat it as the email.
+    # OAuth2 form uses `username`; we treat it as the email. Passwordless
+    # accounts have no hash at all — they fail here cleanly and sign in by
+    # magic link instead.
     user = db.scalar(select(models.User).where(models.User.email == form.username))
-    if not user or not verify_password(form.password, user.hashed_password):
+    if not user or not user.hashed_password or not verify_password(form.password, user.hashed_password):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect email or password",

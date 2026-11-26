@@ -161,6 +161,17 @@ main{position:relative;z-index:0}
 .hero-form .btn[disabled]{opacity:.6;cursor:wait}
 .micro{font:400 13px/1.55 "Public Sans",sans-serif;color:var(--muted);margin:10px 0 0}
 .micro code{font-family:inherit;font-weight:600;color:var(--ink);background:none;padding:0}
+/* Optional marketing consent — off by default, never pre-ticked */
+.optin{display:flex;gap:9px;align-items:flex-start;margin:12px 2px 0;font:400 13px/1.5 "Public Sans",sans-serif;color:var(--muted);cursor:pointer}
+.optin input{width:17px;height:17px;margin:1px 0 0;accent-color:var(--accent-ink);flex:none;cursor:pointer}
+/* Post-signup confirmation card (replaces the form in place) */
+.hero-done{border-color:rgba(0,168,112,.4)}
+.done-title{font:800 20px/1.2 Manrope,sans-serif;letter-spacing:-.02em;margin:2px 0 0}
+.done-title::before{content:"";display:inline-block;width:18px;height:18px;margin-right:8px;vertical-align:-2px;background-color:var(--accent-ink);-webkit-mask:var(--i-check) center/contain no-repeat;mask:var(--i-check) center/contain no-repeat}
+.done-body{font:400 14px/1.6 "Public Sans",sans-serif;color:var(--muted);margin:8px 0 0}
+.done-addr{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:8px 0 0}
+.done-addr code{font-family:inherit;font-weight:700;font-size:15.5px;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:9px 12px}
+.btn-copy{min-height:38px;padding:0 14px;font-size:13.5px;border-radius:10px}
 .hero .form-status{font:600 14px/1.5 "Public Sans",sans-serif;color:var(--amber-ink);margin:10px 0 0}
 .hero .form-status.ok{color:var(--accent-ink)}
 .proof{display:flex;flex-direction:column;gap:8px;margin:26px 0 0;padding:18px 0 0;border-top:1px solid var(--line);list-style:none}

@@ -30,6 +30,12 @@ class Token(BaseModel):
     token_type: str = "bearer"
 
 
+class MagicLinkRequest(BaseModel):
+    email: EmailStr
+    # Explicit, default-off consent; the timestamp is stored server-side.
+    marketing_opt_in: bool = False
+
+
 class PasswordForgot(BaseModel):
     email: EmailStr
 
