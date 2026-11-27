@@ -49,7 +49,7 @@ class User(Base):
 
     stripe_customer_id: Mapped[str | None] = mapped_column(String(255), index=True)
     plan_status: Mapped[str] = mapped_column(
-        String(20), default=PlanStatus.trialing.value, nullable=False
+        String(20), default=PlanStatus.free.value, nullable=False
     )
 
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_utcnow)
@@ -60,8 +60,20 @@ class User(Base):
 
     @property
     def can_monitor(self) -> bool:
-        """Active/trialing plans monitor; past_due/canceled are paused (§11)."""
-        return self.plan_status in (PlanStatus.trialing.value, PlanStatus.active.value)
+        """free/pro (and their legacy spellings) monitor; past_due/canceled are
+        paused (§11). How MANY bookings may be watched is services.plan's job."""
+        return self.plan_status in (
+            PlanStatus.free.value,
+            PlanStatus.pro.value,
+            PlanStatus.trialing.value,
+            PlanStatus.active.value,
+        )
+
+    @property
+    def is_pro(self) -> bool:
+        """Paying subscriber (unlimited bookings). `active` is the legacy
+        spelling of pro from before the free/pro tiers existed."""
+        return self.plan_status in (PlanStatus.pro.value, PlanStatus.active.value)
 
 
 class MonitoringJob(Base):

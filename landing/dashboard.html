@@ -145,14 +145,22 @@
   // (never the query string, so it stays out of logs). Store it and scrub
   // the URL before anything else runs.
   var magicNote = null;
+  var upgradedNote = false;
   (function () {
     var m = (location.hash || "").match(/token=([^&]+)/);
     if (m) {
       setToken(decodeURIComponent(m[1]));
       history.replaceState(null, "", location.pathname + location.search);
     }
-    if (new URLSearchParams(location.search).get("magic") === "invalid") {
+    var params = new URLSearchParams(location.search);
+    if (params.get("magic") === "invalid") {
       magicNote = "That sign-in link is invalid or has expired — request a fresh one below.";
+      history.replaceState(null, "", location.pathname);
+    }
+    // Stripe checkout lands back here with ?upgraded=1 — remember it for a
+    // confirmation toast, then scrub the URL so a reload doesn't repeat it.
+    if (params.get("upgraded") === "1") {
+      upgradedNote = true;
       history.replaceState(null, "", location.pathname);
     }
   })();
@@ -172,15 +180,20 @@
     } catch (e) { return null; }
   }
 
-  // Signed-in account info. All beta accounts are on the free tier, so the
-  // quiet Upgrade link shows for everyone; plan gating can hook in here later.
+  // Signed-in account info from /auth/me. Paying plans ("pro", or its legacy
+  // spelling "active") hide the Upgrade upsell.
   var meEmail = null;
+  var mePlan = null;
+  function isProPlan() { return mePlan === "pro" || mePlan === "active"; }
   function pricingHref() {
     return "/pricing" + (meEmail ? "?email=" + encodeURIComponent(meEmail) : "");
   }
   function paintMe() {
     var up = document.getElementById("upgrade");
-    if (up) up.href = pricingHref();
+    if (up) {
+      up.href = pricingHref();
+      if (isProPlan()) up.hidden = true;
+    }
     if (meEmail) {
       document.getElementById("me-email").textContent = meEmail;
       document.getElementById("me-line").hidden = false;
@@ -192,14 +205,18 @@
     if (meEmail) { paintMe(); return; }
     fetch(API + "/auth/me", { headers: { Authorization: "Bearer " + token() } })
       .then(function (r) { return r.ok ? r.json() : null; })
-      .then(function (u) { if (u && u.email) { meEmail = u.email; paintMe(); } })
+      .then(function (u) {
+        if (u && u.email) { meEmail = u.email; mePlan = u.plan_status || null; paintMe(); }
+      })
       .catch(function () {});
   }
 
   function setChrome(signedIn) {
     ["refresh", "refresh-m", "signout", "signout-m", "upgrade"].forEach(function (id) {
       var el = document.getElementById(id);
-      if (el) el.hidden = !signedIn;
+      // The Upgrade upsell also stays hidden for paying plans, whichever of
+      // /auth/me and /jobs resolves last.
+      if (el) el.hidden = !signedIn || (id === "upgrade" && isProPlan());
     });
     if (!signedIn) document.getElementById("me-line").hidden = true;
   }
@@ -423,7 +440,9 @@
           '<div class="know-card"><p class="know-t">Good to know</p><ul class="know">' +
             "<li>Works with any currency.</li>" +
             "<li>Forward from the email you signed up with.</li>" +
-            '<li>Free plan watches 1 active booking — <a href="' + pricingHref() + '">upgrade anytime</a> for unlimited.</li>' +
+            (isProPlan()
+              ? "<li>Your Founding plan watches unlimited bookings.</li>"
+              : '<li>Free plan watches 1 active booking — <a href="' + pricingHref() + '">upgrade anytime</a> for unlimited.</li>') +
           "</ul></div>" +
         "</div>" +
       "</div>";
@@ -618,7 +637,7 @@
   });
 
   function signoutHandler(e) {
-    e.preventDefault(); setToken(null); meEmail = null; showSignin("Signed out.");
+    e.preventDefault(); setToken(null); meEmail = null; mePlan = null; showSignin("Signed out.");
   }
   ["signout", "signout-m"].forEach(function (id) {
     var el = document.getElementById(id); if (el) el.addEventListener("click", signoutHandler);
@@ -626,6 +645,11 @@
 
   wireCopy(document);
   if (token()) { load(); } else { showSignin(magicNote); }
+  if (upgradedNote && window.MRW) {
+    MRW.toast("You're a Founding Member", {
+      desc: "Unlimited watches unlocked.", variant: "success", timeout: 8000
+    });
+  }
 })();
 </script>
 </body>

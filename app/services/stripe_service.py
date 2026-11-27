@@ -18,20 +18,23 @@ if settings.stripe_secret_key:
 
 
 # Stripe subscription.status  ->  User.plan_status  (§11)
+# A live subscription is pro; a dead one falls back to the free tier (which
+# still watches 1 booking). past_due keeps its grace-period meaning: monitoring
+# pauses until Stripe's retries either recover the card or cancel the sub.
 _STATUS_MAP: dict[str, PlanStatus] = {
-    "trialing": PlanStatus.trialing,
-    "active": PlanStatus.active,
+    "trialing": PlanStatus.pro,
+    "active": PlanStatus.pro,
     "past_due": PlanStatus.past_due,
-    "unpaid": PlanStatus.past_due,
-    "canceled": PlanStatus.canceled,
-    "incomplete": PlanStatus.trialing,
-    "incomplete_expired": PlanStatus.canceled,
-    "paused": PlanStatus.canceled,
+    "unpaid": PlanStatus.free,
+    "canceled": PlanStatus.free,
+    "incomplete": PlanStatus.free,
+    "incomplete_expired": PlanStatus.free,
+    "paused": PlanStatus.free,
 }
 
 
 def map_subscription_status(stripe_status: str) -> PlanStatus:
-    return _STATUS_MAP.get(stripe_status, PlanStatus.canceled)
+    return _STATUS_MAP.get(stripe_status, PlanStatus.free)
 
 
 def create_checkout_session(customer_email: str, success_url: str, cancel_url: str) -> str:

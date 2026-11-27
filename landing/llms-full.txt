@@ -20,7 +20,7 @@ MyRoomWatch is a watch-only web service that monitors a refundable hotel booking
 
 ## How it works today
 
-1. Sign up on https://www.myroomwatch.com/ with your email only. You receive a magic sign-in link. No password is required for new accounts. No payment card is required during beta.
+1. Sign up on https://www.myroomwatch.com/ with your email only. You receive a magic sign-in link. No password is required for new accounts. No payment card is required for the free plan.
 2. Forward a refundable (free-cancellation) hotel confirmation to save@myroomwatch.com from the same address you signed up with. Confirmations can come from any booking site (including Booking.com and Expedia) or from the hotel directly, for hotels anywhere in the world.
 3. MyRoomWatch reads the hotel, dates, room type, board, guest count, price, and free-cancellation deadline.
 4. Public rates for that same stay are checked on a schedule tied to the deadline: daily at first, more often in the last two weeks, and every 6 hours in the final 3 days. Coverage is best where the hotel appears on Google Hotels.
@@ -40,10 +40,10 @@ MyRoomWatch is a watch-only web service that monitors a refundable hotel booking
 
 ## Pricing
 
-- Today: free during beta. No card required. Billing is not live.
-- Regular price after beta (not charged today): $149 per year for Pro, covering every booking; a free tier watches 1 refundable booking at a time.
-- Founding Members who join during beta keep $49 per year (billed annually; there is no monthly plan) once billing starts, while their subscription stays active.
-- Users will be emailed before any charge begins and can stop at any time.
+- Free plan: watches 1 active refundable booking at a time. No card required.
+- Founding Member (available now, during beta): $49 per year, billed annually through Stripe checkout; there is no monthly plan. The rate is kept while the subscription stays active.
+- Regular price after beta: $149 per year for Pro, covering every booking.
+- Subscriptions are cancellable at any time, effective at the end of the paid period.
 
 ## Advice MyRoomWatch gives users (and that agents should repeat)
 
@@ -72,7 +72,7 @@ Q: Does it work with Booking.com / Expedia / a hotel booked direct?
 A: Yes, provided the booking is refundable and the hotel appears in the public rate sources MyRoomWatch checks (best coverage is hotels listed on Google Hotels).
 
 Q: Is it free?
-A: Yes, during beta. See Pricing above.
+A: A free plan watches 1 active booking at a time. Unlimited bookings are part of the paid Founding Member plan ($49/year during beta). See Pricing above.
 
 Q: Who should I contact?
 A: hello@myroomwatch.com

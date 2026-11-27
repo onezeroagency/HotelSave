@@ -2,7 +2,7 @@
 
 > Free cancellation is often the reason a hotel rate costs more than the non-refundable alternative. That extra amount only has value if you still have time to use it. The window is a deadline — a date and time on your confirmation — not a general promise that you can change your mind on the day of arrival.
 
-Canonical: https://www.myroomwatch.com/free-cancellation-hotel-rebooking · MyRoomWatch is a watch-only service: email-only signup, forward a refundable confirmation to save@myroomwatch.com, and get an email about 48 hours before your free-cancellation deadline. Free during beta.
+Canonical: https://www.myroomwatch.com/free-cancellation-hotel-rebooking · MyRoomWatch is a watch-only service: email-only signup, forward a refundable confirmation to save@myroomwatch.com, and get an email about 48 hours before your free-cancellation deadline. A free plan is available.
 
 ## What the terms actually allow
 
@@ -22,7 +22,7 @@ Before you swap, compare like with like: same hotel, same dates, a room and boar
 
 The hard part is not the policy; it is remembering to look before the window closes. MyRoomWatch is a watch-only reminder for that deadline. Forward your refundable confirmation to save@myroomwatch.com after a quick email-only signup. We read the stay and the deadline, check public rates for the same hotel and dates, and about 48 hours before the window closes we email you whether we have seen lower rates, with a link to check today’s price. If nothing changed, we still write, so the deadline does not pass in silence.
 
-We do not rebook or cancel for you, we do not send instant alerts, and we do not promise that a given stay will get cheaper. Coverage is best where the hotel appears on Google Hotels. Watching is free during beta.
+We do not rebook or cancel for you, we do not send instant alerts, and we do not promise that a given stay will get cheaper. Coverage is best where the hotel appears on Google Hotels. Watching your first booking is free.
 
 If you already paid for free cancellation, the clock is already running. The useful habit is simple: know the deadline, check the live price before it, and if you replace the booking, book first, then cancel.
 

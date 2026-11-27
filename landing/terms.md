@@ -1,6 +1,6 @@
 # MyRoomWatch — Terms of Service
 
-Last updated: 26 November 2026 · Canonical: https://www.myroomwatch.com/terms
+Last updated: 27 November 2026 · Canonical: https://www.myroomwatch.com/terms
 
 These terms cover your use of MyRoomWatch, operated by **SIA ONEZERO** (Latvia, EU). By creating an account you agree to them.
 
@@ -28,11 +28,11 @@ Hotel prices may never drop. We cannot promise a saving, a particular number of 
 
 ## 5. Beta
 
-MyRoomWatch is currently in beta and free to use. Features may change or break, and we may contact you about your experience. We'll give you clear notice by email before introducing any charge, and you can stop at any time.
+MyRoomWatch is currently in beta. Features may change or break, and we may contact you about your experience. The free plan stays free, with no card required; the paid Founding Member subscription is optional and described below.
 
-## 6. Pricing and cancellation (when billing begins)
+## 6. Pricing and cancellation
 
-MyRoomWatch is free during the beta. When billing begins, the regular price will be $149 per year for Pro, covering every booking you forward, and a free tier will continue to monitor one refundable booking at a time. Members who join during the beta are Founding Members and keep $49 per year, billed annually, for as long as their subscription remains active. Subscriptions will be cancellable at any time, effective at the end of the paid period, with no notice required, and we will email you clearly before any billing starts. Exact terms will be published before any payment is taken.
+A free plan monitors one active refundable booking at a time, with no card required. The Pro plan covers every booking you forward: members who join during the beta are Founding Members and pay $49 per year, billed annually through Stripe's hosted checkout, keeping that rate for as long as their subscription remains active; the regular price after the beta is $149 per year. There is no monthly plan. Subscriptions are cancellable at any time, effective at the end of the paid period, with no notice required.
 
 ## 7. Affiliate links
 

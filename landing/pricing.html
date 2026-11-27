@@ -4,14 +4,14 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Founding Member pricing — MyRoomWatch</title>
-<meta name="description" content="Free during beta. Founding Members who join in beta keep $49/year (billed annually) while their subscription stays active — regular price after beta is $149/year.">
+<meta name="description" content="Founding Members who join in beta lock in $49/year (billed annually) while their subscription stays active — regular price after beta is $149/year. A free plan watches 1 booking.">
 <link rel="canonical" href="https://www.myroomwatch.com/pricing">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://www.myroomwatch.com/pricing">
 <meta property="og:site_name" content="MyRoomWatch">
 <meta property="og:locale" content="en">
 <meta property="og:title" content="Founding Member pricing — MyRoomWatch">
-<meta property="og:description" content="Free during beta. Founding Members keep $49/year — regular price after beta is $149/year.">
+<meta property="og:description" content="Lock in $49/year before beta ends — regular price after beta is $149/year.">
 <meta property="og:image" content="https://www.myroomwatch.com/og.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
@@ -73,7 +73,7 @@
           </ul>
           <div class="plan-foot">
             <a class="btn btn-ghost btn-block" href="/#start">Try 1 booking free</a>
-            <p class="plan-fine">No card · free during beta</p>
+            <p class="plan-fine">No card needed</p>
           </div>
         </div>
         <div class="plan featured">
@@ -90,8 +90,8 @@
           </ul>
           <div class="plan-foot">
             <p class="payback">One $50 hotel drop pays for your entire year.</p>
-            <a class="btn btn-founding btn-block" id="pro-cta" href="#reserve">Lock in $49/year (Save $100)</a>
-            <p class="plan-fine">Annual plan only · No card charged during beta — we email before billing starts.</p>
+            <a class="btn btn-founding btn-block" id="pro-cta" href="https://buy.stripe.com/dRm9AUfkK4jDeQHfU3bsc00">Lock in $49/year (Save $100)</a>
+            <p class="plan-fine">Annual plan · Cancel anytime · Watch-only, you keep control</p>
           </div>
         </div>
       </div>
@@ -100,7 +100,7 @@
         <p class="vb-t">Travel 5 times a year? One $60 drop more than pays for your whole year. Catching drops on 3 of 5 trips at $60–$90 each puts $180–$270 back in your pocket — illustrative example, not an average or a promise; hotel prices may never drop.</p>
       </div>
       <ul class="trust-strip">
-        <li>No card during beta</li>
+        <li>Secure Stripe checkout</li>
         <li>Cancel anytime</li>
         <li>Watch-only, you keep control</li>
       </ul>
@@ -111,12 +111,12 @@
   <section class="section alt" id="reserve">
     <div class="wrap">
       <div class="reserve-card">
-        <h3>Reserve the $49/year founding rate</h3>
-        <p class="body">Checkout isn't open yet. Leave your email and we'll send your sign-in link now — joining during the beta is what makes you a Founding Member. <strong>You haven't been charged</strong>, and we'll email you before billing opens.</p>
+        <h3>Prefer to start free?</h3>
+        <p class="body">Leave your email and we'll send your sign-in link. The free plan watches 1 active booking — you can lock in the $49/year Founding rate anytime before the beta ends.</p>
         <form class="reserve-form" id="reserve-form" novalidate>
           <label class="sr-only" for="reserve-email">Email address</label>
           <input type="email" id="reserve-email" required autocomplete="email" placeholder="you@example.com">
-          <button class="btn btn-primary" type="submit" id="reserve-submit">Reserve my rate</button>
+          <button class="btn btn-primary" type="submit" id="reserve-submit">Email me a sign-in link</button>
         </form>
         <p class="form-status" id="reserve-status" role="status" aria-live="polite" hidden></p>
       </div>
@@ -142,7 +142,7 @@
 
 <script>
 (function () {
-  var PRO_CHECKOUT_URL = ""; // paste Stripe Payment Link (https://buy.stripe.com/...) here
+  var PRO_CHECKOUT_URL = "https://buy.stripe.com/dRm9AUfkK4jDeQHfU3bsc00"; // Stripe Payment Link
   var API = "https://api.myroomwatch.com";
 
   var params = new URLSearchParams(location.search);
@@ -157,20 +157,17 @@
   }
 
   var cta = document.getElementById("pro-cta");
-  var reserve = document.getElementById("reserve");
   if (PRO_CHECKOUT_URL) {
-    // Real checkout: point the CTA at Stripe (prefill the email cleanly)
-    // and retire the reserve fallback.
+    // Live checkout: point the CTA at Stripe, prefilling the email cleanly.
     var url = PRO_CHECKOUT_URL;
     if (email) {
       url += (url.indexOf("?") === -1 ? "?" : "&") + "prefilled_email=" + encodeURIComponent(email);
     }
     if (cta) cta.href = url;
-    if (reserve) reserve.hidden = true;
   }
 
-  // Honest fallback: nothing is charged here. The email gets a sign-in
-  // link, and joining during the beta is what grants Founding Member status.
+  // Free-start fallback: nothing is charged here. The email gets a sign-in
+  // link; upgrading to the Founding rate happens via the Stripe CTA above.
   var form = document.getElementById("reserve-form");
   var status = document.getElementById("reserve-status");
   var btn = document.getElementById("reserve-submit");
@@ -194,12 +191,12 @@
         var d = b && b.detail;
         throw new Error(typeof d === "string" ? d : "Something went wrong. Please try again.");
       });
-      show("Done \u2014 your sign-in link is on its way. Nothing has been charged; we'll email you before billing opens.", true);
+      show("Done \u2014 your sign-in link is on its way. Check your inbox.", true);
       form.hidden = true;
     }).catch(function (err) {
       show(err.message || "Something went wrong. Please try again.", false);
     }).finally(function () {
-      btn.disabled = false; btn.textContent = "Reserve my rate";
+      btn.disabled = false; btn.textContent = "Email me a sign-in link";
     });
   });
 })();

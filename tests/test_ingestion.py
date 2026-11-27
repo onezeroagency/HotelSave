@@ -143,3 +143,27 @@ def test_webhook_then_patch_activates(client):
     )
     assert patched.status_code == 200
     assert patched.json()["status"] == "active"
+
+
+def test_second_forward_on_free_plan_hits_the_cap(db_session, captured_events):
+    """Free tier watches 1 active booking: the second forward is refused with
+    an upgrade email (Klaviyo event), not silently dropped."""
+    session, _ = db_session
+    user = _make_user(session)
+
+    first = process_inbound_email(session, _email(**_fields()))
+    assert first.status == "monitoring"
+
+    second = process_inbound_email(session, _email(**_fields(Hotel="Hotel Astorija")))
+    assert second.status == "plan_limit"
+    assert second.job_id is None
+    names = [e[0] for e in captured_events]
+    assert klaviyo.EVENT_PLAN_LIMIT_REACHED in names
+    limit_event = [e for e in captured_events if e[0] == klaviyo.EVENT_PLAN_LIMIT_REACHED][0]
+    assert "pricing" in limit_event[2]["upgrade_url"]
+
+    # Pro users are unlimited.
+    user.plan_status = "pro"
+    session.commit()
+    third = process_inbound_email(session, _email(**_fields(Hotel="Hotel Pacai")))
+    assert third.status == "monitoring"

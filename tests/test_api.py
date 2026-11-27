@@ -12,7 +12,7 @@ def test_health(client):
 def test_register_login_me(client):
     r = client.post("/auth/register", json={"email": "a@b.com", "password": "password123"})
     assert r.status_code == 201
-    assert r.json()["plan_status"] == "trialing"
+    assert r.json()["plan_status"] == "free"
 
     # Duplicate email is rejected.
     dup = client.post("/auth/register", json={"email": "a@b.com", "password": "password123"})

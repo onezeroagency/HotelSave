@@ -2,7 +2,7 @@
 
 > You paid extra for free cancellation. MyRoomWatch makes sure you use it: forward your refundable hotel confirmation, and we keep checking rates for your dates and email you about 48 hours before your free-cancellation deadline, telling you if we've seen lower rates for your dates. You decide what to do. Your booking stays exactly as you made it.
 
-Canonical: https://www.myroomwatch.com/ · Signup is email-only (a sign-in link is emailed to you; no password for new accounts, no card during beta). Machine-readable overview: https://www.myroomwatch.com/llms.txt
+Canonical: https://www.myroomwatch.com/ · Signup is email-only (a sign-in link is emailed to you; no password for new accounts, no card for the free plan). Machine-readable overview: https://www.myroomwatch.com/llms.txt
 
 ## Three steps
 
@@ -17,14 +17,14 @@ What we check: same hotel, same dates, same guests and board, before your deadli
 ## Your booking stays yours
 
 - We read the email you forward and send you email back. We can't change or cancel your booking, and we never book anything in your name.
-- No card during beta. When paid plans start, the subscription will be charged through a payment provider's checkout, and we'll email you well before then.
+- The free plan needs no card. Upgrading happens on Stripe's secure checkout page — your card details never touch our servers, and you can cancel anytime.
 - Every number on the site is a labelled example. If we can't stand behind a price, we say "worth a look", not "you save €94".
 - MyRoomWatch is run by SIA ONEZERO, registered in Latvia (EU), reg. no. 41503079902, Kolkasraga iela 3-15, Riga, LV-1002. Under the GDPR you can ask for a copy of your data, correct it or delete it — email hello@myroomwatch.com. We don't sell your data, and the site sets no tracking or advertising cookies.
 - No reviews yet, and no fake ones. MyRoomWatch is in beta and won't invent testimonials.
 
 ## Pricing
 
-Free while in beta — every booking you forward, deadline heads-up, lower-rate emails, no card. After the beta: Pro at a regular price of $149/year covers every booking, and a free tier watches 1 booking at a time. Founding Members who join in beta keep $49/year (billed annually — the only plan) while their subscription stays active — not charged today. Final terms are published in the Terms before any payment is taken.
+A free plan watches 1 active refundable booking at a time — no card needed. Founding Members who join during the beta pay $49/year (billed annually — the only plan) through Stripe checkout and keep that rate while their subscription stays active; the regular price after beta is $149/year for Pro, covering every booking. Cancel anytime, effective at the end of the paid year. Full details in the Terms.
 
 ## FAQ
 
@@ -42,7 +42,7 @@ Free while in beta — every booking you forward, deadline heads-up, lower-rate 
 
 **What do you do with my data?** We use it only to watch your booking and email you. Our providers handle hosting, email and reading your confirmation. The full list is in the Privacy policy. Delete your account any time by emailing hello@myroomwatch.com.
 
-**What happens after the beta?** We email you before billing starts. Founding Members who join in beta keep $49/year (billed annually — the only plan) while their subscription stays active; the regular price after beta is $149/year, and a free tier still watches 1 booking. You can stop at any time.
+**What happens after the beta?** Founding Member checkout is open now: join during the beta and you pay $49/year (billed annually — the only plan), locked in while your subscription stays active. The regular price after beta is $149/year, and a free plan still watches 1 active booking. You can cancel anytime, effective at the end of your paid year.
 
 ## More
 

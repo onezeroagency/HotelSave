@@ -4,7 +4,13 @@ import enum
 
 
 class PlanStatus(str, enum.Enum):
-    """Mirrors Stripe subscription status → User.plan_status (§3, §11)."""
+    """User.plan_status (§3, §11): the two live tiers are `free` and `pro`,
+    synced from Stripe by the billing webhook. The other values are legacy
+    rows from before the tiers existed and read as: trialing ≈ free,
+    active ≈ pro; past_due/canceled pause monitoring entirely."""
+
+    free = "free"
+    pro = "pro"
 
     trialing = "trialing"
     active = "active"

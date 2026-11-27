@@ -4,7 +4,7 @@
 
 *MyRoomWatch is not affiliated with, endorsed by, or part of Expedia.*
 
-Canonical: https://www.myroomwatch.com/expedia-price-drop · MyRoomWatch is a watch-only service: email-only signup, forward a refundable confirmation to save@myroomwatch.com, and get an email about 48 hours before your free-cancellation deadline. Free during beta.
+Canonical: https://www.myroomwatch.com/expedia-price-drop · MyRoomWatch is a watch-only service: email-only signup, forward a refundable confirmation to save@myroomwatch.com, and get an email about 48 hours before your free-cancellation deadline. A free plan is available.
 
 ## Check your own cancellation terms first
 
@@ -24,7 +24,7 @@ MyRoomWatch watches that Expedia booking so you do not have to keep opening the 
 
 We do not cancel or rebook on Expedia for you. We do not send instant price-drop alerts, and we do not quote a saving we cannot stand behind, because the price on one site, at one moment, may not be the price you are offered when you go to book. Coverage is best where the hotel appears on Google Hotels.
 
-Watching is free during beta, with no card. If your Expedia hotel booking is still refundable, the useful time to start watching is now, not the day the cancellation window closes.
+Watching your first booking is free, with no card. If your Expedia hotel booking is still refundable, the useful time to start watching is now, not the day the cancellation window closes.
 
 Rates change between checks and differ between booking sites, so always confirm the price and cancellation terms on the site before you book. Coverage depends on the hotel appearing on Google Hotels.
 

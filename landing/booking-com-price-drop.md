@@ -4,7 +4,7 @@
 
 *MyRoomWatch is not affiliated with, endorsed by, or part of Booking.com.*
 
-Canonical: https://www.myroomwatch.com/booking-com-price-drop · MyRoomWatch is a watch-only service: email-only signup, forward a refundable confirmation to save@myroomwatch.com, and get an email about 48 hours before your free-cancellation deadline. Free during beta.
+Canonical: https://www.myroomwatch.com/booking-com-price-drop · MyRoomWatch is a watch-only service: email-only signup, forward a refundable confirmation to save@myroomwatch.com, and get an email about 48 hours before your free-cancellation deadline. A free plan is available.
 
 ## When you can actually do something about it
 
@@ -24,7 +24,7 @@ Keeping an eye on a Booking.com booking by hand means rechecking the same dates 
 
 We do not book or cancel on Booking.com for you, we do not promise an instant alert the moment a price changes, and we do not quote a guaranteed saving — prices move, and the figure on our check may not be the figure you see when you open the site. Coverage is best where the hotel appears on Google Hotels.
 
-Watching is free during beta, and you do not need a card. If you already have a refundable Booking.com reservation, the cancellation window is already counting down.
+Watching your first booking is free, and you do not need a card. If you already have a refundable Booking.com reservation, the cancellation window is already counting down.
 
 Rates change between checks and differ between booking sites, so always confirm the price and cancellation terms on the site before you book. Coverage depends on the hotel appearing on Google Hotels.
 

@@ -35,6 +35,7 @@ EVENT_PASSWORD_RESET = "Password Reset Requested"  # carries reset_url + expiry
 EVENT_PARSE_FAILED = "Parse Failed"  # forwarded confirmation we couldn't read
 EVENT_SIGNUP_INVITE = "Forwarded Without Account"  # unknown sender → invite to sign up
 EVENT_NEEDS_REFUNDABLE = "Refundable Confirmation Needed"  # non-refundable booking (§6a)
+EVENT_PLAN_LIMIT_REACHED = "Plan Limit Reached"  # free tier already watching 1 booking (§11)
 EVENT_NEEDS_DEADLINE = "Cancellation Deadline Needed"  # deadline missing (§6a)
 EVENT_HOTEL_RESOLUTION_NEEDED = "Hotel Resolution Needed"  # ambiguous hotel (§6b)
 

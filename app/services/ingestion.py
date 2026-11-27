@@ -16,7 +16,7 @@ from sqlalchemy.orm import Session
 
 from .. import models
 from ..enums import JobStatus
-from . import klaviyo
+from . import klaviyo, plan
 from .email_inbound import InboundEmail
 from .parser import ParsedBooking, get_parser
 from .price_source import get_price_source
@@ -24,7 +24,7 @@ from .price_source import get_price_source
 
 @dataclass
 class IngestionResult:
-    status: str  # unknown_sender | parse_failed | not_refundable | monitoring | pending_hotel | pending_info
+    status: str  # unknown_sender | parse_failed | not_refundable | plan_limit | monitoring | pending_hotel | pending_info
     job_id: int | None = None
 
 
@@ -58,6 +58,21 @@ def process_inbound_email(db: Session, inbound: InboundEmail) -> IngestionResult
             {"hotel": parsed.hotel_name, "check_in": parsed.check_in.isoformat()},
         )
         return IngestionResult(status="not_refundable")
+
+    # Plan gate (§11): free watches 1 active booking, pro is unlimited. Tell
+    # the user by email (via Klaviyo) — a silently dropped forward looks like
+    # the product doing nothing.
+    if plan.at_free_limit(db, user):
+        klaviyo.emit_event(
+            klaviyo.EVENT_PLAN_LIMIT_REACHED,
+            user.email,
+            {
+                "hotel": parsed.hotel_name,
+                "check_in": parsed.check_in.isoformat(),
+                "upgrade_url": plan.UPGRADE_URL,
+            },
+        )
+        return IngestionResult(status="plan_limit")
 
     job = _build_job(user.id, parsed)
     _resolve_hotel(job, parsed)

@@ -1,18 +1,18 @@
 # MyRoomWatch
 
-> MyRoomWatch watches a refundable hotel booking you already made. Forward your confirmation to save@myroomwatch.com. About 48 hours before your free-cancellation deadline, MyRoomWatch emails you whether lower public rates were seen for the same hotel and dates. You decide whether to cancel and rebook yourself. Watching is free during beta. MyRoomWatch does not book, change, or cancel reservations, and is not affiliated with Booking.com, Expedia, or any other booking site.
+> MyRoomWatch watches a refundable hotel booking you already made. Forward your confirmation to save@myroomwatch.com. About 48 hours before your free-cancellation deadline, MyRoomWatch emails you whether lower public rates were seen for the same hotel and dates. You decide whether to cancel and rebook yourself. A free plan watches 1 active booking at a time. MyRoomWatch does not book, change, or cancel reservations, and is not affiliated with Booking.com, Expedia, or any other booking site.
 
 MyRoomWatch is a web service operated by SIA ONEZERO (Latvia, EU; registration number 41503079902; Kolkasraga iela 3-15, Riga, LV-1002, Latvia). Contact: hello@myroomwatch.com. Canonical site: https://www.myroomwatch.com/ (the www host is authoritative).
 
 How it works today (watch-only):
-- Create an account with your email only. No password is required; a sign-in link is emailed to you. No card during beta.
+- Create an account with your email only. No password is required; a sign-in link is emailed to you. No card needed for the free plan.
 - Forward a free-cancellation hotel confirmation, from any booking site or the hotel directly, to save@myroomwatch.com from the same address you signed up with.
 - MyRoomWatch reads the hotel, dates, room, board, guests, price and the free-cancellation deadline, then checks public rates for that stay on a schedule tied to the deadline (daily at first, more often in the last two weeks, every 6 hours in the final 3 days). Coverage is best where the hotel appears on Google Hotels.
 - About 48 hours before the deadline, you receive an email describing what was seen, with a link to check today's price if lower rates appeared. If nothing moved, you still get the deadline heads-up.
 - If you rebook, always book the new rate first, confirm it, then cancel the original. Never cancel first. Always confirm the live price and cancellation terms on the booking site.
 - MyRoomWatch does not send instant price-drop alerts, does not quote a guaranteed saving, and does not rebook for you.
 
-Pricing: free during beta; nothing is charged today. Regular price after beta: $149/year for Pro (every booking you forward), with a free tier watching 1 booking at a time. Founding Members who join in beta keep $49/year (billed annually; annual is the only plan) while their subscription stays active. You will be emailed before any charge.
+Pricing: a free plan watches 1 active refundable booking at a time (no card). Founding Members who join during the beta pay $49/year (billed annually; annual is the only plan) through Stripe checkout and keep that rate while their subscription stays active. Regular price after beta: $149/year for Pro, covering every booking. Cancel anytime, effective at the end of the paid year.
 
 ## Pages
 
@@ -27,4 +27,4 @@ Pricing: free during beta; nothing is charged today. Regular price after beta: $
 - [Full product brief for agents](https://www.myroomwatch.com/llms-full.txt): Longer, citable description of what MyRoomWatch is, what it is not, pricing, legal entity, and common questions.
 - [Privacy policy](https://www.myroomwatch.com/privacy.md): What is collected, why, and GDPR rights.
 - [Terms of service](https://www.myroomwatch.com/terms.md): What the service does and does not do.
-- [Start watching (human signup)](https://www.myroomwatch.com/#start): Email-only signup on the homepage. No card during beta.
+- [Start watching (human signup)](https://www.myroomwatch.com/#start): Email-only signup on the homepage. No card needed for the free plan.

@@ -2,7 +2,7 @@
 
 > Hotel prices are not frozen the moment you click book. Hotels and booking sites use dynamic pricing, so the public rate for the same room on the same dates can fall — or rise — between the day you reserve and the day you arrive. If you paid extra for free cancellation, that movement is only useful if you notice it while you can still cancel.
 
-Canonical: https://www.myroomwatch.com/hotel-price-drop-tracker · MyRoomWatch is a watch-only service: email-only signup, forward a refundable confirmation to save@myroomwatch.com, and get an email about 48 hours before your free-cancellation deadline. Free during beta.
+Canonical: https://www.myroomwatch.com/hotel-price-drop-tracker · MyRoomWatch is a watch-only service: email-only signup, forward a refundable confirmation to save@myroomwatch.com, and get an email about 48 hours before your free-cancellation deadline. A free plan is available.
 
 ## What a post-booking tracker actually does
 
@@ -12,7 +12,7 @@ That is the job of a post-booking hotel price drop tracker: it watches a stay yo
 
 ## How MyRoomWatch works
 
-MyRoomWatch is built for that moment. You create an account with your email only — no password, no card during beta — and forward your refundable hotel confirmation to save@myroomwatch.com. We read the hotel, dates, room, board, guests, price and your free-cancellation deadline. We then keep checking public rates for that same stay on a schedule tied to your deadline: daily at first, more often in the last two weeks, and every six hours in the final three days. Coverage is best where the hotel appears on Google Hotels. Confirmations can come from any booking site, including Booking.com or Expedia, or from the hotel directly.
+MyRoomWatch is built for that moment. You create an account with your email only — no password, and no card for the free plan — and forward your refundable hotel confirmation to save@myroomwatch.com. We read the hotel, dates, room, board, guests, price and your free-cancellation deadline. We then keep checking public rates for that same stay on a schedule tied to your deadline: daily at first, more often in the last two weeks, and every six hours in the final three days. Coverage is best where the hotel appears on Google Hotels. Confirmations can come from any booking site, including Booking.com or Expedia, or from the hotel directly.
 
 About 48 hours before your free-cancellation window closes, we email you what we saw. If we have seen lower rates for your dates, we say so and give you a link to check today's price. If nothing moved, we tell you that too, so you can keep your booking with a clear mind.
 
@@ -26,7 +26,7 @@ If you decide the new rate is better, the safe order is always: book the new rat
 
 This is for travellers who already hold a free-cancellation booking and do not want the deadline to pass quietly. It is not useful for a non-refundable rate, and it is not a promise that every stay will get cheaper. Plenty of bookings never drop. The value is that you find out in time either way.
 
-Watching is free during beta. Forward one refundable booking and see the checks, the deadline heads-up, and what we find.
+Watching your first booking is free. Forward one refundable booking and see the checks, the deadline heads-up, and what we find.
 
 Rates change between checks and differ between booking sites, so always confirm the price and cancellation terms on the site before you book. Coverage depends on the hotel appearing on Google Hotels.
 

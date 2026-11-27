@@ -11,7 +11,7 @@ from .. import models, schemas
 from ..database import get_db
 from ..deps import get_current_user
 from ..enums import JobStatus
-from ..services import klaviyo, lifecycle
+from ..services import klaviyo, lifecycle, plan
 from ..services.price_source import get_price_source
 
 logger = logging.getLogger("hotelsave.jobs")
@@ -36,6 +36,12 @@ def create_job(
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail="check_out must be after check_in",
+        )
+
+    if plan.at_free_limit(db, current_user):
+        raise HTTPException(
+            status_code=status.HTTP_402_PAYMENT_REQUIRED,
+            detail=plan.LIMIT_MESSAGE,
         )
 
     job = models.MonitoringJob(
