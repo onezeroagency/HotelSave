@@ -15,6 +15,7 @@
     <a class="logo" href="/"><span class="logo-mark"></span>MyRoomWatch</a>
     <nav class="nav">
       <a href="/#how">How it works</a>
+      <a href="/pricing" id="upgrade" hidden>Upgrade</a>
       <button class="btn btn-ghost" type="button" id="refresh" hidden>Refresh</button>
       <a class="btn btn-dark" href="#" id="signout" hidden>Sign out</a>
     </nav>
@@ -75,6 +76,7 @@
       <div>
         <h1>Your bookings</h1>
         <p class="body" id="dash-sub">Forward a confirmation to start a watch — it takes one email.</p>
+        <p class="me-line" id="me-line" hidden>Signed in as <b id="me-email"></b></p>
       </div>
       <button class="copy-pill" type="button" id="copy-head" data-copy="save@myroomwatch.com">
         <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>
@@ -170,11 +172,36 @@
     } catch (e) { return null; }
   }
 
+  // Signed-in account info. All beta accounts are on the free tier, so the
+  // quiet Upgrade link shows for everyone; plan gating can hook in here later.
+  var meEmail = null;
+  function pricingHref() {
+    return "/pricing" + (meEmail ? "?email=" + encodeURIComponent(meEmail) : "");
+  }
+  function paintMe() {
+    var up = document.getElementById("upgrade");
+    if (up) up.href = pricingHref();
+    if (meEmail) {
+      document.getElementById("me-email").textContent = meEmail;
+      document.getElementById("me-line").hidden = false;
+      // The empty-state onboarding names this address — refresh it if shown.
+      if (!allJobs.length && !dashPanel.hidden) render(allJobs);
+    }
+  }
+  function loadMe() {
+    if (meEmail) { paintMe(); return; }
+    fetch(API + "/auth/me", { headers: { Authorization: "Bearer " + token() } })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (u) { if (u && u.email) { meEmail = u.email; paintMe(); } })
+      .catch(function () {});
+  }
+
   function setChrome(signedIn) {
-    ["refresh", "refresh-m", "signout", "signout-m"].forEach(function (id) {
+    ["refresh", "refresh-m", "signout", "signout-m", "upgrade"].forEach(function (id) {
       var el = document.getElementById(id);
       if (el) el.hidden = !signedIn;
     });
+    if (!signedIn) document.getElementById("me-line").hidden = true;
   }
   function showSignin(msg) {
     signinWrap.hidden = false; dashPanel.hidden = true; loadingEl.hidden = true;
@@ -367,7 +394,7 @@
       hotel_name_raw: "Hotel Artemide", city: "Rome",
       check_in: inD.toISOString(), check_out: outD.toISOString(),
       board_type: "Breakfast", adults: 2,
-      original_price: 486, currency: "EUR", status: "active",
+      original_price: 486, currency: "USD", status: "active",
       cancellation_deadline: dl.toISOString(), check_count: 12,
       current_best_price: null, current_best_url: null, check_url: null
     };
@@ -378,7 +405,7 @@
       '<div class="empty-grid">' +
         '<div class="start-card">' +
           "<h3>Start watching your first booking</h3>" +
-          '<p class="start-sub">Forward any free-cancellation hotel confirmation from the email you signed up with.</p>' +
+          '<p class="start-sub">Forward any free-cancellation hotel confirmation from ' + (meEmail ? "<b>" + esc(meEmail) + "</b>" : "the email you signed up with") + ".</p>" +
           '<div class="fwd-box"><code>' + FWD + "</code>" +
             '<div class="fwd-actions">' + copyButton("copy-empty", "Copy email") +
             '<a class="btn btn-ghost" href="mailto:' + FWD + '">Open mail app</a></div>' +
@@ -396,7 +423,7 @@
           '<div class="know-card"><p class="know-t">Good to know</p><ul class="know">' +
             "<li>Works with any currency.</li>" +
             "<li>Forward from the email you signed up with.</li>" +
-            "<li>Free during beta — no card needed.</li>" +
+            '<li>Free plan watches 1 active booking — <a href="' + pricingHref() + '">upgrade anytime</a> for unlimited.</li>' +
           "</ul></div>" +
         "</div>" +
       "</div>";
@@ -451,7 +478,7 @@
     if (!jobs.length) {
       jobsEl.innerHTML = emptyState();
       filtersEl.hidden = true; filtersEl.innerHTML = "";
-      document.getElementById("total-saved").textContent = "—";
+      document.getElementById("total-saved").textContent = "0";
       document.getElementById("total-watching").textContent = "0";
       document.getElementById("total-checks").textContent = "0";
       document.getElementById("kpi-saved").classList.remove("hot");
@@ -481,6 +508,7 @@
   var loading = false;
   function load(fromRefresh) {
     if (loading) return; loading = true;
+    loadMe();
     dashStatus.hidden = true;
     if (dashPanel.hidden) showLoading();
     ["refresh", "refresh-m"].forEach(function (id) {
@@ -590,7 +618,7 @@
   });
 
   function signoutHandler(e) {
-    e.preventDefault(); setToken(null); showSignin("Signed out.");
+    e.preventDefault(); setToken(null); meEmail = null; showSignin("Signed out.");
   }
   ["signout", "signout-m"].forEach(function (id) {
     var el = document.getElementById(id); if (el) el.addEventListener("click", signoutHandler);

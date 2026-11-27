@@ -874,3 +874,8 @@ main{position:relative;z-index:0}
 .plan.featured .plan-fine{color:rgba(255,255,255,.78)}
 /* Long CTA labels may wrap inside the buy box instead of forcing card width */
 .plans-2 .plan .btn-block{white-space:normal;line-height:1.3;padding-top:11px;padding-bottom:11px}
+
+/* Signed-in account line under the dashboard heading */
+.me-line{margin:4px 0 0;font:400 12.5px/1.5 "Public Sans",sans-serif;color:var(--muted)}
+.me-line b{font-weight:600;color:var(--ink)}
+.know li a{color:var(--accent-ink);font-weight:600}
