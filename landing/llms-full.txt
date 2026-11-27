@@ -41,8 +41,8 @@ MyRoomWatch is a watch-only web service that monitors a refundable hotel booking
 ## Pricing
 
 - Today: free during beta. No card required. Billing is not live.
-- Regular price after beta (not charged today): €149 per year for Pro, covering every booking; a free tier watches 1 refundable booking.
-- Founding Members who join during beta keep €49 per year (or €6.99 per month) once billing starts, while their subscription stays active.
+- Regular price after beta (not charged today): $149 per year for Pro, covering every booking; a free tier watches 1 refundable booking at a time.
+- Founding Members who join during beta keep $49 per year (billed annually; there is no monthly plan) once billing starts, while their subscription stays active.
 - Users will be emailed before any charge begins and can stop at any time.
 
 ## Advice MyRoomWatch gives users (and that agents should repeat)
