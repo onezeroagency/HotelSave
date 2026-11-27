@@ -7,6 +7,48 @@
 <meta name="robots" content="noindex">
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
 <link rel="stylesheet" href="styles.css">
+
+<!-- Meta Pixel -->
+<script>
+!function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;
+n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;
+t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,
+document,'script','https://connect.facebook.net/en_US/fbevents.js');
+fbq('init', '955713480660923');
+fbq('track', 'PageView');
+// Shared tracker: mrwFb(name, params, eventId) — eventId pairs the browser
+// event with its Conversions API twin for deduplication.
+window.mrwFb = function (name, params, eventId) {
+  try { fbq('track', name, params || {}, eventId ? { eventID: eventId } : undefined); } catch (e) {}
+};
+// Server-side companion: posts the event to our API so the Conversions API
+// receives the same event_id (plus _fbp/_fbc, and the email when known).
+// text/plain keeps sendBeacon preflight-free; the API parses the body as JSON.
+window.mrwFbBeacon = function (eventName, eventId, email) {
+  try {
+    var fbp = document.cookie.match(/(?:^|; )_fbp=([^;]+)/);
+    var fbc = document.cookie.match(/(?:^|; )_fbc=([^;]+)/);
+    var body = JSON.stringify({
+      event_name: eventName,
+      event_id: eventId,
+      event_source_url: location.href.split("#")[0],
+      fbp: fbp ? decodeURIComponent(fbp[1]) : null,
+      fbc: fbc ? decodeURIComponent(fbc[1]) : null,
+      email: email || null
+    });
+    var url = "https://api.myroomwatch.com/billing/meta/event";
+    if (navigator.sendBeacon) {
+      navigator.sendBeacon(url, new Blob([body], { type: "text/plain" }));
+    } else {
+      fetch(url, { method: "POST", body: body, keepalive: true });
+    }
+  } catch (e) {}
+};
+</script>
+<noscript><img height="1" width="1" style="display:none" alt=""
+src="https://www.facebook.com/tr?id=955713480660923&ev=PageView&noscript=1"></noscript>
+<!-- End Meta Pixel -->
 </head>
 <body class="dash-body">
 
@@ -146,10 +188,16 @@
   // the URL before anything else runs.
   var magicNote = null;
   var upgradedNote = false;
+  var purchaseSession = null; // Stripe session_id, read before the URL is scrubbed
+  var newAccount = false; // first sign-in of a just-created account (magic link)
   (function () {
-    var m = (location.hash || "").match(/token=([^&]+)/);
+    var hash = location.hash || "";
+    var m = hash.match(/token=([^&]+)/);
     if (m) {
       setToken(decodeURIComponent(m[1]));
+      // &new=1 rides in the fragment beside the token: this link's request
+      // created the account, so the one-time registration event may fire.
+      newAccount = /(?:^|[#&])new=1(?:&|$)/.test(hash);
       history.replaceState(null, "", location.pathname + location.search);
     }
     var params = new URLSearchParams(location.search);
@@ -157,10 +205,12 @@
       magicNote = "That sign-in link is invalid or has expired — request a fresh one below.";
       history.replaceState(null, "", location.pathname);
     }
-    // Stripe checkout lands back here with ?upgraded=1 — remember it for a
-    // confirmation toast, then scrub the URL so a reload doesn't repeat it.
+    // Stripe checkout lands back here with ?upgraded=1&session_id=cs_... —
+    // capture both for the toast and the Purchase event, then scrub the URL
+    // so a reload doesn't repeat either.
     if (params.get("upgraded") === "1") {
       upgradedNote = true;
+      purchaseSession = params.get("session_id") || null;
       history.replaceState(null, "", location.pathname);
     }
   })();
@@ -207,8 +257,9 @@
       .then(function (r) { return r.ok ? r.json() : null; })
       .then(function (u) {
         if (u && u.email) { meEmail = u.email; mePlan = u.plan_status || null; paintMe(); }
+        fireRegistration();
       })
-      .catch(function () {});
+      .catch(function () { fireRegistration(); });
   }
 
   function setChrome(signedIn) {
@@ -643,12 +694,46 @@
     var el = document.getElementById(id); if (el) el.addEventListener("click", signoutHandler);
   });
 
+  // One-time Meta CompleteRegistration: only when this page load consumed a
+  // magic link whose request created the account (never repeat logins, never
+  // accounts the Stripe webhook created). Called once /auth/me has answered,
+  // so the Conversions API twin can carry the email.
+  function fireRegistration() {
+    if (!newAccount) return;
+    newAccount = false;
+    var id = (window.crypto && crypto.randomUUID)
+      ? crypto.randomUUID()
+      : "reg-" + Date.now() + "-" + Math.random().toString(36).slice(2);
+    if (window.mrwFb) mrwFb("CompleteRegistration", {}, id);
+    if (window.mrwFbBeacon) mrwFbBeacon("CompleteRegistration", id, meEmail);
+  }
+
   wireCopy(document);
   if (token()) { load(); } else { showSignin(magicNote); }
-  if (upgradedNote && window.MRW) {
-    MRW.toast("You're a Founding Member", {
-      desc: "Unlimited watches unlocked.", variant: "success", timeout: 8000
-    });
+  if (upgradedNote) {
+    if (window.MRW) {
+      MRW.toast("You're a Founding Member", {
+        desc: "Unlimited watches unlocked.", variant: "success", timeout: 8000
+      });
+    }
+    // Browser Purchase, deduplicated against the webhook's Conversions API
+    // event by eventID = the Stripe session id, and guarded in localStorage
+    // so back/forward navigation can't refire it. Without a session_id the
+    // toast still shows and the browser Purchase is skipped (the webhook's
+    // server event still records the sale).
+    if (purchaseSession) {
+      try {
+        var pk = "mrw_fb_purchase_" + purchaseSession;
+        if (!localStorage.getItem(pk)) {
+          if (window.mrwFb) mrwFb("Purchase", {
+            value: 49.00, currency: "USD",
+            content_ids: ["myroomwatch-founding"], content_type: "product",
+            content_name: "myroomwatch-founding"
+          }, purchaseSession);
+          localStorage.setItem(pk, "1");
+        }
+      } catch (e) {}
+    }
   }
 })();
 </script>

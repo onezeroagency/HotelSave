@@ -121,6 +121,12 @@ class Settings(BaseSettings):
     # Klaviyo (§10)
     klaviyo_api_key: str | None = None
 
+    # Meta Pixel / Conversions API (ad measurement). Without a token the CAPI
+    # client dry-runs to the log, same contract as Klaviyo/Stripe.
+    meta_pixel_id: str = "955713480660923"
+    meta_capi_token: str | None = None
+    meta_capi_base_url: str = "https://graph.facebook.com/v21.0"
+
     @property
     def cors_origin_list(self) -> list[str]:
         return [o.strip() for o in self.cors_origins.split(",") if o.strip()]

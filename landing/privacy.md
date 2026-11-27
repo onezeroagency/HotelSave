@@ -1,6 +1,6 @@
 # MyRoomWatch — Privacy Policy
 
-Last updated: 26 November 2026 · Canonical: https://www.myroomwatch.com/privacy
+Last updated: 27 November 2026 · Canonical: https://www.myroomwatch.com/privacy
 
 MyRoomWatch watches a hotel booking you already made and emails you about 48 hours before your free-cancellation deadline, telling you if we've seen lower rates for your dates. To do that we need a small amount of information about you and that booking. This page explains exactly what we hold, why, and how to get rid of it.
 
@@ -36,6 +36,7 @@ We use a small number of providers, each only for a specific job:
 - **SerpApi** — provides Google Hotels rate data. We send the hotel's name and city (or its Google property identifier), the stay dates and the guest count — never your identity.
 - **Klaviyo** — delivers your alert emails.
 - **Vercel** — serves the website.
+- **Meta Platforms** — measures our own advertising. The Meta Pixel on the site and our server send Meta the pages you visit, ad events (such as starting checkout) and, when you sign up or buy, a hashed (SHA-256) version of your email address.
 
 We do not sell your personal data, and we do not share it for anyone else's advertising.
 
@@ -49,7 +50,7 @@ Under the GDPR you can ask us to give you a copy of your data, correct it, delet
 
 ## Cookies
 
-The site sets no tracking or advertising cookies. When you sign in, a session token is stored in your browser's local storage purely to keep you signed in; it never leaves your device except to authenticate you with the API.
+We use one advertising tool: the Meta Pixel, which sets cookies (such as _fbp/_fbc) to measure our own ads — see Meta Platforms above. We set no other tracking or advertising cookies. When you sign in, a session token is stored in your browser's local storage purely to keep you signed in; it never leaves your device except to authenticate you with the API.
 
 ## Changes
 

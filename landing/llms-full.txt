@@ -36,7 +36,7 @@ MyRoomWatch is a watch-only web service that monitors a refundable hotel booking
 - It is not a travel agency, not a booking platform, and not a party to the guest's reservation.
 - It is not affiliated with Booking.com, Expedia, Hotels.com, Google, or any other booking site or hotel chain.
 - It does not accept non-refundable bookings as rebookable stays; if one is forwarded, the user is told.
-- It does not sell personal data, and the marketing site sets no tracking or advertising cookies.
+- It does not sell personal data. The marketing site's only advertising cookie is the Meta Pixel, used to measure MyRoomWatch's own ads.
 
 ## Pricing
 

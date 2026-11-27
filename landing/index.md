@@ -19,7 +19,7 @@ What we check: same hotel, same dates, same guests and board, before your deadli
 - We read the email you forward and send you email back. We can't change or cancel your booking, and we never book anything in your name.
 - The free plan needs no card. Upgrading happens on Stripe's secure checkout page — your card details never touch our servers, and you can cancel anytime.
 - Every number on the site is a labelled example. If we can't stand behind a price, we say "worth a look", not "you save €94".
-- MyRoomWatch is run by SIA ONEZERO, registered in Latvia (EU), reg. no. 41503079902, Kolkasraga iela 3-15, Riga, LV-1002. Under the GDPR you can ask for a copy of your data, correct it or delete it — email hello@myroomwatch.com. We don't sell your data, and the site sets no tracking or advertising cookies.
+- MyRoomWatch is run by SIA ONEZERO, registered in Latvia (EU), reg. no. 41503079902, Kolkasraga iela 3-15, Riga, LV-1002. Under the GDPR you can ask for a copy of your data, correct it or delete it — email hello@myroomwatch.com. We don't sell your data. The site's only advertising cookie is the Meta Pixel, used to measure our own ads.
 - No reviews yet, and no fake ones. MyRoomWatch is in beta and won't invent testimonials.
 
 ## Pricing

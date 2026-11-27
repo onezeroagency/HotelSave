@@ -118,6 +118,48 @@
  ]
 }
 </script>
+
+<!-- Meta Pixel -->
+<script>
+!function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;
+n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;
+t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,
+document,'script','https://connect.facebook.net/en_US/fbevents.js');
+fbq('init', '955713480660923');
+fbq('track', 'PageView');
+// Shared tracker: mrwFb(name, params, eventId) — eventId pairs the browser
+// event with its Conversions API twin for deduplication.
+window.mrwFb = function (name, params, eventId) {
+  try { fbq('track', name, params || {}, eventId ? { eventID: eventId } : undefined); } catch (e) {}
+};
+// Server-side companion: posts the event to our API so the Conversions API
+// receives the same event_id (plus _fbp/_fbc, and the email when known).
+// text/plain keeps sendBeacon preflight-free; the API parses the body as JSON.
+window.mrwFbBeacon = function (eventName, eventId, email) {
+  try {
+    var fbp = document.cookie.match(/(?:^|; )_fbp=([^;]+)/);
+    var fbc = document.cookie.match(/(?:^|; )_fbc=([^;]+)/);
+    var body = JSON.stringify({
+      event_name: eventName,
+      event_id: eventId,
+      event_source_url: location.href.split("#")[0],
+      fbp: fbp ? decodeURIComponent(fbp[1]) : null,
+      fbc: fbc ? decodeURIComponent(fbc[1]) : null,
+      email: email || null
+    });
+    var url = "https://api.myroomwatch.com/billing/meta/event";
+    if (navigator.sendBeacon) {
+      navigator.sendBeacon(url, new Blob([body], { type: "text/plain" }));
+    } else {
+      fetch(url, { method: "POST", body: body, keepalive: true });
+    }
+  } catch (e) {}
+};
+</script>
+<noscript><img height="1" width="1" style="display:none" alt=""
+src="https://www.facebook.com/tr?id=955713480660923&ev=PageView&noscript=1"></noscript>
+<!-- End Meta Pixel -->
 </head>
 <body>
 

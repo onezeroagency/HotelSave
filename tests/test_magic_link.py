@@ -55,7 +55,9 @@ def _fragment_token(resp):
     assert resp.status_code == 303
     location = resp.headers["location"]
     assert location.startswith(f"{settings.site_base_url}/dashboard.html#token=")
-    return location.split("#token=", 1)[1]
+    # The fragment may carry flags after the token (e.g. &new=1 on a brand-new
+    # account) — the dashboard's parser stops at &, and so does this one.
+    return location.split("#token=", 1)[1].split("&", 1)[0]
 
 
 def test_new_user_magic_signup_end_to_end(client, db_session, outbox):

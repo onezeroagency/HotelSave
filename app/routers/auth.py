@@ -19,6 +19,7 @@ from ..security import (
     create_magic_token,
     create_reset_token,
     hash_password,
+    magic_token_is_new_account,
     verify_magic_token,
     verify_password,
     verify_reset_token,
@@ -117,7 +118,7 @@ def request_magic_link(
     db.commit()
     db.refresh(user)
 
-    token = create_magic_token(user.id, user.magic_nonce)
+    token = create_magic_token(user.id, user.magic_nonce, new_account=created)
     link = f"{settings.api_base_url}/auth/magic-link/verify?token={token}"
     subject, html, text = mailer.magic_link_email(link, settings.magic_link_expire_minutes)
     if not mailer.send_email(user.email, subject, html, text):
@@ -177,8 +178,12 @@ def verify_magic_link(token: str, db: Session = Depends(get_db)) -> RedirectResp
     user.magic_nonce = None  # consumed — the same token can never verify again
     db.commit()
     session_token = create_access_token(user.id)
+    # &new=1 marks the first sign-in of an account this link's request created,
+    # so the dashboard fires its one-time registration event. It rides in the
+    # fragment with the token, out of server logs and Referer headers.
+    new_flag = "&new=1" if magic_token_is_new_account(token) else ""
     return RedirectResponse(
-        f"{settings.site_base_url}/dashboard.html#token={session_token}",
+        f"{settings.site_base_url}/dashboard.html#token={session_token}{new_flag}",
         status_code=status.HTTP_303_SEE_OTHER,
     )
 

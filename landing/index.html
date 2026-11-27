@@ -153,6 +153,48 @@
   ]
 }
 </script>
+
+<!-- Meta Pixel -->
+<script>
+!function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;
+n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;
+t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,
+document,'script','https://connect.facebook.net/en_US/fbevents.js');
+fbq('init', '955713480660923');
+fbq('track', 'PageView');
+// Shared tracker: mrwFb(name, params, eventId) — eventId pairs the browser
+// event with its Conversions API twin for deduplication.
+window.mrwFb = function (name, params, eventId) {
+  try { fbq('track', name, params || {}, eventId ? { eventID: eventId } : undefined); } catch (e) {}
+};
+// Server-side companion: posts the event to our API so the Conversions API
+// receives the same event_id (plus _fbp/_fbc, and the email when known).
+// text/plain keeps sendBeacon preflight-free; the API parses the body as JSON.
+window.mrwFbBeacon = function (eventName, eventId, email) {
+  try {
+    var fbp = document.cookie.match(/(?:^|; )_fbp=([^;]+)/);
+    var fbc = document.cookie.match(/(?:^|; )_fbc=([^;]+)/);
+    var body = JSON.stringify({
+      event_name: eventName,
+      event_id: eventId,
+      event_source_url: location.href.split("#")[0],
+      fbp: fbp ? decodeURIComponent(fbp[1]) : null,
+      fbc: fbc ? decodeURIComponent(fbc[1]) : null,
+      email: email || null
+    });
+    var url = "https://api.myroomwatch.com/billing/meta/event";
+    if (navigator.sendBeacon) {
+      navigator.sendBeacon(url, new Blob([body], { type: "text/plain" }));
+    } else {
+      fetch(url, { method: "POST", body: body, keepalive: true });
+    }
+  } catch (e) {}
+};
+</script>
+<noscript><img height="1" width="1" style="display:none" alt=""
+src="https://www.facebook.com/tr?id=955713480660923&ev=PageView&noscript=1"></noscript>
+<!-- End Meta Pixel -->
 </head>
 <body>
 
@@ -325,7 +367,7 @@
         <div class="scard">
           <span class="sicon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="22" x2="21" y2="22"/><line x1="6" y1="18" x2="6" y2="11"/><line x1="10" y1="18" x2="10" y2="11"/><line x1="14" y1="18" x2="14" y2="11"/><line x1="18" y1="18" x2="18" y2="11"/><polygon points="12 2 20 7 4 7"/></svg></span>
           <h3>A real EU company</h3>
-          <p>MyRoomWatch is run by SIA ONEZERO, registered in Latvia (EU). Under the GDPR you can ask for a copy of your data, correct it or delete it — email hello@myroomwatch.com. We don't sell your data, and this site sets no tracking or advertising cookies. <a href="/privacy">Privacy policy</a></p>
+          <p>MyRoomWatch is run by SIA ONEZERO, registered in Latvia (EU). Under the GDPR you can ask for a copy of your data, correct it or delete it — email hello@myroomwatch.com. We don't sell your data. The site's only advertising cookie is the Meta Pixel, used to measure our own ads. <a href="/privacy">Privacy policy</a></p>
         </div>
       </div>
       <p class="fineprint">No reviews yet, and no fake ones. We're in beta and won't invent testimonials.</p>
@@ -985,14 +1027,29 @@ void main() {
 </script>
 
 <script>
-// Founding CTA: prefill Stripe Checkout with the email from ?email= when present.
+// Founding CTA: prefill Stripe Checkout with the email from ?email= when
+// present, and fire Meta InitiateCheckout (browser + Conversions API twin,
+// paired by event_id) on the way out. Non-blocking: sendBeacon survives the
+// navigation, so no preventDefault.
 (function () {
   var email = (new URLSearchParams(location.search).get("email") || "").trim();
   var cta = document.getElementById("pro-cta");
-  if (email && cta) {
+  if (!cta) return;
+  if (email) {
     cta.href += (cta.href.indexOf("?") === -1 ? "?" : "&") +
       "prefilled_email=" + encodeURIComponent(email);
   }
+  cta.addEventListener("click", function () {
+    var id = (window.crypto && crypto.randomUUID)
+      ? crypto.randomUUID()
+      : "ic-" + Date.now() + "-" + Math.random().toString(36).slice(2);
+    if (window.mrwFb) mrwFb("InitiateCheckout", {
+      value: 49.00, currency: "USD",
+      content_ids: ["myroomwatch-founding"], content_type: "product",
+      content_name: "myroomwatch-founding"
+    }, id);
+    if (window.mrwFbBeacon) mrwFbBeacon("InitiateCheckout", id, email || null);
+  });
 })();
 </script>
 

@@ -78,7 +78,7 @@ def create_reset_token(user_id: int, hashed_password: str) -> str:
 _MAGIC_PURPOSE = "magic-login"
 
 
-def create_magic_token(user_id: int, nonce: str) -> str:
+def create_magic_token(user_id: int, nonce: str, new_account: bool = False) -> str:
     expire = datetime.now(timezone.utc) + timedelta(
         minutes=settings.magic_link_expire_minutes
     )
@@ -88,7 +88,22 @@ def create_magic_token(user_id: int, nonce: str) -> str:
         "purpose": _MAGIC_PURPOSE,
         "nonce": nonce,
     }
+    if new_account:
+        # Set only when this magic-link REQUEST created the account, so the
+        # dashboard can fire its one-time registration event. Repeat sign-ins,
+        # and accounts created any other way (e.g. by the Stripe webhook),
+        # never carry it.
+        payload["new"] = True
     return jwt.encode(payload, settings.secret_key, algorithm=settings.algorithm)
+
+
+def magic_token_is_new_account(token: str) -> bool:
+    """Read the `new` claim of an (already verified) magic token."""
+    try:
+        payload = jwt.decode(token, settings.secret_key, algorithms=[settings.algorithm])
+    except JWTError:
+        return False
+    return payload.get("new") is True
 
 
 def verify_magic_token(token: str, nonce_lookup) -> str | None:

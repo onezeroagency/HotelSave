@@ -48,6 +48,11 @@ class User(Base):
     magic_nonce: Mapped[str | None] = mapped_column(String(64))
 
     stripe_customer_id: Mapped[str | None] = mapped_column(String(255), index=True)
+    # Meta ad-attribution cookies (_fbp/_fbc), captured when the browser
+    # reports checkout intent, so the server-side Purchase event can be
+    # matched back to the ad click.
+    meta_fbp: Mapped[str | None] = mapped_column(String(128))
+    meta_fbc: Mapped[str | None] = mapped_column(String(512))
     plan_status: Mapped[str] = mapped_column(
         String(20), default=PlanStatus.free.value, nullable=False
     )
